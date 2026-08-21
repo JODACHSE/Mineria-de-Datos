@@ -1,0 +1,39 @@
+```
+└── 📁Mineria de Datos
+    └── 📁app
+        └── 📁routes
+            ├── __init__.py
+            ├── lessons.py
+            ├── project.py
+        └── 📁static
+            └── 📁assets
+                └── 📁fonts
+                    ├── Orbitron.ttf
+                └── 📁png
+                    ├── wololo-icon.png
+            └── 📁css
+                ├── styles.css
+            └── 📁js
+                ├── index.js
+            ├── favicon.ico
+        └── 📁templates
+            └── 📁components
+                ├── footer.html
+                ├── navbar.html
+            └── 📁layouts
+                ├── base.html
+            └── 📁lessons
+                ├── clase_01.html
+                ├── index.html
+            └── 📁project
+                ├── index.html
+        ├── __init__.py
+        ├── config.py
+    └── 📁tests
+        ├── __init__.py
+    ├── .env
+    ├── .gitignore
+    ├── README.md
+    ├── requirements.txt
+    └── run.py
+```

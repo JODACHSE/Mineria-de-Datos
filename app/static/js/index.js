@@ -1,0 +1,1 @@
+console.log("Aplicación de Minería de Datos iniciada correctamente.");
