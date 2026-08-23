@@ -1,20 +1,759 @@
 {% extends 'layouts/base.html' %}
 
-{% block title %}Proyecto - Minería de Datos{% endblock %}
+{% block title %}R1 · Proyecto - Minería de Datos{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 text-center mb-4">
-        <h1 class="display-5 fw-bold"><i class="bi bi-diagram-3 text-primary me-2"></i>Proyecto Final</h1>
-        <p class="lead text-secondary">Sistema analítico y dashboard interactivo de minería de datos.</p>
-    </div>
-</div>
+<div class="container py-2">
 
-<div class="card bg-dark-subtle border-0 shadow-sm p-4 text-center">
-    <div class="card-body">
-        <i class="bi bi-gear-wide-connected display-1 text-primary mb-3"></i>
-        <h3>Módulo de Proyecto en Desarrollo</h3>
-        <p class="text-muted">Aquí se integrarán los tableros de Power BI, pipelines de Spark ML y clustering.</p>
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('project.index') }}">Proyecto</a></li>
+            <li class="breadcrumb-item active" aria-current="page">R1 · Del problema a los datos</li>
+        </ol>
+    </nav>
+
+    <!-- Encabezado -->
+    <div class="border-bottom pb-3 mb-4">
+        <h1 class="display-6 fw-bold text-primary">
+            <i class="bi bi-diagram-3 me-2"></i>R1 · Del problema a los datos
+        </h1>
+        <p class="text-secondary mb-2">
+            Primer entregable — Problema &rarr; preguntas &rarr; necesidades de información &rarr; fuentes &rarr; dataset &rarr; diccionario &rarr; calidad.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="badge bg-success fs-6"><i class="bi bi-egg-fried me-1"></i>Tema: Seguridad alimentaria y producción agrícola</span>
+            <span class="badge bg-secondary fs-6"><i class="bi bi-geo-alt me-1"></i>Cobertura: Colombia (nacional)</span>
+            <span class="badge bg-secondary fs-6"><i class="bi bi-calendar3 me-1"></i>Periodo: 2000&ndash;2023</span>
+        </div>
+    </div>
+
+    <!-- Índice de la página -->
+    <div class="card border-0 shadow-sm bg-dark-subtle mb-4">
+        <div class="card-body">
+            <h6 class="text-uppercase text-muted mb-2"><i class="bi bi-list-ol me-1"></i>Contenido del entregable</h6>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="#problema" class="badge bg-dark border text-decoration-none">1. Problema y contexto</a>
+                <a href="#preguntas" class="badge bg-dark border text-decoration-none">2. Preguntas</a>
+                <a href="#necesidades" class="badge bg-dark border text-decoration-none">3. Necesidades de información</a>
+                <a href="#fuentes" class="badge bg-dark border text-decoration-none">4. Fuentes y recolección</a>
+                <a href="#dataset" class="badge bg-dark border text-decoration-none">5. Dataset inicial</a>
+                <a href="#diccionario" class="badge bg-dark border text-decoration-none">6. Diccionario de datos</a>
+                <a href="#caracterizacion" class="badge bg-dark border text-decoration-none">7. Registros y variables</a>
+                <a href="#calidad" class="badge bg-dark border text-decoration-none">8. Calidad inicial</a>
+                <a href="#limitaciones" class="badge bg-dark border text-decoration-none">9. Limitaciones</a>
+                <a href="#vista-datos" class="badge bg-dark border text-decoration-none">Vista del dataset</a>
+                <a href="#evidencia" class="badge bg-dark border text-decoration-none">10. Evidencia visual</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- 1. PROBLEMA Y CONTEXTO -->
+        <div class="col-12" id="problema">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-clipboard2-pulse me-2"></i>1. Problema y contexto</h4>
+                    <p>
+                        Colombia posee una amplia frontera agrícola y una gran diversidad de cultivos, pero enfrenta
+                        una <strong>paradoja</strong>: muchos territorios que producen alimentos presentan, al mismo tiempo,
+                        altos niveles de inseguridad alimentaria. Según la <strong>ENSIN 2015</strong>, más de la mitad de los
+                        hogares colombianos reportó algún grado de inseguridad alimentaria en el hogar, con mayor incidencia
+                        en zonas rurales y en varias regiones de la periferia.
+                    </p>
+                    <p class="mb-2">
+                        La <strong>disponibilidad</strong> de alimentos (uno de los pilares de la seguridad alimentaria) depende
+                        directamente de la producción agrícola local y regional. Sin embargo, esa producción no está distribuida
+                        de forma homogénea: se concentra en pocos departamentos y cultivos, muestra fuerte estacionalidad y es
+                        sensible a la variabilidad climática. Entender <em>dónde, cuánto y qué tan eficientemente</em> se produce
+                        es un paso previo para diagnosticar la vulnerabilidad alimentaria del territorio.
+                    </p>
+                    <div class="alert alert-info d-flex align-items-start mt-3" role="alert">
+                        <i class="bi bi-lightbulb fs-4 me-2"></i>
+                        <div>
+                            <strong>Del problema real al problema de datos:</strong>
+                            no buscamos "resolver el hambre", sino caracterizar con evidencia la oferta de producción agrícola
+                            municipal y sus patrones (por región, cultivo y tiempo) para identificar zonas de baja productividad
+                            o alta variabilidad que puedan asociarse a riesgo de disponibilidad alimentaria.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PREGUNTAS -->
+        <div class="col-12" id="preguntas">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-question-circle me-2"></i>2. Pregunta principal y secundarias</h4>
+
+                    <div class="p-3 border border-primary rounded bg-body mb-3">
+                        <h6 class="text-primary mb-1"><i class="bi bi-star-fill me-2"></i>Pregunta principal</h6>
+                        <p class="mb-0">
+                            ¿Cómo se comporta la oferta de producción agrícola municipal en Colombia (2019&ndash;2024) y qué patrones
+                            por región, cultivo y periodo permiten identificar territorios vulnerables en la
+                            <strong>disponibilidad</strong> de alimentos?
+                        </p>
+                    </div>
+
+                    <h6 class="text-secondary"><i class="bi bi-diagram-2 me-2"></i>Preguntas secundarias</h6>
+                    <ol class="mb-3">
+                        <li class="mb-2">¿Qué departamentos y municipios <strong>concentran</strong> la producción de cultivos básicos de la canasta alimentaria (maíz, arroz, papa, plátano, yuca, fríjol) y cómo ha evolucionado entre 2019 y 2024?</li>
+                        <li class="mb-2">¿Cómo varía el <strong>rendimiento (t/ha)</strong> entre regiones y cultivos, y qué zonas muestran productividad persistentemente baja?</li>
+                        <li class="mb-2">¿Qué cultivos y territorios presentan mayor <strong>variabilidad interanual</strong> de producción (posible señal de riesgo o estacionalidad climática)?</li>
+                        <li class="mb-2">¿Existe relación entre la <strong>diversidad de cultivos</strong> producida por municipio y la magnitud/estabilidad de su producción total?</li>
+                    </ol>
+
+                    <div class="alert alert-warning d-flex align-items-start mb-0" role="alert">
+                        <i class="bi bi-exclamation-triangle fs-5 me-2"></i>
+                        <div><strong>Evitamos</strong> preguntas demasiado generales ("¿por qué hay hambre?"), de opinión, o cuya respuesta ya está en el enunciado.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. NECESIDADES DE INFORMACIÓN -->
+        <div class="col-12" id="necesidades">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-search me-2"></i>3. Necesidades de información</h4>
+                    <p>Cada pregunta se traduce en necesidades concretas de información:</p>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-diagram-3 me-1"></i>Entidades</h6>
+                                <p class="mb-0 text-muted small">Municipio, departamento, cultivo, periodo/evento productivo.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-tags me-1"></i>Atributos</h6>
+                                <p class="mb-0 text-muted small">Área sembrada, área cosechada, producción (t), rendimiento (t/ha), grupo y ciclo del cultivo, código DANE.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-bounding-box me-1"></i>Cobertura</h6>
+                                <p class="mb-0 text-muted small">Nacional, desagregada a nivel municipal, con serie temporal 2019&ndash;2024.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-secondary mt-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Deseable vs. disponible:</strong> lo ideal sería cruzar producción con indicadores de seguridad
+                        alimentaria a nivel municipal y anual; en la práctica esos indicadores (ENSIN) existen a escala nacional/regional
+                        y con menor frecuencia, por lo que se incorporan como fuentes complementarias de contexto (ver Limitaciones).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. FUENTES Y RECOLECCIÓN -->
+        <div class="col-12" id="fuentes">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-database-down me-2"></i>4. Fuentes de datos y tipo de recolección</h4>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <div class="p-3 border border-secondary rounded bg-body h-100">
+                                <span class="badge bg-secondary mb-2">Primaria</span>
+                                <h6 class="mb-1">No aplicada</h6>
+                                <p class="mb-0 text-muted small">El proyecto no levanta encuestas ni sensores propios; el volumen y la cobertura nacional requerida no son abordables de primera mano por el equipo.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border border-success rounded bg-body h-100">
+                                <span class="badge bg-success mb-2">Secundaria (producción)</span>
+                                <h6 class="mb-1">EVA · MinAgricultura / UPRA</h6>
+                                <p class="mb-0 text-muted small">Evaluaciones Agropecuarias Municipales. Producción agrícola oficial a nivel <strong>municipal</strong>, consolidada por los municipios. Publicada en Datos Abiertos Colombia.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border border-success rounded bg-body h-100">
+                                <span class="badge bg-success mb-2">Secundaria (seguridad alim.)</span>
+                                <h6 class="mb-1">FAOSTAT · FAO</h6>
+                                <p class="mb-0 text-muted small">Indicadores de seguridad alimentaria y producción a nivel <strong>país</strong>, curados por la FAO a partir de fuentes nacionales oficiales. Descarga masiva en CSV con actualización anual.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-secondary d-flex align-items-start mt-3 mb-0" role="alert">
+                        <i class="bi bi-diagram-2 fs-5 me-2"></i>
+                        <div class="small">
+                            <strong>Escalas complementarias:</strong> EVA aporta el detalle <em>municipal</em> de la producción; FAOSTAT
+                            aporta la <em>serie nacional</em> de seguridad alimentaria (que EVA no mide). FAOSTAT es un caso límite
+                            entre secundaria y terciaria: al ser un <strong>agregador</strong> que compila datos de terceros (DANE, UNSD, IMF…),
+                            puede discutirse como terciaria, pero se usa como secundaria por su curaduría metodológica propia.
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary mt-4"><i class="bi bi-grid-3x3-gap me-1"></i>Datasets FAOSTAT según las 4 dimensiones de seguridad alimentaria</h6>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-sm table-striped table-bordered align-middle">
+                            <thead class="table-secondary text-dark">
+                                <tr><th>Código</th><th>Dataset</th><th>Dimensión / uso</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>FS</code></td><td>Suite of Food Security Indicators</td><td>Transversal (subalimentación PoU, inseguridad FIES, suficiencia de suministro)</td></tr>
+                                <tr><td><code>FBS</code></td><td>Food Balances (2010–)</td><td>Disponibilidad (kcal/cápita/día, suministro)</td></tr>
+                                <tr><td><code>CAHD</code></td><td>Cost &amp; Affordability of a Healthy Diet</td><td>Acceso económico</td></tr>
+                                <tr><td><code>CP</code></td><td>Consumer Price Indices (Food CPI)</td><td>Acceso / precios de alimentos</td></tr>
+                                <tr><td><code>QCL</code></td><td>Crops and livestock products</td><td>Producción nacional (contraste con EVA)</td></tr>
+                                <tr><td><code>SDGB</code></td><td>SDG Indicators (Objetivo 2)</td><td>Estabilidad / metas ODS de Hambre Cero</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h6 class="text-secondary mt-4"><i class="bi bi-tags me-1"></i>Clasificación de las fuentes</h6>
+                    <p class="mb-3">
+                        <span class="badge bg-secondary me-1">Primaria</span> no aplica (no se levantan datos propios) ·
+                        <span class="badge bg-success me-1">Secundaria</span> EVA y FAOSTAT (datos oficiales recolectados por terceros) ·
+                        <span class="badge bg-info text-dark me-1">Terciaria</span> Banco Mundial y el propio FAOSTAT en su rol de <em>agregador</em> que integra cifras de DANE, UNSD e IMF.
+                    </p>
+
+                    <h6 class="text-secondary mt-4"><i class="bi bi-link-45deg me-1"></i>Fuentes complementarias</h6>
+                    <ul class="mb-3">
+                        <li><strong>ENSIN</strong> (ICBF / MinSalud): prevalencia de inseguridad alimentaria en el hogar (referencia nacional, última publicada 2015).</li>
+                        <li><strong>DANE</strong>: pobreza monetaria e IPC de alimentos (acceso económico a los alimentos).</li>
+                        <li><strong>Agronet</strong> (MinAgricultura): repositorio con series históricas EVA y anuarios estadísticos.</li>
+                        <li><strong>Banco Mundial</strong>: contexto socioeconómico y comparación internacional.</li>
+                    </ul>
+
+                    <div class="alert alert-success d-flex align-items-start mb-0" role="alert">
+                        <i class="bi bi-patch-check fs-5 me-2"></i>
+                        <div>
+                            <strong>Justificación (pertinencia · confiabilidad · actualidad · cobertura):</strong>
+                            EVA responde directamente a las preguntas sobre producción y rendimiento (entidad oficial, metodología documentada,
+                            ~1.104 municipios y ~192 cultivos, datos abiertos reproducibles); <strong>FAOSTAT</strong> aporta la dimensión de
+                            seguridad alimentaria con series anuales curadas por la FAO. Juntas cubren producción + seguridad alimentaria con
+                            trazabilidad y reproducibilidad garantizadas.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4b. METODOLOGÍA / CÓMO OBTUVIMOS LOS DATOS -->
+        <div class="col-12" id="metodologia">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-gear-wide-connected me-2"></i>Metodología — cómo obtuvimos los datos (vía API)</h4>
+                    <p>La adquisición de datos <strong>no se hizo descargando archivos a mano</strong>, sino de forma programática y reproducible con la API de FAOSTAT y el paquete de Python <code>faostat</code>. Todo el proceso queda registrado en <code>scripts/fetch_faostat.py</code>, cumpliendo el principio de trazabilidad.</p>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-3"><div class="p-3 border rounded bg-body h-100"><span class="badge bg-primary mb-2">1. Autenticación</span><p class="mb-0 small text-muted">Token JWT del Portal para Desarrolladores de FAOSTAT (caduca a los 60 min), leído desde una variable de entorno, nunca escrito en el código.</p></div></div>
+                        <div class="col-md-3"><div class="p-3 border rounded bg-body h-100"><span class="badge bg-primary mb-2">2. Consulta</span><p class="mb-0 small text-muted"><code>get_data_df()</code> pidiendo solo Colombia (código FAO <code>44</code>) y el rango de años, para no traer el mundo entero.</p></div></div>
+                        <div class="col-md-3"><div class="p-3 border rounded bg-body h-100"><span class="badge bg-primary mb-2">3. Filtrado</span><p class="mb-0 small text-muted">Los cultivos básicos se seleccionan por <em>nombre</em> en pandas (el endpoint de códigos estaba restringido), documentando el filtro aplicado.</p></div></div>
+                        <div class="col-md-3"><div class="p-3 border rounded bg-body h-100"><span class="badge bg-primary mb-2">4. Guardado</span><p class="mb-0 small text-muted">CSV original sin modificar en <code>app/data/</code> + un JSON para el gráfico. Se conserva la fuente tal cual llegó.</p></div></div>
+                    </div>
+
+                    <h6 class="text-secondary mt-4"><i class="bi bi-code-slash me-1"></i>Consulta reproducible (extracto)</h6>
+                    <pre class="bg-body border rounded p-3 small mb-3"><code>import faostat
+faostat.set_requests_args(token=TOKEN, lang="es")
+
+# Seguridad alimentaria (dataset FS), solo Colombia (área FAO = 44)
+fs = faostat.get_data_df("FS", pars={"area": "44"})
+
+# Producción de cultivos (dataset QCL), Colombia + años
+qcl = faostat.get_data_df("QCL", pars={"area": "44", "year": range(2000, 2025)})</code></pre>
+
+                    <div class="alert alert-secondary d-flex align-items-start mb-0">
+                        <i class="bi bi-shield-check fs-5 me-2"></i>
+                        <div class="small">
+                            <strong>Trazabilidad:</strong> cualquiera puede reproducir la descarga corriendo el mismo script con su token.
+                            Fuente: API de FAOSTAT (<code>faostatservices.fao.org</code>).
+                            <span id="mData"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. DATASET INICIAL -->
+        <div class="col-12" id="dataset">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-table me-2"></i>5. Descripción del dataset inicial</h4>
+                    <h6 class="text-primary"><i class="bi bi-1-circle me-1"></i>Dataset principal — Producción agrícola (municipal)</h6>
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <table class="table table-dark table-striped table-bordered align-middle">
+                                <tbody>
+                                    <tr><th scope="row" style="width:38%">Nombre</th><td>Evaluaciones Agropecuarias Municipales &ndash; EVA. 2019&ndash;2024. Base Agrícola</td></tr>
+                                    <tr><th scope="row">Productor</th><td>Min. de Agricultura y Desarrollo Rural / UPRA</td></tr>
+                                    <tr><th scope="row">Plataforma</th><td>Datos Abiertos Colombia (datos.gov.co)</td></tr>
+                                    <tr><th scope="row">Identificador</th><td><code>uejq-wxrr</code></td></tr>
+                                    <tr><th scope="row">Formato</th><td>CSV / API SODA (Socrata)</td></tr>
+                                    <tr><th scope="row">Unidad de análisis</th><td>Municipio · Cultivo · Periodo</td></tr>
+                                    <tr><th scope="row">Cobertura</th><td>~1.104 municipios · ~192 cultivos · 2019&ndash;2024</td></tr>
+                                    <tr><th scope="row">Volumen aprox.</th><td>Cientos de miles de registros (verificar en descarga)</td></tr>
+                                    <tr><th scope="row">Licencia</th><td>Datos abiertos (uso libre con atribución)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-signpost-split me-1"></i>Trazabilidad</h6>
+                                <ul class="small text-muted mb-2">
+                                    <li>Conservar el CSV original sin modificar; trabajar sobre copias/procesos reproducibles.</li>
+                                    <li>Registrar <strong>fecha de descarga</strong> y URL exacta de la fuente.</li>
+                                    <li>Documentar filtros aplicados (p. ej. selección de cultivos básicos).</li>
+                                </ul>
+                                <p class="small mb-0">
+                                    <i class="bi bi-box-arrow-up-right me-1"></i>
+                                    <a href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">Página del dataset en datos.gov.co</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4 border-secondary">
+                    <h6 class="text-primary"><i class="bi bi-2-circle me-1"></i>Dataset complementario — Seguridad alimentaria (nacional)</h6>
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <table class="table table-dark table-striped table-bordered align-middle">
+                                <tbody>
+                                    <tr><th scope="row" style="width:38%">Nombre</th><td>FAOSTAT · Suite of Food Security Indicators</td></tr>
+                                    <tr><th scope="row">Productor</th><td>FAO — Statistics Division (ESS)</td></tr>
+                                    <tr><th scope="row">Código</th><td><code>FS</code></td></tr>
+                                    <tr><th scope="row">Formato</th><td>CSV normalizado (descarga masiva en ZIP)</td></tr>
+                                    <tr><th scope="row">Unidad de análisis</th><td>País · Indicador · Año</td></tr>
+                                    <tr><th scope="row">Cobertura</th><td>Global (filtrar Colombia); 4 dimensiones de seg. alimentaria</td></tr>
+                                    <tr><th scope="row">Volumen</th><td>287.735 registros (base global)</td></tr>
+                                    <tr><th scope="row">Actualización</th><td>Anual (última: 2026-07)</td></tr>
+                                    <tr><th scope="row">Licencia</th><td>CC BY-4.0 (atribución a FAO)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="col-lg-5">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-funnel me-1"></i>Preparación</h6>
+                                <ul class="small text-muted mb-0">
+                                    <li>Descargar el ZIP <code>FS</code> desde bulks-faostat.fao.org y filtrar <strong>Area = Colombia</strong>.</li>
+                                    <li>Seleccionar indicadores clave: prevalencia de subalimentación (PoU) e inseguridad alimentaria (FIES moderada/grave).</li>
+                                    <li>Alinear el rango de años con la serie EVA para permitir la lectura conjunta producción ↔ seguridad alimentaria.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. DICCIONARIO DE DATOS -->
+        <div class="col-12" id="diccionario">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-journal-code me-2"></i>6. Diccionario de datos</h4>
+                    <p class="text-muted small">Documenta las 12 columnas <strong>reales</strong> del dataset descargado (FAOSTAT normalizado). Incluye los 7 atributos exigidos: nombre, descripción, tipo, dominio/unidad, fuente, ejemplo y observaciones.</p>
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-hover table-bordered align-middle small">
+                            <thead class="table-secondary text-dark">
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Descripción</th>
+                                    <th>Tipo</th>
+                                    <th>Dominio / Unidad</th>
+                                    <th>Fuente</th>
+                                    <th>Ejemplo</th>
+                                    <th>Observaciones / restricciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><code>Código del ámbito</code></td><td>Código del dataset FAOSTAT</td><td>Categórico (nominal)</td><td>FS, QCL</td><td>FAOSTAT</td><td>FS</td><td>Constante dentro de cada archivo</td></tr>
+                                <tr><td><code>Ámbito</code></td><td>Nombre del dominio de datos</td><td>Categórico (nominal)</td><td>Texto</td><td>FAOSTAT</td><td>Datos de Seguridad Alimentaria</td><td>Redundante con el código</td></tr>
+                                <tr><td><code>Código del área</code></td><td>Código FAO del país</td><td>Categórico (nominal)</td><td>Numérico FAO</td><td>FAOSTAT</td><td>44</td><td>44 = Colombia (fijo en este proyecto)</td></tr>
+                                <tr><td><code>Área</code></td><td>País / territorio</td><td>Categórico (nominal)</td><td>Texto</td><td>FAOSTAT</td><td>Colombia</td><td>Filtrado solo a Colombia</td></tr>
+                                <tr><td><code>Código del elemento</code></td><td>Código de la medida o indicador</td><td>Categórico (nominal)</td><td>Numérico FAO</td><td>FAOSTAT</td><td>5510</td><td>5510=Producción, 5419=Rendimiento</td></tr>
+                                <tr><td><code>Elemento</code></td><td>Medida o indicador</td><td>Categórico (nominal)</td><td>Texto</td><td>FAOSTAT</td><td>Producción</td><td>En FS suele ser "Valor"</td></tr>
+                                <tr><td><code>Código del producto</code></td><td>Código del cultivo o indicador</td><td>Categórico (nominal)</td><td>Numérico FAO</td><td>FAOSTAT</td><td>56</td><td>Sistema de códigos FAO/CPC</td></tr>
+                                <tr><td><code>Producto</code></td><td>Cultivo (QCL) o indicador (FS)</td><td>Categórico (nominal)</td><td>Texto</td><td>FAOSTAT</td><td>Maíz</td><td>En FS es el nombre del indicador</td></tr>
+                                <tr><td><code>Código del año</code></td><td>Código del periodo</td><td>Temporal</td><td>AAAA o AAAAAAAA</td><td>FAOSTAT</td><td>20002002</td><td>En FS codifica trienios</td></tr>
+                                <tr><td><code>Año</code></td><td>Año o trienio de referencia</td><td>Temporal</td><td>1961–2024</td><td>FAOSTAT</td><td>2000-2002</td><td>FS reporta promedios de 3 años</td></tr>
+                                <tr><td><code>Unidad</code></td><td>Unidad de medida del valor</td><td>Categórico (nominal)</td><td>t, %, kg/ha…</td><td>FAOSTAT</td><td>toneladas</td><td>Varía según el elemento</td></tr>
+                                <tr><td><code>Valor</code></td><td>Valor medido</td><td>Numérico (continuo)</td><td>&ge; 0</td><td>FAOSTAT</td><td>27638.53</td><td>Puede faltar en algunos años</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="small text-muted mb-0"><i class="bi bi-info-circle me-1"></i>El dataset municipal EVA (producción por municipio) se documentará e integrará en la siguiente iteración; su diccionario seguirá el mismo formato de 7 atributos.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. CARACTERIZACIÓN DE REGISTROS Y VARIABLES -->
+        <div class="col-12" id="caracterizacion">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-rulers me-2"></i>7. Registros y variables</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary">Unidad de análisis</h6>
+                                <p class="mb-0 small text-muted">Combinación <strong>municipio · cultivo · periodo</strong>: la oferta de un cultivo, en un municipio, en un semestre.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary">Registro</h6>
+                                <p class="mb-0 small text-muted">Una fila = una observación de esa unidad, con sus áreas, producción y rendimiento.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary">Variable</h6>
+                                <p class="mb-0 small text-muted">Cada característica medida por registro (área, producción, rendimiento, cultivo…).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="text-secondary mt-4"><i class="bi bi-collection me-1"></i>Tipos de variables</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="p-3 border border-info rounded bg-body h-100">
+                                <span class="badge bg-info text-dark mb-2">Categóricas</span>
+                                <p class="mb-0 small">Departamento, municipio, cultivo, grupo, ciclo, estado físico. (Periodo es ordinal.)</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border border-success rounded bg-body h-100">
+                                <span class="badge bg-success mb-2">Numéricas</span>
+                                <p class="mb-0 small">Área sembrada, área cosechada, producción, rendimiento (continuas).</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="p-3 border border-warning rounded bg-body h-100">
+                                <span class="badge bg-warning text-dark mb-2">Temporales / espaciales</span>
+                                <p class="mb-0 small">Año y periodo (tiempo); códigos y nombres DANE (espacio/geografía).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. CALIDAD INICIAL -->
+        <div class="col-12" id="calidad">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-clipboard2-check me-2"></i>8. Diagnóstico inicial de calidad</h4>
+                    <p class="text-muted small">En R1 solo <strong>diagnosticamos</strong>; la limpieza profunda se hará en un entregable posterior.</p>
+                    <div class="row g-2 mb-3" id="qMetrics">
+                        <div class="col-6 col-md-3"><div class="p-2 border rounded bg-body text-center"><div class="fs-5 fw-bold text-primary" id="mFsRows">—</div><div class="small text-muted">filas FS (seg. alim.)</div></div></div>
+                        <div class="col-6 col-md-3"><div class="p-2 border rounded bg-body text-center"><div class="fs-5 fw-bold text-primary" id="mQclRows">—</div><div class="small text-muted">filas QCL (básicos)</div></div></div>
+                        <div class="col-6 col-md-3"><div class="p-2 border rounded bg-body text-center"><div class="fs-5 fw-bold" id="mFsMissing">—</div><div class="small text-muted">celdas vacías FS</div></div></div>
+                        <div class="col-6 col-md-3"><div class="p-2 border rounded bg-body text-center"><div class="fs-5 fw-bold" id="mFsDup">—</div><div class="small text-muted">duplicados FS</div></div></div>
+                    </div>
+                    <p class="small text-muted"><i class="bi bi-check2-circle me-1"></i>Métricas calculadas automáticamente sobre los datos descargados.</p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-pie-chart me-1"></i>Completitud</h6>
+                                <p class="mb-0 small text-muted">Rendimiento ausente o 0 cuando el área cosechada es 0; posibles vacíos en producción para siembras recientes.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-files me-1"></i>Unicidad</h6>
+                                <p class="mb-0 small text-muted">Revisar duplicados por la clave municipio–cultivo–periodo y por desagregaciones de sistema productivo.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-input-cursor-text me-1"></i>Consistencia</h6>
+                                <p class="mb-0 small text-muted">Nombres de municipios/cultivos con tildes, mayúsculas y espacios variables; separadores decimales; codificación de texto.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-body h-100">
+                                <h6 class="text-primary"><i class="bi bi-shield-exclamation me-1"></i>Validez</h6>
+                                <p class="mb-0 small text-muted">Área cosechada &gt; sembrada, valores negativos, rendimientos atípicos; verificar RENDIMIENTO &asymp; PRODUCCIÓN / ÁREA_COSECHADA. <strong>Hallazgo real:</strong> el filtro de cultivos por nombre capturó derivados (p. ej. "Aceite, maíz"), que deben excluirse en la limpieza.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9. LIMITACIONES -->
+        <div class="col-12" id="limitaciones">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-cone-striped me-2"></i>9. Limitaciones y consideraciones</h4>
+                    <ul class="mb-0">
+                        <li class="mb-2"><strong>Autorreporte municipal:</strong> EVA se construye con información reportada por los municipios, lo que puede generar subregistro y heterogeneidad en la calidad entre territorios.</li>
+                        <li class="mb-2"><strong>No capta autoconsumo ni economía informal:</strong> parte de la producción para consumo del hogar puede quedar fuera del registro.</li>
+                        <li class="mb-2"><strong>Disponibilidad &ne; acceso:</strong> la seguridad alimentaria también depende del acceso económico y del uso; la producción mide sobre todo la <em>disponibilidad</em>.</li>
+                        <li class="mb-2"><strong>Distinta escala geográfica:</strong> FAOSTAT ofrece la seguridad alimentaria a nivel <em>país</em> y EVA la producción a nivel <em>municipal</em>. El cruce directo es nacional; para el municipio, la seguridad alimentaria solo puede aproximarse con referencias como ENSIN (no anual, última 2015).</li>
+                        <li class="mb-0"><strong>Sesgo climático/coyuntural:</strong> años con fenómenos como El Niño/La Niña afectan producción y rendimientos, y deben interpretarse con cautela.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9b. VISTA DEL DATASET -->
+        <div class="col-12" id="vista-datos">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-table me-2"></i>Explorador del dataset (datos reales, con filtros)</h4>
+                    <div id="dsMissing" class="alert alert-warning d-none">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Aún no hay datos cargados. Ejecuta <code>python scripts/fetch_faostat.py</code> para generar los JSON en <code>app/static/data/</code>.
+                    </div>
+                    <div id="dsWrap">
+                    <p class="small text-muted">Carga por páginas y filtros para no mostrar todos los registros de golpe: el dataset completo está disponible, pero solo se pinta la página que estás viendo.</p>
+
+                    <div class="row g-2 align-items-end mb-3">
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small mb-1">Dataset</label>
+                            <select id="dsSelect" class="form-select form-select-sm bg-dark text-light border-secondary">
+                                <option value="fs">Seguridad alimentaria (FS)</option>
+                                <option value="qcl_basicos">Producción · cultivos básicos</option>
+                                <option value="qcl">Producción · completo (QCL)</option>
+                            </select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small mb-1">Elemento</label>
+                            <select id="fElemento" class="form-select form-select-sm bg-dark text-light border-secondary"><option value="">(todos)</option></select>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <label class="form-label small mb-1">Producto / indicador</label>
+                            <select id="fProducto" class="form-select form-select-sm bg-dark text-light border-secondary"><option value="">(todos)</option></select>
+                        </div>
+                        <div class="col-6 col-md-1">
+                            <label class="form-label small mb-1">Año</label>
+                            <select id="fAnio" class="form-select form-select-sm bg-dark text-light border-secondary"><option value="">(todos)</option></select>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <label class="form-label small mb-1">Buscar</label>
+                            <input id="fQ" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="texto libre...">
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mb-3">
+                        <button id="fClear" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle me-1"></i>Limpiar</button>
+                        <span id="dsInfo" class="ms-auto small text-muted align-self-center"></span>
+                    </div>
+
+                    <div class="table-responsive" style="max-height:460px;">
+                        <table class="table table-dark table-sm table-striped table-bordered align-middle small mb-0">
+                            <thead class="table-secondary text-dark position-sticky top-0"><tr id="dsHead"></tr></thead>
+                            <tbody id="dsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <nav class="d-flex align-items-center justify-content-between mt-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <button id="fPrev" class="btn btn-sm btn-outline-primary"><i class="bi bi-chevron-left"></i></button>
+                            <span id="dsPage" class="small text-muted"></span>
+                            <button id="fNext" class="btn btn-sm btn-outline-primary"><i class="bi bi-chevron-right"></i></button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <label class="small text-muted mb-0">Filas por página</label>
+                            <select id="fSize" class="form-select form-select-sm bg-dark text-light border-secondary" style="width:auto;">
+                                <option>10</option><option selected>20</option><option>50</option><option>100</option>
+                            </select>
+                        </div>
+                    </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. EVIDENCIA VISUAL -->
+        <div class="col-12" id="evidencia">
+            <div class="card border-0 shadow-sm bg-dark-subtle">
+                <div class="card-body">
+                    <h4 class="card-title text-info"><i class="bi bi-graph-up me-2"></i>10. Evidencia visual — Seguridad alimentaria en Colombia</h4>
+                    <p class="text-muted small">Serie histórica de indicadores FAOSTAT (dataset <code>FS</code>). Se genera al ejecutar <code>scripts/fetch_faostat.py</code>.</p>
+                    <div id="fsChartFallback" class="alert alert-warning d-none">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Aún no hay datos cargados. Ejecuta <code>python scripts/fetch_faostat.py</code> (con tu token de FAOSTAT) para generar el gráfico.
+                    </div>
+                    <div style="position:relative; height:360px;">
+                        <canvas id="fsChart"></canvas>
+                    </div>
+                    <p class="text-muted small mt-2 mb-0"><i class="bi bi-database me-1"></i>Fuente: FAOSTAT · Suite of Food Security Indicators (FAO). Elaboración propia.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cierre -->
+        <div class="col-12">
+            <div class="alert alert-primary d-flex align-items-center mb-0" role="alert">
+                <i class="bi bi-flag fs-4 me-2"></i>
+                <div>
+                    <strong>Producto R1:</strong> el grupo entiende el problema y cuenta con bases de datos justificables
+                    (EVA + FAOSTAT) para iniciar el proceso de minería. R1 no busca aún el mejor modelo, sino una base sólida para descubrir conocimiento.
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    const canvas = document.getElementById('fsChart');
+    const fallback = document.getElementById('fsChartFallback');
+    if (!canvas) return;
+    fetch("{{ url_for('static', filename='data/faostat_fs_colombia.json') }}")
+        .then(r => { if (!r.ok) throw new Error('sin datos'); return r.json(); })
+        .then(cfg => {
+            const palette = ['#0d6efd', '#dc3545', '#20c997', '#ffc107'];
+            new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: cfg.labels,
+                    datasets: cfg.datasets.map((d, i) => ({
+                        label: d.label,
+                        data: d.data,
+                        borderColor: palette[i % palette.length],
+                        backgroundColor: palette[i % palette.length] + '33',
+                        spanGaps: true,
+                        tension: 0.3,
+                        pointRadius: 2
+                    }))
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#dee2e6' } } },
+                    scales: {
+                        x: { ticks: { color: '#adb5bd' }, grid: { color: '#343a40' } },
+                        y: { ticks: { color: '#adb5bd' }, grid: { color: '#343a40' },
+                             title: { display: true, text: '% de la población', color: '#adb5bd' } }
+                    }
+                }
+            });
+        })
+        .catch(() => {
+            canvas.classList.add('d-none');
+            if (fallback) fallback.classList.remove('d-none');
+        });
+})();
+</script>
+
+<script>
+// --- Explorador del dataset: carga JSON estáticos y filtra/pagina en el navegador ---
+(function () {
+    const dsSelect = document.getElementById('dsSelect');
+    if (!dsSelect) return;
+    const files = {
+        fs: "{{ url_for('static', filename='data/fs.json') }}",
+        qcl_basicos: "{{ url_for('static', filename='data/qcl_basicos.json') }}",
+        qcl: "{{ url_for('static', filename='data/qcl.json') }}"
+    };
+    const fEl = document.getElementById('fElemento');
+    const fPr = document.getElementById('fProducto');
+    const fAn = document.getElementById('fAnio');
+    const fQ = document.getElementById('fQ');
+    const fSize = document.getElementById('fSize');
+    const head = document.getElementById('dsHead');
+    const body = document.getElementById('dsBody');
+    const info = document.getElementById('dsInfo');
+    const pageLbl = document.getElementById('dsPage');
+    const cache = {};
+    let current = null, page = 1;
+
+    const idx = (cols, name) => cols.indexOf(name);
+
+    function fillSelect(sel, values) {
+        sel.innerHTML = '<option value="">(todos)</option>';
+        values.forEach(v => {
+            const o = document.createElement('option');
+            o.value = v; o.textContent = v.length > 60 ? v.slice(0, 60) + '…' : v;
+            sel.appendChild(o);
+        });
+    }
+
+    function distinct(rows, i) {
+        return [...new Set(rows.map(r => r[i]).filter(x => x !== ''))].sort();
+    }
+
+    function applyFilters() {
+        const cols = current.columns, rows = current.rows;
+        const iEl = idx(cols, 'Elemento'), iPr = idx(cols, 'Producto'), iAn = idx(cols, 'Año');
+        const q = fQ.value.trim().toLowerCase();
+        return rows.filter(r => {
+            if (fEl.value && iEl >= 0 && r[iEl] !== fEl.value) return false;
+            if (fPr.value && iPr >= 0 && r[iPr] !== fPr.value) return false;
+            if (fAn.value && iAn >= 0 && r[iAn] !== fAn.value) return false;
+            if (q && !r.some(c => String(c).toLowerCase().includes(q))) return false;
+            return true;
+        });
+    }
+
+    function render() {
+        if (!current) return;
+        const filtered = applyFilters();
+        const size = parseInt(fSize.value, 10);
+        const pages = Math.max(1, Math.ceil(filtered.length / size));
+        if (page > pages) page = pages;
+        const start = (page - 1) * size;
+        const slice = filtered.slice(start, start + size);
+
+        head.innerHTML = '';
+        current.columns.forEach(c => { const th = document.createElement('th'); th.textContent = c; head.appendChild(th); });
+        body.innerHTML = '';
+        slice.forEach(r => {
+            const tr = document.createElement('tr');
+            r.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
+            body.appendChild(tr);
+        });
+        info.textContent = filtered.length + ' registros coinciden (de ' + current.rows.length + ')';
+        pageLbl.textContent = 'Página ' + page + ' de ' + pages;
+    }
+
+    function loadDataset(key) {
+        const done = data => {
+            current = data;
+            const cols = data.columns;
+            fillSelect(fEl, idx(cols, 'Elemento') >= 0 ? distinct(data.rows, idx(cols, 'Elemento')) : []);
+            fillSelect(fPr, idx(cols, 'Producto') >= 0 ? distinct(data.rows, idx(cols, 'Producto')) : []);
+            fillSelect(fAn, idx(cols, 'Año') >= 0 ? distinct(data.rows, idx(cols, 'Año')) : []);
+            page = 1; render();
+        };
+        if (cache[key]) { done(cache[key]); return; }
+        fetch(files[key]).then(r => { if (!r.ok) throw new Error(); return r.json(); })
+            .then(d => { cache[key] = d; done(d); })
+            .catch(() => { info.textContent = 'No se pudo cargar el dataset (¿corriste el script?).'; });
+    }
+
+    dsSelect.addEventListener('change', () => loadDataset(dsSelect.value));
+    [fEl, fPr, fAn, fSize].forEach(el => el.addEventListener('change', () => { page = 1; render(); }));
+    let t; fQ.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => { page = 1; render(); }, 300); });
+    document.getElementById('fClear').addEventListener('click', () => { fEl.value=''; fPr.value=''; fAn.value=''; fQ.value=''; page=1; render(); });
+    document.getElementById('fPrev').addEventListener('click', () => { if (page > 1) { page--; render(); } });
+    document.getElementById('fNext').addEventListener('click', () => { page++; render(); });
+
+    loadDataset('fs');
+
+    // --- Métricas de calidad (calculadas en el navegador) ---
+    function metrics(rows) {
+        let missing = 0; const seen = new Set(); let dup = 0;
+        rows.forEach(r => {
+            r.forEach(c => { if (c === '' || c === null) missing++; });
+            const k = r.join('||'); if (seen.has(k)) dup++; else seen.add(k);
+        });
+        return { n: rows.length, missing, dup };
+    }
+    function color(el, ok) { if (el) el.classList.add(ok ? 'text-success' : 'text-warning'); }
+
+    fetch(files.fs).then(r => r.json()).then(d => {
+        const m = metrics(d.rows);
+        document.getElementById('mFsRows').textContent = m.n;
+        document.getElementById('mFsMissing').textContent = m.missing; color(document.getElementById('mFsMissing'), m.missing === 0);
+        document.getElementById('mFsDup').textContent = m.dup; color(document.getElementById('mFsDup'), m.dup === 0);
+    }).catch(() => {
+        document.getElementById('dsMissing').classList.remove('d-none');
+        const w = document.getElementById('dsWrap'); if (w) w.classList.add('d-none');
+    });
+    fetch(files.qcl_basicos).then(r => r.json()).then(d => {
+        document.getElementById('mQclRows').textContent = d.rows.length;
+    }).catch(() => {});
+})();
+</script>
 {% endblock %}
