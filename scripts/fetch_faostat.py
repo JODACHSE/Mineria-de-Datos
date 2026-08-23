@@ -123,20 +123,23 @@ def fetch_food_security():
     year_col = _find_col(df, ["Year", "Año"])
     val_col = _find_col(df, ["Value", "Valor"])
 
-    def serie(keywords):
-        mask = df[item_col].str.lower().str.contains("|".join(keywords), na=False)
-        sub = df[mask].dropna(subset=[val_col]).copy()
+    def serie(contains_all):
+        """Selecciona un ÚNICO indicador que cumpla todos los términos (evita mezclar
+        '%', 'millones' y 'kcal' del mismo tema)."""
+        mask = pd.Series(True, index=df.index)
+        for kw in contains_all:
+            mask &= df[item_col].str.lower().str.contains(kw, na=False)
+        sub = df[mask]
+        if sub[item_col].nunique() > 1:            # si queda más de uno, el más frecuente
+            sub = sub[sub[item_col] == sub[item_col].value_counts().idxmax()]
+        sub = sub.dropna(subset=[val_col]).copy()
         sub["yr"] = pd.to_numeric(sub[year_col].astype(str).str[:4], errors="coerce")
         sub = sub.dropna(subset=["yr"]).sort_values("yr")
         return sub[["yr", val_col]]
 
-    pou = serie(["subaliment", "undernourish"])          # Prevalencia de subalimentación (%)
-    fies = serie(["moderada o grave", "grave o moderada", "moderate or severe"])  # FIES mod+grave (%)
+    pou = serie(["prevalencia de la subalimentación", "%"])                    # PoU (%)
+    fies = serie(["moderada o grave", "población total", "%"])                 # FIES mod+grave (%)
     print(f"     Indicadores encontrados: subalimentación={len(pou)} pts, FIES={len(fies)} pts")
-    if len(pou) == 0 and len(fies) == 0:
-        print("     [diag] Nombres de indicador disponibles (revisa cuáles usar):")
-        for name in sorted(df[item_col].dropna().unique())[:60]:
-            print("        -", name)
 
     years = sorted(set(pou["yr"]).union(set(fies["yr"])))
     chart = {
