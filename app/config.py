@@ -34,7 +34,7 @@ class Config:
     # Repositorio público en GitHub. Placeholder: reemplazar por la URL real
     # una vez creado el repositorio (único lugar que hay que tocar; se usa
     # en el botón del navbar y en el footer).
-    GITHUB_REPO_URL = os.environ.get("GITHUB_REPO_URL", "#")
+    GITHUB_REPO_URL = os.environ.get("GITHUB_REPO_URL", "https://github.com/JODACHSE/Mineria-de-Datos")
 
     DEVELOPERS = [
         {

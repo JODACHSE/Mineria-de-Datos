@@ -1,8 +1,3 @@
-"""Punto de entrada de la aplicación Flask.
-
-Uso:
-    python run.py
-"""
 import os
 
 from dotenv import load_dotenv
