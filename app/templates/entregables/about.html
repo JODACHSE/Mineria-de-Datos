@@ -1,0 +1,68 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Sobre nosotros — {{ brand_name }}{% endblock %}
+
+{% block content %}
+
+<section class="section container" style="padding-top:3rem;">
+  <span class="eyebrow reveal">Sobre nosotros</span>
+  <h1 class="reveal" style="font-size:clamp(2rem,5.4vw,3.2rem);">Somos <span class="accent">{{ brand_name }}</span></h1>
+  <p class="reveal" style="max-width:56ch;">
+    Un equipo de dos estudiantes que construyó este proyecto para el curso de
+    Minería de Datos: caracterizar la producción agrícola de Colombia y su relación
+    con la disponibilidad de alimentos, con datos abiertos y reproducibles.
+  </p>
+</section>
+
+<section class="section container">
+  <div class="card-grid cols-2 reveal-stagger">
+    {% for dev in developers %}
+    <div class="neu card dev-card">
+      <div class="dev-card__avatar">{{ dev.iniciales }}</div>
+      <h3 class="card__title" style="margin-top:1rem;">{{ dev.nombre }}</h3>
+      <p class="card__text">{{ dev.rol }} · {{ universidad_nombre }}</p>
+      <div style="display:flex; gap:.6rem; flex-wrap:wrap; margin-top:1rem;">
+        <a href="{{ dev.github_url }}" target="_blank" rel="noopener" class="neu-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.57.1.78-.25.78-.55 0-.27-.01-1.16-.02-2.11-3.2.7-3.88-1.36-3.88-1.36-.52-1.34-1.28-1.69-1.28-1.69-1.04-.72.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.53-2.55-.29-5.24-1.28-5.24-5.68 0-1.25.44-2.28 1.18-3.08-.12-.29-.51-1.47.11-3.06 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 5.74 0c2.19-1.49 3.15-1.18 3.15-1.18.62 1.59.23 2.77.11 3.06.74.8 1.18 1.83 1.18 3.08 0 4.41-2.7 5.38-5.27 5.67.42.36.78 1.07.78 2.17 0 1.56-.01 2.82-.01 3.2 0 .31.2.66.79.55A10.52 10.52 0 0 0 23.5 12c0-6.35-5.15-11.5-11.5-11.5Z"/></svg>
+          github.com/{{ dev.github_user }}
+        </a>
+        <a href="mailto:{{ dev.email }}" class="neu-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          {{ dev.email }}
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="neu reveal" style="margin-top:2rem; padding:clamp(1.6rem,4vw,2.4rem); display:flex; align-items:center; gap:1.4rem; flex-wrap:wrap;">
+    <img src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="Escudo de Wololo" style="width:72px; height:72px; border-radius:50%;">
+    <div>
+      <span class="eyebrow">Afiliación académica</span>
+      <h3 class="card__title" style="margin:.4rem 0;">{{ universidad_nombre }}</h3>
+      <p class="card__text" style="margin:0;">
+        Proyecto desarrollado en el marco del curso de Minería de Datos.
+        <a href="{{ universidad_url }}" target="_blank" rel="noopener" style="color:var(--accent);">Visitar sitio institucional →</a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="section container">
+  <div class="section__head reveal">
+    <div>
+      <span class="eyebrow">El nombre</span>
+      <h2 class="section__title">¿Por qué Wololo?</h2>
+    </div>
+  </div>
+  <div class="neu-flat card reveal">
+    <p class="card__text" style="font-size:.95rem;">
+      "Wololo" es el sonido del hechizo de conversión de los sacerdotes en
+      <em>Age of Empires II</em>. Nos gustó el nombre porque resume bien lo
+      que nos gusta hacer: tomar una idea y convertirla en algo real. Este
+      proyecto es un ejemplo de eso.
+    </p>
+  </div>
+</section>
+
+{% endblock %}

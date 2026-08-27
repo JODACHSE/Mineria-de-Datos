@@ -1,5 +1,58 @@
-<footer class="footer mt-auto py-3 bg-dark text-white border-top border-secondary text-center">
-    <div class="container">
-        <span class="text-muted"><i class="bi bi-code-slash me-1"></i> Minería de Datos &copy; 2026 - Universidad de Cundinamarca</span>
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <a href="{{ url_for('project.index') }}" class="brand" style="margin-bottom:1rem;">
+          <img class="brand__mark" src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="Escudo de Wololo" style="width:30px;height:30px;">
+          <span class="brand__text-group">
+            <span class="brand__text">{{ brand_name | upper }}</span>
+          </span>
+        </a>
+        <p style="max-width:34ch; font-size:.88rem;">
+          Proyecto académico del curso de Minería de Datos en la
+          {{ universidad_nombre }}. Caracteriza la oferta de producción
+          agrícola en Colombia y su relación con la disponibilidad de
+          alimentos, a partir de fuentes oficiales abiertas.
+        </p>
+      </div>
+      <div>
+        <h4 class="font-mono">Proyecto</h4>
+        <ul>
+          <li><a href="{{ url_for('project.index') }}">Inicio</a></li>
+          <li><a href="{{ url_for('entregables.index') }}">Entregables</a></li>
+          <li><a href="{{ url_for('project.r1') }}">Reporte R1</a></li>
+          <li><a href="{{ url_for('project.r1') }}#limitaciones">Limitaciones</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-mono">Equipo</h4>
+        <ul>
+          <li><a href="{{ url_for('entregables.about') }}">Sobre nosotros</a></li>
+          {% for dev in developers %}
+          <li><a href="{{ dev.github_url }}" target="_blank" rel="noopener">{{ dev.nombre.split(' ')[0] }} {{ dev.nombre.split(' ')[1] }}</a></li>
+          {% endfor %}
+          <li><a href="{{ universidad_url }}" target="_blank" rel="noopener">{{ universidad_nombre }}</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-mono">Fuentes &amp; API</h4>
+        <ul>
+          <li><a href="{{ github_repo_url }}" target="_blank" rel="noopener">Repositorio en GitHub</a></li>
+          <li><a href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">EVA · MinAgricultura/UPRA</a></li>
+          <li><a href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT · FAO</a></li>
+          <li><a href="{{ url_for('project.api_dataset', name='qcl_basicos') }}">/api/dataset/qcl_basicos</a></li>
+          <li><a href="{{ url_for('project.api_quality', name='fs') }}">/api/quality/fs</a></li>
+        </ul>
+      </div>
     </div>
+
+    <div class="footer__bottom">
+      <span>© <span id="current-year">2026</span> {{ brand_name }} — {{ proyecto_tema | capitalize }}. Datos: FAO / MinAgricultura, uso académico.</span>
+      <span>Construido con Flask · Chart.js · Neumorfismo</span>
+    </div>
+  </div>
 </footer>
+
+<button class="icon-btn back-to-top" id="back-to-top" aria-label="Volver arriba">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>

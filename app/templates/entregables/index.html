@@ -1,0 +1,54 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Entregables — {{ brand_name }} · {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block content %}
+
+<section class="section container" style="padding-top:3rem;">
+  <span class="eyebrow reveal">Hoja de ruta del proyecto</span>
+  <h1 class="reveal" style="font-size:clamp(2rem,5.4vw,3.2rem);">Ocho entregables,<br><span class="accent">un solo territorio</span></h1>
+  <p class="reveal" style="max-width:56ch;">
+    El proyecto avanza en ocho entregables, desde entender el problema hasta comunicar
+    resultados accionables. Hoy solo <strong>R1</strong> está publicado; los demás aún
+    no se han definido y se irán habilitando a medida que el curso avanza.
+  </p>
+</section>
+
+<section class="section container">
+  <div class="card-grid cols-2 reveal-stagger">
+    {% for e in entregables %}
+    <div class="neu-flat card entregable-card{{ ' is-live' if e.estado == 'completado' else '' }}">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:.8rem;">
+        <span class="tag {{ 'leaf' if e.estado == 'completado' else 'chili' }}">{{ 'Disponible' if e.estado == 'completado' else 'Próximamente' }}</span>
+        {% if e.url_endpoint %}<a href="{{ url_for(e.url_endpoint) }}" style="font-family:var(--font-mono); font-size:.78rem; color:var(--accent);">Ver →</a>{% endif %}
+      </div>
+      <p class="entregable-card__num">Entregable {{ loop.index }}</p>
+      <h3 class="entregable-card__title">{{ e.codigo }}-{{ e.titulo }}</h3>
+      <p class="card__text">{{ e.resumen }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="section container">
+  <div class="section__head reveal">
+    <div>
+      <span class="eyebrow">Metodología</span>
+      <h2 class="section__title">Cómo trabajamos</h2>
+    </div>
+    <p style="max-width:36ch; margin:0;">
+      Una adaptación de CRISP-DM guía el orden de los ocho entregables.
+    </p>
+  </div>
+  <div class="card-grid cols-3 reveal-stagger">
+    {% for titulo, texto in fases %}
+    <div class="neu card">
+      <span class="tag amber">Fase {{ loop.index }}</span>
+      <h3 class="card__title" style="margin-top:.7rem;">{{ titulo }}</h3>
+      <p class="card__text">{{ texto }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

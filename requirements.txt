@@ -1,5 +1,6 @@
-flask
-python-dotenv
-gunicorn
-faostat
-pandas
+Flask>=3.0,<4
+python-dotenv>=1.0,<2
+pandas>=2.2.3,<3
+requests>=2.32,<3
+faostat>=2.0,<3
+pytest>=8.2,<9

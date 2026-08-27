@@ -1,7 +1,311 @@
-from flask import Blueprint, render_template
+"""Blueprint 'project'.
 
-project_bp = Blueprint('project', __name__)
+Contiene:
+- La landing page del proyecto.
+- El entregable R1 ("Del problema a los datos").
+- Una pequeña API JSON que sirve los datasets ya curados (FAOSTAT y EVA),
+  con filtrado y paginación en el servidor (esto es lo que hace la
+  app "dinámica": el explorador de datos de R1.html no lee un JSON
+  estático completo, sino que negocia con Flask en cada consulta).
 
-@project_bp.route('/')
+Dos familias de esquema conviven aquí:
+- FAOSTAT (fs, qcl, qcl_basicos): formato "largo" -> Área, Producto,
+  Elemento, Año, Unidad, Valor.
+- EVA (eva_basicos): formato "ancho" y municipal -> Departamento,
+  Municipio, Cultivo, Año, con 4 variables numéricas propias
+  (AreaSembrada, AreaCosechada, Produccion, Rendimiento).
+Por eso compute_quality/api_dataset reciben la configuración de
+columnas de cada dataset en vez de asumir un único esquema fijo.
+"""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from flask import Blueprint, current_app, jsonify, render_template, request
+
+project_bp = Blueprint("project", __name__)
+
+# Nombre lógico -> archivo físico dentro de app/static/data/R1
+DATASETS = {
+    "qcl": "qcl.json",
+    "qcl_basicos": "qcl_basicos.json",
+    "fs": "fs.json",
+    "eva_basicos": "eva_basicos.json",
+}
+
+# Configuración de columnas por dataset: qué campo es la "clave" para
+# detectar duplicados, cuáles son numéricas (para completitud/validez),
+# y cuáles son las columnas "categóricas" que la API expone para filtrar
+# y que el explorador de datos usa para poblar sus selects.
+DATASET_SCHEMA = {
+    "qcl": {
+        "key_fields": ("Área", "Producto", "Elemento", "Año"),
+        "numeric_fields": ("Valor",),
+        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
+        "year_field": "Año",
+        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
+    },
+    "qcl_basicos": {
+        "key_fields": ("Área", "Producto", "Elemento", "Año"),
+        "numeric_fields": ("Valor",),
+        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
+        "year_field": "Año",
+        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
+    },
+    "fs": {
+        "key_fields": ("Área", "Producto", "Elemento", "Año"),
+        "numeric_fields": ("Valor",),
+        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
+        "year_field": "Año",
+        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
+    },
+    "eva_basicos": {
+        "key_fields": ("CodigoMunicipioDane", "Cultivo", "DesagregacionCultivo", "Anio", "Periodo"),
+        "numeric_fields": ("AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"),
+        "filter_fields": {"producto": "Cultivo", "elemento": "Departamento"},
+        "year_field": "Anio",
+        "display_columns": ["Departamento", "Municipio", "Cultivo", "Anio", "Periodo",
+                             "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"],
+    },
+}
+
+_cache: dict[str, dict] = {}
+
+
+def _load_dataset(name: str) -> dict:
+    """Carga (con caché en memoria) uno de los datasets tabulares JSON."""
+    if name not in DATASETS:
+        raise KeyError(name)
+    if name in _cache:
+        return _cache[name]
+
+    path: Path = current_app.config["R1_JSON_DIR"] / DATASETS[name]
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _cache[name] = data
+    return data
+
+
+def _rows_as_dicts(dataset: dict) -> list[dict]:
+    cols = dataset["columns"]
+    return [dict(zip(cols, row)) for row in dataset["rows"]]
+
+
+def _to_float(value):
+    try:
+        return float(str(value).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+
+
+def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
+    """Diagnóstico de calidad calculado en vivo (no precalculado a mano).
+
+    Cubre completitud, unicidad y validez para CUALQUIER dataset
+    registrado en DATASET_SCHEMA (no asume un único esquema de columnas).
+    """
+    schema = DATASET_SCHEMA[schema_name]
+    key_fields = schema["key_fields"]
+    numeric_fields = schema["numeric_fields"]
+
+    rows = _rows_as_dicts(dataset)
+    total = len(rows)
+    if total == 0:
+        return dict(total=0, completeness=0, uniqueness=0, validity=0,
+                     duplicates=0, negatives=0, missing_valor=0, products=0)
+
+    seen = set()
+    duplicates = 0
+    missing_numeric = 0
+    negatives = 0
+    products = set()
+
+    producto_field = schema["filter_fields"].get("producto")
+
+    for r in rows:
+        key = tuple(r.get(f) for f in key_fields)
+        if key in seen:
+            duplicates += 1
+        else:
+            seen.add(key)
+
+        row_has_missing = False
+        for nf in numeric_fields:
+            val = r.get(nf)
+            if val in (None, "", "NaN"):
+                row_has_missing = True
+            else:
+                fval = _to_float(val)
+                if fval is not None and fval < 0:
+                    negatives += 1
+        if row_has_missing:
+            missing_numeric += 1
+
+        if producto_field and r.get(producto_field):
+            products.add(r[producto_field])
+
+    completeness = round(100 * (total - missing_numeric) / total, 2)
+    uniqueness = round(100 * (total - duplicates) / total, 2)
+    validity = round(100 * max(0, total - negatives) / total, 2)
+
+    return dict(
+        total=total,
+        completeness=completeness,
+        uniqueness=uniqueness,
+        validity=validity,
+        duplicates=duplicates,
+        negatives=negatives,
+        missing_valor=missing_numeric,
+        products=len(products),
+    )
+
+
+@project_bp.route("/")
 def index():
-    return render_template('project/index.html')
+    """Landing page del proyecto."""
+    return render_template("project/index.html")
+
+
+@project_bp.route("/r1")
+def r1():
+    """Entregable R1: del problema a los datos."""
+    qcl_basicos = _load_dataset("qcl_basicos")
+    qcl = _load_dataset("qcl")
+    fs = _load_dataset("fs")
+    eva_basicos = _load_dataset("eva_basicos")
+
+    quality = {
+        "qcl_basicos": compute_quality(qcl_basicos, "qcl_basicos"),
+        "qcl": compute_quality(qcl, "qcl"),
+        "fs": compute_quality(fs, "fs"),
+        "eva_basicos": compute_quality(eva_basicos, "eva_basicos"),
+    }
+
+    with open(current_app.config["R1_JSON_DIR"] / "faostat_fs_colombia.json", encoding="utf-8") as fh:
+        fs_chart = json.load(fh)
+
+    with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
+        integracion = json.load(fh)
+
+    # --- Diagnóstico de consistencia específico de EVA (área cosechada
+    # no puede superar el área sembrada; es un hallazgo real, no simulado) ---
+    eva_rows = _rows_as_dicts(eva_basicos)
+    eva_incons_area = sum(
+        1 for r in eva_rows
+        if _to_float(r.get("AreaCosechada")) is not None
+        and _to_float(r.get("AreaSembrada")) is not None
+        and _to_float(r.get("AreaCosechada")) > _to_float(r.get("AreaSembrada"))
+    )
+    eva_departamentos = len({r.get("Departamento") for r in eva_rows if r.get("Departamento")})
+    eva_municipios_codigo = len({r.get("CodigoMunicipioDane") for r in eva_rows if r.get("CodigoMunicipioDane")})
+    eva_municipios_nombre = len({r.get("Municipio") for r in eva_rows if r.get("Municipio")})
+
+    # Un dato "vivo" para el hero: último valor no nulo de subalimentación
+    subalim = fs_chart["datasets"][0]["data"]
+    labels = fs_chart["labels"]
+    ultimo_valor, ultimo_anio = None, None
+    for lbl, val in zip(reversed(labels), reversed(subalim)):
+        if val is not None:
+            ultimo_valor, ultimo_anio = val, lbl
+            break
+
+    return render_template(
+        "project/project/R1.html",
+        quality=quality,
+        fs_chart=fs_chart,
+        integracion=integracion,
+        ultimo_valor=ultimo_valor,
+        ultimo_anio=ultimo_anio,
+        n_productos_basicos=quality["qcl_basicos"]["products"],
+        n_registros_qcl=quality["qcl"]["total"],
+        n_registros_fs=quality["fs"]["total"],
+        n_registros_eva=quality["eva_basicos"]["total"],
+        eva_departamentos=eva_departamentos,
+        eva_municipios_codigo=eva_municipios_codigo,
+        eva_municipios_nombre=eva_municipios_nombre,
+        eva_incons_area=eva_incons_area,
+        eva_incons_area_pct=round(100 * eva_incons_area / len(eva_rows), 2) if eva_rows else 0,
+        n_registros_totales=quality["qcl"]["total"] + quality["fs"]["total"] + quality["eva_basicos"]["total"],
+    )
+
+
+@project_bp.route("/api/dataset/<name>")
+def api_dataset(name):
+    """Sirve un dataset filtrado y paginado en JSON.
+
+    Query params soportados:
+    - producto: coincidencia parcial (case-insensitive) sobre el campo
+      "producto" del dataset (Producto en FAOSTAT, Cultivo en EVA)
+    - elemento: coincidencia exacta sobre el campo "elemento" del dataset
+      (Elemento en FAOSTAT, Departamento en EVA)
+    - anio_min / anio_max: filtra por año
+    - q: búsqueda libre sobre producto y elemento
+    - page (default 1), page_size (default 25, máx 200)
+    """
+    try:
+        dataset = _load_dataset(name)
+    except KeyError:
+        return jsonify(error=f"Dataset '{name}' no existe. Usa uno de: {list(DATASETS)}"), 404
+
+    schema = DATASET_SCHEMA[name]
+    producto_field = schema["filter_fields"].get("producto")
+    elemento_field = schema["filter_fields"].get("elemento")
+    year_field = schema["year_field"]
+
+    rows = _rows_as_dicts(dataset)
+
+    producto = request.args.get("producto", "").strip().lower()
+    elemento = request.args.get("elemento", "").strip()
+    q = request.args.get("q", "").strip().lower()
+    anio_min = request.args.get("anio_min", type=int)
+    anio_max = request.args.get("anio_max", type=int)
+
+    def year_of(row):
+        raw = str(row.get(year_field, ""))[:4]
+        return int(raw) if raw.isdigit() else None
+
+    filtered = rows
+    if producto and producto_field:
+        filtered = [r for r in filtered if producto in str(r.get(producto_field, "")).lower()]
+    if elemento and elemento_field:
+        filtered = [r for r in filtered if str(r.get(elemento_field, "")) == elemento]
+    if q:
+        filtered = [
+            r for r in filtered
+            if (producto_field and q in str(r.get(producto_field, "")).lower())
+            or (elemento_field and q in str(r.get(elemento_field, "")).lower())
+        ]
+    if anio_min is not None:
+        filtered = [r for r in filtered if (year_of(r) or 0) >= anio_min]
+    if anio_max is not None:
+        filtered = [r for r in filtered if (year_of(r) or 9999) <= anio_max]
+
+    page = max(request.args.get("page", 1, type=int), 1)
+    page_size = min(max(request.args.get("page_size", 25, type=int), 1), 200)
+    start = (page - 1) * page_size
+    end = start + page_size
+    page_rows = filtered[start:end]
+
+    return jsonify(
+        dataset=name,
+        columns=dataset["columns"],
+        display_columns=schema["display_columns"],
+        rows=page_rows,
+        total=len(filtered),
+        page=page,
+        page_size=page_size,
+        total_pages=max(1, -(-len(filtered) // page_size)),
+        productos_disponibles=sorted({r.get(producto_field, "") for r in rows if producto_field and r.get(producto_field)}) if producto_field else [],
+        elementos_disponibles=sorted({r.get(elemento_field, "") for r in rows if elemento_field and r.get(elemento_field)}) if elemento_field else [],
+    )
+
+
+@project_bp.route("/api/quality/<name>")
+def api_quality(name):
+    """Diagnóstico de calidad recalculado bajo demanda para un dataset."""
+    try:
+        dataset = _load_dataset(name)
+    except KeyError:
+        return jsonify(error=f"Dataset '{name}' no existe."), 404
+    return jsonify(dataset=name, **compute_quality(dataset, name))

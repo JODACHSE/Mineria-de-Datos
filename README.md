@@ -1,57 +1,173 @@
-# 📊 Minería de Datos - Aplicación Web & Dashboard
+# Wololo · Seguridad alimentaria y producción agrícola — Colombia
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Flask](https://img.shields.io/badge/Framework-Flask_3.0-green.svg)](https://flask.palletsprojects.com/)
-[![Bootstrap](https://img.shields.io/badge/UI-Bootstrap_5.3-7952B3.svg)](https://getbootstrap.com/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](#)
+Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
+Sitio web en **Flask** que presenta el entregable **R1 · Del problema a
+los datos**: problema y contexto, preguntas analíticas, fuentes, dataset
+inicial, diccionario de datos, caracterización, diagnóstico de calidad,
+limitaciones y evidencia visual, con un explorador de datos interactivo
+respaldado por una API propia.
 
-Proyecto web modular desarrollado en **Flask** enfocado en la enseñanza, exploración y despliegue de conceptos, metodologías y modelos analíticos de **Minería de Datos**.
-
----
-
-## 🚀 Descripción del Proyecto
-
-Esta aplicación actúa como una plataforma integral para organizar las lecciones del curso y presentar los avances del proyecto final de analítica. Su objetivo principal es integrar un proceso completo de datos para extraer conocimientos evidentes, multidimensionales, ocultos y profundos mediante técnicas descriptivas y predictivas.
-
----
-
-## 🛠️ Stack Tecnológico
-
-* **Backend / Web:** Python, Flask 3.x
-* **Frontend:** Jinja2, HTML5, CSS3, Bootstrap 5.3 & Bootstrap Icons
-* **Procesamiento & Analítica:** Apache Spark (Spark ML), Orange, Clustering
-* **Visualización / BI:** Power BI
-* **Entorno & Herramientas:** Git, GitHub, VS Code, `python-dotenv`
+**Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
+Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
+**Cobertura:** Colombia (nacional) · **Periodo:** 2000–2024
+**Fuentes:** EVA · MinAgricultura/UPRA (producción municipal, dataset real de 48.932 registros) + FAOSTAT · FAO (seguridad alimentaria y producción nacional/global) + ENSIN, DANE, World Bank, Our World in Data (contexto)
 
 ---
 
-## 📁 Estructura del Repositorio
+## ✨ Características
 
-```text
-└── 📁Mineria de Datos
-    ├── 📁app
-    │   ├── 📁components
-    │   ├── 📁routes
-    │   │   ├── lessons.py        # Rutas de las lecciones del curso
-    │   │   └── project.py        # Rutas del módulo del proyecto
-    │   ├── 📁static
-    │   │   ├── 📁css
-    │   │   │   └── styles.css
-    │   │   └── 📁js
-    │   │       └── index.js
-    │   ├── 📁templates
-    │   │   ├── 📁layouts
-    │   │   │   └── base.html     # Plantilla base con Bootstrap 5.3 e Iconos
-    │   │   ├── 📁lessons
-    │   │   │   ├── index.html
-    │   │   │   └── clase_01.html # Apuntes estructurados de la Clase 1
-    │   │   └── 📁project
-    │   │       └── index.html
-    │   ├── __init__.py           # Application Factory (create_app)
-    │   └── config.py             # Configuración general de Flask
-    ├── 📁tests
-    ├── .env.example              # Plantilla de variables de entorno
-    ├── .gitignore
-    ├── README.md
-    ├── requirements.txt          # Dependencias de Python
-    └── run.py                    # Punto de entrada de la aplicación
+- **Backend dinámico**: filtros y paginación de los datasets FAOSTAT se
+  resuelven en el servidor (`/api/dataset/<nombre>`), no en un JSON
+  estático volcado al navegador.
+- **Diagnóstico de calidad en vivo**: completitud, unicidad y validez se
+  calculan en cada solicitud (`/api/quality/<nombre>`), no están
+  hard-codeados en la plantilla.
+- **Diseño de marca Wololo**: retícula técnica ("instrumento de campo") +
+  tarjetas neumórficas, tema claro/oscuro (el oscuro retoma los colores
+  exactos del escudo Wololo: verde pino + gris pizarra), tipografía
+  Orbitron / Exo 2 / Space Mono.
+- **Motion & sonido**: animaciones de entrada por scroll
+  (`IntersectionObserver`), ícono de marca con glow animado, y sonidos de
+  interfaz **sintetizados con Web Audio API** (clic, hover, toggle) — no
+  dependen de archivos de audio externos. El botón de sonido muestra un
+  ícono con barra diagonal cuando está muteado.
+- **Gráfico interactivo** de la serie histórica de seguridad alimentaria
+  (Chart.js) alimentado por `faostat_fs_colombia.json`.
+
+- **Dataset real integrado**: producción agrícola municipal de EVA
+  (48.932 registros, 32 departamentos, 6 cultivos básicos, 2019–2024,
+  formato numérico colombiano convertido) cruzado con FAOSTAT a nivel
+  nacional por cultivo y año — ver `/r1#integracion`.
+- **Responsive**, con foco visible por teclado y `prefers-reduced-motion`
+  respetado.
+
+## 🧱 Stack
+
+- Flask 3 (blueprints `project` y `lessons`)
+- Bootstrap 5.3.8 (solo grid/utilidades — la identidad visual es propia)
+- Chart.js 4 (CDN)
+- Vanilla JS (sin build step)
+- pandas / requests / `faostat` (scripts de adquisición de datos)
+
+## 📁 Estructura
+
+```
+Mineria de Datos/
+├── app/
+│   ├── data/                     # CSV originales (trazabilidad)
+│   │   ├── eva_basicos_colombia.csv      # EVA real, sin modificar
+│   │   └── faostat_*.csv
+│   ├── routes/                   # blueprints: project.py, lessons.py (blueprint 'entregables')
+│   ├── etapas.py                 # las 8 etapas/entregables (global de plantilla)
+│   ├── static/
+│   │   ├── assets/fonts|img/     # tipografías (CDN) e imágenes
+│   │   ├── css/styles.css        # sistema de diseño
+│   │   ├── data/R1/*.json        # datasets curados: fs, qcl, qcl_basicos,
+│   │   │                         # eva_basicos, integracion_eva_faostat
+│   │   ├── js/index.js
+│   │   └── favicon.ico
+│   ├── templates/
+│   │   ├── components/           # navbar.html, footer.html
+│   │   ├── layouts/base.html
+│   │   ├── entregables/          # index.html, about.html
+│   │   └── project/
+│   │       ├── index.html
+│   │       └── project/R1.html
+│   ├── __init__.py               # application factory
+│   └── config.py
+├── scripts/
+│   ├── fetch_faostat.py          # descarga reproducible vía API
+│   ├── rebuild_chart.py          # regenera JSON de FAOSTAT desde los CSV
+│   └── process_eva.py            # limpia y regenera eva_basicos.json + integración
+├── tests/
+├── setup.sh / setup.bat          # arranque en un solo comando
+├── .env / .gitignore
+├── requirements.txt
+└── run.py
+```
+
+## 🚀 Puesta en marcha
+
+### Opción rápida (un solo comando)
+
+```bash
+# Linux / macOS
+./setup.sh
+
+# Windows (cmd o PowerShell)
+setup.bat
+```
+
+Cada script crea el entorno virtual `.venv` si no existe, instala las
+dependencias de `requirements.txt` y arranca el servidor en
+`http://127.0.0.1:5000`.
+
+### Opción manual
+
+```bash
+# 1) Crear y activar un entorno virtual
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
+
+# 2) Instalar dependencias
+pip install -r requirements.txt
+
+# 3) Variables de entorno
+# el archivo .env ya trae valores por defecto funcionales;
+# FAOSTAT_TOKEN solo es necesario si vas a re-descargar datos
+
+# 4) Ejecutar
+python run.py
+# → http://127.0.0.1:5000
+```
+
+## 🔌 Rutas principales
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Landing del proyecto |
+| `/r1` | Entregable R1 completo |
+| `/entregables` | Hoja de ruta con las 8 etapas del proyecto |
+| `/sobre-nosotros` | El equipo Wololo y la afiliación académica |
+| `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados/filtrados (JSON) |
+| `/api/quality/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Diagnóstico de calidad recalculado |
+
+Parámetros soportados por `/api/dataset/<name>`: `q`, `producto`,
+`elemento`, `anio_min`, `anio_max`, `page`, `page_size`.
+
+## 🔁 Reproducir la descarga de datos
+
+```bash
+export FAOSTAT_TOKEN="tu_token_jwt"
+python scripts/fetch_faostat.py     # descarga completa de FAOSTAT vía API
+python scripts/rebuild_chart.py     # o solo regenerar JSON de FAOSTAT desde los CSV
+python scripts/process_eva.py       # limpia app/data/eva_basicos_colombia.csv y
+                                     # regenera eva_basicos.json + la tabla de
+                                     # integración EVA↔FAOSTAT
+```
+
+El dataset EVA (48.932 registros reales de producción municipal, 6
+cultivos básicos, 2019–2024) se descargó manualmente desde el portal
+de Datos Abiertos Colombia con un filtro por cultivo aplicado en la
+interfaz — la API SODA con parámetros de filtro no era accesible
+desde este entorno de desarrollo. El CSV original queda intacto en
+`app/data/eva_basicos_colombia.csv`; `scripts/process_eva.py` documenta
+exactamente qué transformaciones se le aplicaron (ver comentarios del
+script).
+
+## ✅ Pruebas
+
+```bash
+pytest
+```
+
+## 📚 Fuentes y licencias
+
+- **EVA — Evaluaciones Agropecuarias Municipales** (MinAgricultura/UPRA),
+  Datos Abiertos Colombia — datos abiertos, uso libre con atribución.
+- **FAOSTAT** (FAO) — CC BY-4.0, atribución a FAO.
+- **ENSIN 2015** (ICBF/MinSalud) — publicación institucional de acceso público.
+- **DANE** (IPC) — datos abiertos, uso estadístico público.
+- **World Bank Open Data** — CC BY-4.0.
+- **Our World in Data** — CC BY 4.0.
+- Uso estrictamente académico.

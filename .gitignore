@@ -1,33 +1,25 @@
-# Entorno Virtual
+# Entorno
+.venv/
 venv/
 env/
-.venv/
-ENV/
-
-# Variables de entorno y secretos (NUNCA subir a GitHub)
 .env
-.env.local
-.env.*.local
 
-# Archivos de caché de Python
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
 
-# Configuraciones de VS Code y editores
+# Editor / SO
 .vscode/
 .idea/
-*.swp
-*.swo
-
-# Archivos del sistema operativo
 .DS_Store
 Thumbs.db
-desktop.ini
 
-# Bases de datos locales o temporales
+# Flask
+instance/
+.flaskenv
 
-# Registros y Logs
+# Logs
 *.log
