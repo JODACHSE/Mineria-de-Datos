@@ -165,7 +165,20 @@ def r1():
 
 @project_bp.route("/r2")
 def r2():
-    """Entregable R2: diagnóstico y calidad de los datos."""
+    """Entregable R2: diagnóstico y calidad de los datos.
+
+    El perfilamiento + las 6 dimensiones sobre los 4 datasets (EVA incluye
+    48.932 filas) es costoso pero determinista: depende únicamente de los
+    JSON estáticos de R1/R2, que no cambian mientras el proceso vive. Se
+    calcula una sola vez por proceso y se cachea en memoria (mismo patrón
+    que `_load_dataset`), en vez de recalcularse en cada visita a la página.
+    """
+    if "r2:context" not in _cache:
+        _cache["r2:context"] = _build_r2_context()
+    return render_template("project/project/R2.html", **_cache["r2:context"])
+
+
+def _build_r2_context() -> dict:
     with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
         integracion = json.load(fh)
     treatment_log = _load_treatment_log()
@@ -192,11 +205,12 @@ def r2():
             dup_antes = _count_duplicates(rows_crudo, schema["key_fields"])
             dimensiones_antes["unicidad"] = round(100 * (total - dup_antes) / total, 2) if total else None
 
+        # perfil_despues (sobre la version tratada) no se muestra en la
+        # plantilla -- solo se perfila la version cruda, que ademas se
+        # reutiliza en build_problem_inventory() en vez de recalcularse.
         resultados[name] = dict(
             total=len(rows_crudo),
-            total_tratado=len(tratado["rows"]),
             perfil_antes=profile_columns(rows_crudo, crudo["columns"], schema["column_meta"]),
-            perfil_despues=profile_columns(_rows_as_dicts(tratado), tratado["columns"], schema["column_meta"]),
             dimensiones_antes=dimensiones_antes,
             dimensiones_despues=dimensiones_despues,
             requisitos=QUALITY_REQUIREMENTS[name],
@@ -207,7 +221,8 @@ def r2():
             despues=[dimensiones_despues[d] for d in DIMENSION_LABELS],
         )
 
-    inventario = build_problem_inventory(all_rows_raw, integracion=integracion)
+    profiles_raw = {name: r["perfil_antes"] for name, r in resultados.items()}
+    inventario = build_problem_inventory(all_rows_raw, profiles=profiles_raw, integracion=integracion)
     n_problemas_alto = sum(1 for p in inventario if p["nivel_impacto"] == "Alto")
     n_problemas_medio = sum(1 for p in inventario if p["nivel_impacto"] == "Medio")
     n_problemas_bajo = sum(1 for p in inventario if p["nivel_impacto"] == "Bajo")
@@ -219,8 +234,7 @@ def r2():
         "fs": "FAOSTAT — seguridad alimentaria",
     }
 
-    return render_template(
-        "project/project/R2.html",
+    return dict(
         resultados=resultados,
         inventario=inventario,
         n_problemas_alto=n_problemas_alto,

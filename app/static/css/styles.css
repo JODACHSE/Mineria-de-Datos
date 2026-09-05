@@ -492,7 +492,8 @@ table.data-table td.flag-on{ color:var(--chili); font-weight:600; }
 
 /* ---------- Explorador de datos ---------------------------------------*/
 .explorer__controls{ display:flex; flex-wrap:wrap; gap:.8rem; margin-bottom:1.2rem; align-items:center; }
-.explorer__controls select, .explorer__controls input{
+.explorer__controls select, .explorer__controls input,
+.compare-controls select{
   font-family:var(--font-mono); font-size:.82rem;
   background:var(--bg-panel); color:var(--text);
   border:none; border-radius:var(--radius-sm);

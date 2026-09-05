@@ -22,7 +22,6 @@ dimensiones de calidad de R2 viven en funciones nuevas y separadas
 from __future__ import annotations
 
 import re
-import statistics
 from collections import Counter, defaultdict
 
 # Nombre lógico -> archivo físico dentro de app/static/data/R1
@@ -154,6 +153,11 @@ def _rows_as_dicts(dataset: dict) -> list[dict]:
 
 
 def _to_float(value):
+    # Atajo para el caso común (el JSON ya trae float/int nativos, no texto
+    # con coma decimal): evita el str()+replace() de la ruta lenta, lo que
+    # importa mucho en columnas de cientos de miles de celdas.
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
     try:
         return float(str(value).replace(",", "."))
     except (TypeError, ValueError):
@@ -240,18 +244,32 @@ def _percentile(sorted_vals: list[float], p: float) -> float:
 
 
 def _numeric_stats(sorted_vals: list[float]) -> dict:
-    """Estadísticos descriptivos + outliers por rango intercuartílico (1.5×IQR)."""
+    """Estadísticos descriptivos + outliers por rango intercuartílico (1.5×IQR).
+
+    Media/mediana/desviación se calculan con aritmética de punto flotante
+    simple, NO con el módulo `statistics` (su precisión "exacta" vía
+    `Fraction` lo vuelve 10-50x más lento sobre listas de decenas de miles
+    de valores — perceptible en el tiempo de carga de /r2 con EVA, 48.932
+    filas). El resultado es el mismo salvo diferencias de punto flotante
+    muy por debajo del redondeo a 3 decimales que se aplica al final.
+    """
     n = len(sorted_vals)
     q1, q3 = _percentile(sorted_vals, 0.25), _percentile(sorted_vals, 0.75)
     iqr = q3 - q1
     lo, hi = q1 - 1.5 * iqr, q3 + 1.5 * iqr
     outliers = sum(1 for v in sorted_vals if v < lo or v > hi)
+
+    media = sum(sorted_vals) / n
+    mid = n // 2
+    mediana = sorted_vals[mid] if n % 2 else (sorted_vals[mid - 1] + sorted_vals[mid]) / 2
+    desviacion = (sum((v - media) ** 2 for v in sorted_vals) / n) ** 0.5 if n > 1 else 0.0
+
     return dict(
         minimo=sorted_vals[0],
         maximo=sorted_vals[-1],
-        media=round(statistics.mean(sorted_vals), 3),
-        mediana=round(statistics.median(sorted_vals), 3),
-        desviacion=round(statistics.pstdev(sorted_vals), 3) if n > 1 else 0.0,
+        media=round(media, 3),
+        mediana=round(mediana, 3),
+        desviacion=round(desviacion, 3),
         q1=round(q1, 3),
         q3=round(q3, 3),
         outliers_iqr=outliers,
@@ -612,7 +630,8 @@ def _hallazgo_duplicados_por_unidad(rows: list[dict], key_fields: tuple[str, ...
     return n_grupos_multi, n_filas_afectadas
 
 
-def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict | None = None) -> list[dict]:
+def build_problem_inventory(all_rows: dict[str, list[dict]], profiles: dict[str, dict] | None = None,
+                              integracion: dict | None = None) -> list[dict]:
     """Inventario de problemas (punto 5 del enunciado de R2).
 
     `all_rows` = {nombre_dataset: [fila_dict, ...]} ya cargados (Python
@@ -621,6 +640,12 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
     conformes, outliers) más 3 hallazgos narrativos que requieren
     conocimiento de dominio (área>sembrada en EVA, doble unidad en qcl,
     intervalos de confianza en fs).
+
+    `profiles`, si se pasa, evita recalcular `profile_columns` para
+    datasets que el llamador ya perfiló (p. ej. la ruta `/r2`, que
+    necesita el mismo perfil para su propia sección de perfilamiento) —
+    importa para EVA (48.932 filas): recalcularlo aquí duplicaría el
+    costo más caro de la página.
     """
     inventario: list[dict] = []
     _id_counter: dict[str, int] = defaultdict(int)
@@ -655,7 +680,9 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
         total = len(rows)
         if total == 0:
             continue
-        profile = profile_columns(rows, list(schema["column_meta"].keys()), schema["column_meta"])
+        profile = (profiles or {}).get(name) or profile_columns(
+            rows, list(schema["column_meta"].keys()), schema["column_meta"]
+        )
         for col, p in profile.items():
             campo_critico = col in schema["campos_criticos"]
             if p["n_nulos"] > 0:
