@@ -33,6 +33,7 @@ from app.quality import (
     DATASET_SCHEMA,
     DATASETS,
     QUALITY_REQUIREMENTS,
+    _count_duplicates,
     _rows_as_dicts,
     _to_float,
     build_problem_inventory,
@@ -40,6 +41,8 @@ from app.quality import (
     compute_quality,
     profile_columns,
 )
+
+DIMENSION_LABELS = ["completitud", "exactitud", "consistencia", "unicidad", "validez", "actualidad"]
 
 project_bp = Blueprint("project", __name__)
 
@@ -160,6 +163,76 @@ def r1():
     )
 
 
+@project_bp.route("/r2")
+def r2():
+    """Entregable R2: diagnóstico y calidad de los datos."""
+    with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
+        integracion = json.load(fh)
+    treatment_log = _load_treatment_log()
+
+    resultados = {}
+    all_rows_raw = {}
+    quality_compare = {}
+
+    for name in DATASETS:
+        schema = DATASET_SCHEMA[name]
+        crudo = _load_dataset(name)
+        tratado = _load_treated_dataset(name)
+        rows_crudo = _rows_as_dicts(crudo)
+        all_rows_raw[name] = rows_crudo
+
+        kwargs = dict(integracion=integracion) if schema.get("accuracy_check") == "cruce_eva_faostat" else {}
+        dimensiones_antes = compute_dimensions(crudo, name, **kwargs)
+        dimensiones_despues = compute_dimensions(tratado, name, **kwargs)
+
+        if name != "eva_basicos":
+            # "Antes" refleja el método de R1 (llave de unicidad sin 'Unidad');
+            # "después" ya usa la llave corregida (ver DATASET_SCHEMA[name]["unique_key_fields"]).
+            total = len(rows_crudo)
+            dup_antes = _count_duplicates(rows_crudo, schema["key_fields"])
+            dimensiones_antes["unicidad"] = round(100 * (total - dup_antes) / total, 2) if total else None
+
+        resultados[name] = dict(
+            total=len(rows_crudo),
+            total_tratado=len(tratado["rows"]),
+            perfil_antes=profile_columns(rows_crudo, crudo["columns"], schema["column_meta"]),
+            perfil_despues=profile_columns(_rows_as_dicts(tratado), tratado["columns"], schema["column_meta"]),
+            dimensiones_antes=dimensiones_antes,
+            dimensiones_despues=dimensiones_despues,
+            requisitos=QUALITY_REQUIREMENTS[name],
+        )
+        quality_compare[name] = dict(
+            labels=DIMENSION_LABELS,
+            antes=[dimensiones_antes[d] for d in DIMENSION_LABELS],
+            despues=[dimensiones_despues[d] for d in DIMENSION_LABELS],
+        )
+
+    inventario = build_problem_inventory(all_rows_raw, integracion=integracion)
+    n_problemas_alto = sum(1 for p in inventario if p["nivel_impacto"] == "Alto")
+    n_problemas_medio = sum(1 for p in inventario if p["nivel_impacto"] == "Medio")
+    n_problemas_bajo = sum(1 for p in inventario if p["nivel_impacto"] == "Bajo")
+
+    dataset_labels = {
+        "eva_basicos": "EVA — producción municipal",
+        "qcl": "FAOSTAT — todos los productos",
+        "qcl_basicos": "FAOSTAT — cultivos básicos",
+        "fs": "FAOSTAT — seguridad alimentaria",
+    }
+
+    return render_template(
+        "project/project/R2.html",
+        resultados=resultados,
+        inventario=inventario,
+        n_problemas_alto=n_problemas_alto,
+        n_problemas_medio=n_problemas_medio,
+        n_problemas_bajo=n_problemas_bajo,
+        treatment_log=treatment_log,
+        quality_compare=quality_compare,
+        dataset_labels=dataset_labels,
+        dimension_labels=DIMENSION_LABELS,
+    )
+
+
 @project_bp.route("/api/dataset/<name>")
 def api_dataset(name):
     """Sirve un dataset filtrado y paginado en JSON.
@@ -171,10 +244,13 @@ def api_dataset(name):
       (Elemento en FAOSTAT, Departamento en EVA)
     - anio_min / anio_max: filtra por año
     - q: búsqueda libre sobre producto y elemento
+    - version: "crudo" (default, datos de R1) o "tratado" (datos de R2,
+      con las columnas de bandera del tratamiento aplicado)
     - page (default 1), page_size (default 25, máx 200)
     """
+    version = request.args.get("version", "crudo")
     try:
-        dataset = _load_dataset(name)
+        dataset = _load_treated_dataset(name) if version == "tratado" else _load_dataset(name)
     except KeyError:
         return jsonify(error=f"Dataset '{name}' no existe. Usa uno de: {list(DATASETS)}"), 404
 
@@ -239,3 +315,32 @@ def api_quality(name):
     except KeyError:
         return jsonify(error=f"Dataset '{name}' no existe."), 404
     return jsonify(dataset=name, **compute_quality(dataset, name))
+
+
+@project_bp.route("/api/profile/<name>")
+def api_profile(name):
+    """Perfilamiento por columna + las 6 dimensiones de calidad (entregable R2).
+
+    Query params:
+    - version: "crudo" (default, R1) o "tratado" (R2, con banderas de tratamiento).
+    """
+    version = request.args.get("version", "crudo")
+    try:
+        dataset = _load_treated_dataset(name) if version == "tratado" else _load_dataset(name)
+    except KeyError:
+        return jsonify(error=f"Dataset '{name}' no existe. Usa uno de: {list(DATASETS)}"), 404
+
+    schema = DATASET_SCHEMA[name]
+    rows = _rows_as_dicts(dataset)
+    kwargs = {}
+    if schema.get("accuracy_check") == "cruce_eva_faostat":
+        with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
+            kwargs["integracion"] = json.load(fh)
+
+    return jsonify(
+        dataset=name,
+        version=version,
+        total=len(rows),
+        columns=profile_columns(rows, dataset["columns"], schema["column_meta"]),
+        dimensiones=compute_dimensions(dataset, name, **kwargs),
+    )

@@ -447,6 +447,7 @@ table.data-table thead th{
 table.data-table tbody tr{ transition:background var(--speed-fast); }
 table.data-table tbody tr:hover{ background:var(--bg-panel-2); }
 table.data-table td.num{ text-align:right; }
+table.data-table td.flag-on{ color:var(--chili); font-weight:600; }
 
 /* ---------- Barra de progreso de calidad ------------------------------*/
 .quality-bar{ height:10px; border-radius:999px; overflow:hidden; }
