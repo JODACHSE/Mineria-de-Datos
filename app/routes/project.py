@@ -3,6 +3,7 @@
 Contiene:
 - La landing page del proyecto.
 - El entregable R1 ("Del problema a los datos").
+- El entregable R2 ("Diagnóstico y calidad de los datos").
 - Una pequeña API JSON que sirve los datasets ya curados (FAOSTAT y EVA),
   con filtrado y paginación en el servidor (esto es lo que hace la
   app "dinámica": el explorador de datos de R1.html no lee un JSON
@@ -16,6 +17,10 @@ Dos familias de esquema conviven aquí:
   (AreaSembrada, AreaCosechada, Produccion, Rendimiento).
 Por eso compute_quality/api_dataset reciben la configuración de
 columnas de cada dataset en vez de asumir un único esquema fijo.
+
+La lógica de calidad (esquemas, perfilamiento, dimensiones) vive en
+`app.quality` (Python puro, sin Flask) para poder reutilizarla también
+desde `scripts/clean_datasets.py`.
 """
 from __future__ import annotations
 
@@ -24,57 +29,25 @@ from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 
+from app.quality import (
+    DATASET_SCHEMA,
+    DATASETS,
+    QUALITY_REQUIREMENTS,
+    _rows_as_dicts,
+    _to_float,
+    build_problem_inventory,
+    compute_dimensions,
+    compute_quality,
+    profile_columns,
+)
+
 project_bp = Blueprint("project", __name__)
-
-# Nombre lógico -> archivo físico dentro de app/static/data/R1
-DATASETS = {
-    "qcl": "qcl.json",
-    "qcl_basicos": "qcl_basicos.json",
-    "fs": "fs.json",
-    "eva_basicos": "eva_basicos.json",
-}
-
-# Configuración de columnas por dataset: qué campo es la "clave" para
-# detectar duplicados, cuáles son numéricas (para completitud/validez),
-# y cuáles son las columnas "categóricas" que la API expone para filtrar
-# y que el explorador de datos usa para poblar sus selects.
-DATASET_SCHEMA = {
-    "qcl": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "qcl_basicos": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "fs": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "eva_basicos": {
-        "key_fields": ("CodigoMunicipioDane", "Cultivo", "DesagregacionCultivo", "Anio", "Periodo"),
-        "numeric_fields": ("AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"),
-        "filter_fields": {"producto": "Cultivo", "elemento": "Departamento"},
-        "year_field": "Anio",
-        "display_columns": ["Departamento", "Municipio", "Cultivo", "Anio", "Periodo",
-                             "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"],
-    },
-}
 
 _cache: dict[str, dict] = {}
 
 
 def _load_dataset(name: str) -> dict:
-    """Carga (con caché en memoria) uno de los datasets tabulares JSON."""
+    """Carga (con caché en memoria) la versión CRUDA (R1) de un dataset."""
     if name not in DATASETS:
         raise KeyError(name)
     if name in _cache:
@@ -87,78 +60,35 @@ def _load_dataset(name: str) -> dict:
     return data
 
 
-def _rows_as_dicts(dataset: dict) -> list[dict]:
-    cols = dataset["columns"]
-    return [dict(zip(cols, row)) for row in dataset["rows"]]
+def _load_treated_dataset(name: str) -> dict:
+    """Carga (con caché en memoria) la versión TRATADA (R2) de un dataset.
 
-
-def _to_float(value):
-    try:
-        return float(str(value).replace(",", "."))
-    except (TypeError, ValueError):
-        return None
-
-
-def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
-    """Diagnóstico de calidad calculado en vivo (no precalculado a mano).
-
-    Cubre completitud, unicidad y validez para CUALQUIER dataset
-    registrado en DATASET_SCHEMA (no asume un único esquema de columnas).
+    Generada offline por `scripts/clean_datasets.py` y commiteada en
+    `app/static/data/R2/`, siguiendo el mismo patrón que R1 (los scripts
+    son generadores offline, no se ejecutan en cada request).
     """
-    schema = DATASET_SCHEMA[schema_name]
-    key_fields = schema["key_fields"]
-    numeric_fields = schema["numeric_fields"]
+    cache_key = f"r2:{name}"
+    if name not in DATASETS:
+        raise KeyError(name)
+    if cache_key in _cache:
+        return _cache[cache_key]
 
-    rows = _rows_as_dicts(dataset)
-    total = len(rows)
-    if total == 0:
-        return dict(total=0, completeness=0, uniqueness=0, validity=0,
-                     duplicates=0, negatives=0, missing_valor=0, products=0)
+    path: Path = current_app.config["R2_JSON_DIR"] / DATASETS[name]
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _cache[cache_key] = data
+    return data
 
-    seen = set()
-    duplicates = 0
-    missing_numeric = 0
-    negatives = 0
-    products = set()
 
-    producto_field = schema["filter_fields"].get("producto")
-
-    for r in rows:
-        key = tuple(r.get(f) for f in key_fields)
-        if key in seen:
-            duplicates += 1
-        else:
-            seen.add(key)
-
-        row_has_missing = False
-        for nf in numeric_fields:
-            val = r.get(nf)
-            if val in (None, "", "NaN"):
-                row_has_missing = True
-            else:
-                fval = _to_float(val)
-                if fval is not None and fval < 0:
-                    negatives += 1
-        if row_has_missing:
-            missing_numeric += 1
-
-        if producto_field and r.get(producto_field):
-            products.add(r[producto_field])
-
-    completeness = round(100 * (total - missing_numeric) / total, 2)
-    uniqueness = round(100 * (total - duplicates) / total, 2)
-    validity = round(100 * max(0, total - negatives) / total, 2)
-
-    return dict(
-        total=total,
-        completeness=completeness,
-        uniqueness=uniqueness,
-        validity=validity,
-        duplicates=duplicates,
-        negatives=negatives,
-        missing_valor=missing_numeric,
-        products=len(products),
-    )
+def _load_treatment_log() -> dict:
+    cache_key = "r2:log"
+    if cache_key in _cache:
+        return _cache[cache_key]
+    path: Path = current_app.config["R2_JSON_DIR"] / "log_tratamiento.json"
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _cache[cache_key] = data
+    return data
 
 
 @project_bp.route("/")
