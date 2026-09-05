@@ -1,0 +1,254 @@
+{
+  "acciones": [
+    {
+      "dataset": "qcl",
+      "accion": "Corrección de la llave de unicidad (+ 'Unidad')",
+      "n_afectados": 50,
+      "decision": "correccion_llave",
+      "justificacion": "25 combinaciones (Área,Producto,Elemento,Año) reportaban el mismo indicador en más de una Unidad y se contaban como 'duplicadas' con la llave original de R1. Se corrige agregando 'Unidad' a la llave de unicidad — no se elimina ninguna fila, eran datos válidos."
+    },
+    {
+      "dataset": "qcl",
+      "accion": "Tratamiento de valores nulos en 'Valor'",
+      "n_afectados": 280,
+      "decision": "flag",
+      "justificacion": "280 filas sin 'Valor' reportado; se marcan con '_flag_valor_nulo' y se excluyen de agregaciones, pero se conservan (no se fabrica un valor que FAOSTAT no reportó)."
+    },
+    {
+      "dataset": "qcl",
+      "accion": "Estandarización de texto (espacios/casing)",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Se recorta espacio en blanco y se colapsan espacios dobles; en este corte no se encontraron variantes, el control queda activo para futuros refrescos."
+    },
+    {
+      "dataset": "qcl",
+      "accion": "Estandarización de fechas (AnioNormalizado)",
+      "n_afectados": 9274,
+      "decision": "correccion",
+      "justificacion": "Se añade 'AnioNormalizado' (año entero) a partir de 'Año', que en FAOSTAT puede venir como año puntual o como trienio (p. ej. '2000-2002'); el campo original se conserva sin modificar."
+    },
+    {
+      "dataset": "qcl",
+      "accion": "Homologación/consistencia de unidad por producto y elemento",
+      "n_afectados": 25,
+      "decision": "flag",
+      "justificacion": "25 filas usan, para su combinación (Producto, Elemento), una Unidad distinta a la modal; se marcan con '_flag_unidad_atipica' para revisión, sin alterar el valor reportado."
+    },
+    {
+      "dataset": "qcl_basicos",
+      "accion": "Corrección de la llave de unicidad (+ 'Unidad')",
+      "n_afectados": 0,
+      "decision": "correccion_llave",
+      "justificacion": "No se encontraron combinaciones ambiguas de Unidad para este dataset."
+    },
+    {
+      "dataset": "qcl_basicos",
+      "accion": "Tratamiento de valores nulos en 'Valor'",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "No se encontraron valores nulos en 'Valor'."
+    },
+    {
+      "dataset": "qcl_basicos",
+      "accion": "Estandarización de texto (espacios/casing)",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Se recorta espacio en blanco y se colapsan espacios dobles; en este corte no se encontraron variantes, el control queda activo para futuros refrescos."
+    },
+    {
+      "dataset": "qcl_basicos",
+      "accion": "Estandarización de fechas (AnioNormalizado)",
+      "n_afectados": 374,
+      "decision": "correccion",
+      "justificacion": "Se añade 'AnioNormalizado' (año entero) a partir de 'Año', que en FAOSTAT puede venir como año puntual o como trienio (p. ej. '2000-2002'); el campo original se conserva sin modificar."
+    },
+    {
+      "dataset": "qcl_basicos",
+      "accion": "Homologación/consistencia de unidad por producto y elemento",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Todas las filas usan la Unidad modal de su combinación (Producto, Elemento)."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Corrección de la llave de unicidad (+ 'Unidad')",
+      "n_afectados": 0,
+      "decision": "correccion_llave",
+      "justificacion": "No se encontraron combinaciones ambiguas de Unidad para este dataset."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Tratamiento de valores nulos en 'Valor'",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "No se encontraron valores nulos en 'Valor'."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Estandarización de texto (espacios/casing)",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Se recorta espacio en blanco y se colapsan espacios dobles; en este corte no se encontraron variantes, el control queda activo para futuros refrescos."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Estandarización de fechas (AnioNormalizado)",
+      "n_afectados": 1138,
+      "decision": "correccion",
+      "justificacion": "Se añade 'AnioNormalizado' (año entero) a partir de 'Año', que en FAOSTAT puede venir como año puntual o como trienio (p. ej. '2000-2002'); el campo original se conserva sin modificar."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Homologación/consistencia de unidad por producto y elemento",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Todas las filas usan la Unidad modal de su combinación (Producto, Elemento)."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Eliminación de duplicados",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Se verificó la llave (municipio, cultivo, desagregación, año, periodo); no se encontraron filas duplicadas para eliminar."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Tratamiento de valores nulos",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "No se encontraron valores nulos en las variables numéricas críticas; no se requirió imputación ni eliminación."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Estandarización de texto (espacios/casing)",
+      "n_afectados": 0,
+      "decision": "sin_accion",
+      "justificacion": "Se recorta espacio en blanco y se colapsan espacios dobles en campos de texto y categóricos; en este corte no se encontraron variantes (la fuente ya llega curada), el control queda activo para futuros refrescos del dataset."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Corrección de tipos de datos (códigos DANE con cero inicial)",
+      "n_afectados": 5854,
+      "decision": "correccion",
+      "justificacion": "5854 registros tenían 'CodigoMunicipioDane'/'CodigoDeptoDane' sin el cero inicial (se guardaron como entero al construir el JSON de R1); se reformatean como texto de ancho fijo (2 y 5 dígitos) — el valor no cambia, solo su representación."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Validación de rangos (AreaCosechada ≤ AreaSembrada)",
+      "n_afectados": 6700,
+      "decision": "flag",
+      "justificacion": "6700 registros incumplen la regla; se marcan con '_flag_area_incoherente' porque no hay forma no ambigua de saber cuál campo es el erróneo (podría ser resiembra legítima en el mismo semestre) — no se fabrica un valor corregido."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Tratamiento justificado de atípicos en 'AreaSembrada' (± 1.5×RIC)",
+      "n_afectados": 6288,
+      "decision": "flag",
+      "justificacion": "6288 valores fuera de [-257.64, 456.06]; se marcan con '_outlier_iqr_AreaSembrada' y NO se eliminan — valores altos en municipios o cultivos de gran escala son datos reales, no errores de captura."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Tratamiento justificado de atípicos en 'AreaCosechada' (± 1.5×RIC)",
+      "n_afectados": 6505,
+      "decision": "flag",
+      "justificacion": "6505 valores fuera de [-227.0, 405.0]; se marcan con '_outlier_iqr_AreaCosechada' y NO se eliminan — valores altos en municipios o cultivos de gran escala son datos reales, no errores de captura."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Tratamiento justificado de atípicos en 'Produccion' (± 1.5×RIC)",
+      "n_afectados": 7368,
+      "decision": "flag",
+      "justificacion": "7368 valores fuera de [-1165.5, 1998.5]; se marcan con '_outlier_iqr_Produccion' y NO se eliminan — valores altos en municipios o cultivos de gran escala son datos reales, no errores de captura."
+    },
+    {
+      "dataset": "eva_basicos",
+      "accion": "Tratamiento justificado de atípicos en 'Rendimiento' (± 1.5×RIC)",
+      "n_afectados": 3342,
+      "decision": "flag",
+      "justificacion": "3342 valores fuera de [-8.5, 17.9]; se marcan con '_outlier_iqr_Rendimiento' y NO se eliminan — valores altos en municipios o cultivos de gran escala son datos reales, no errores de captura."
+    }
+  ],
+  "resumen_antes_despues": {
+    "qcl": {
+      "antes": {
+        "completitud": 99.25,
+        "exactitud": 35.15,
+        "consistencia": 99.73,
+        "unicidad": 99.73,
+        "validez": 100.0,
+        "actualidad": 80.0
+      },
+      "despues": {
+        "completitud": 99.25,
+        "exactitud": 35.15,
+        "consistencia": 99.73,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 80.0
+      }
+    },
+    "qcl_basicos": {
+      "antes": {
+        "completitud": 100.0,
+        "exactitud": 35.15,
+        "consistencia": 100.0,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 80.0
+      },
+      "despues": {
+        "completitud": 100.0,
+        "exactitud": 35.15,
+        "consistencia": 100.0,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 80.0
+      }
+    },
+    "fs": {
+      "antes": {
+        "completitud": 100.0,
+        "exactitud": 100.0,
+        "consistencia": 100.0,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 93.33
+      },
+      "despues": {
+        "completitud": 100.0,
+        "exactitud": 100.0,
+        "consistencia": 100.0,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 93.33
+      }
+    },
+    "eva_basicos": {
+      "antes": {
+        "completitud": 100.0,
+        "exactitud": 99.91,
+        "consistencia": 86.31,
+        "unicidad": 100.0,
+        "validez": 88.04,
+        "actualidad": 80.0
+      },
+      "despues": {
+        "completitud": 100.0,
+        "exactitud": 99.91,
+        "consistencia": 86.31,
+        "unicidad": 100.0,
+        "validez": 100.0,
+        "actualidad": 80.0
+      }
+    }
+  },
+  "crop_mapping": {
+    "Maíz": "Maíz",
+    "Arroz": "Arroz",
+    "Papa": "Papas, patatas",
+    "Plátano": "Plátanos (Verde) y bananos para cocinar",
+    "Yuca": "Yuca, fresca",
+    "Frijol": "Frijoles, secos"
+  }
+}

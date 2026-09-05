@@ -328,18 +328,38 @@ def _year_of(value, year_field_is_range: bool = False) -> int | None:
     return int(raw) if raw.isdigit() else None
 
 
-def _consistencia_unidad_por_elemento(rows: list[dict]) -> tuple[int, int]:
-    """Para cada Elemento, toma la Unidad modal y cuenta filas que no coinciden.
-
-    Detecta el patrón real encontrado en qcl.json: un mismo Elemento
-    (p. ej. "Producción") reportado en más de una Unidad según el
-    Producto (huevos en toneladas Y en 1000 unidades).
-    """
-    por_elemento = defaultdict(Counter)
+def _count_duplicates(rows: list[dict], key_fields: tuple[str, ...]) -> int:
+    """Cuenta filas duplicadas bajo una llave dada. Reutilizable para comparar
+    la unicidad medida con la llave original de R1 (`key_fields`) contra la
+    llave corregida de R2 (`unique_key_fields`)."""
+    seen = set()
+    duplicados = 0
     for r in rows:
-        por_elemento[r.get("Elemento")][r.get("Unidad")] += 1
-    modal = {e: c.most_common(1)[0][0] for e, c in por_elemento.items()}
-    n_incons = sum(1 for r in rows if r.get("Unidad") != modal.get(r.get("Elemento")))
+        k = tuple(r.get(f) for f in key_fields)
+        if k in seen:
+            duplicados += 1
+        else:
+            seen.add(k)
+    return duplicados
+
+
+def _consistencia_unidad_por_elemento(rows: list[dict]) -> tuple[int, int]:
+    """Para cada par (Producto, Elemento), toma la Unidad modal y cuenta
+    filas que no coinciden.
+
+    Se agrupa por (Producto, Elemento) y NO solo por Elemento: un mismo
+    Elemento (p. ej. "Producción") cubre en FAOSTAT tanto cultivos
+    (toneladas) como ganadería (cabezas, kg/ha, etc.), así que agrupar
+    solo por Elemento generaba cientos de falsos positivos por
+    heterogeneidad legítima de producto. Agrupando por (Producto,
+    Elemento) el chequeo aísla exactamente el caso real: huevos con
+    Producción reportada en 'toneladas' Y en '1000 No.'.
+    """
+    por_grupo = defaultdict(Counter)
+    for r in rows:
+        por_grupo[(r.get("Producto"), r.get("Elemento"))][r.get("Unidad")] += 1
+    modal = {k: c.most_common(1)[0][0] for k, c in por_grupo.items()}
+    n_incons = sum(1 for r in rows if r.get("Unidad") != modal.get((r.get("Producto"), r.get("Elemento"))))
     return n_incons, len(rows)
 
 
@@ -428,14 +448,7 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
     completitud = round(100 * (1 - nulos_criticos / (total * len(campos_criticos))), 2)
 
     # --- Unicidad: duplicados bajo unique_key_fields ---
-    seen = set()
-    duplicados = 0
-    for r in rows:
-        key = tuple(r.get(f) for f in schema["unique_key_fields"])
-        if key in seen:
-            duplicados += 1
-        else:
-            seen.add(key)
+    duplicados = _count_duplicates(rows, schema["unique_key_fields"])
     unicidad = round(100 * (total - duplicados) / total, 2)
 
     # --- Validez: violaciones de rango/dominio/patrón en campos críticos ---
