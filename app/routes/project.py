@@ -3,6 +3,7 @@
 Contiene:
 - La landing page del proyecto.
 - El entregable R1 ("Del problema a los datos").
+- El entregable R2 ("Diagnóstico y calidad de los datos").
 - Una pequeña API JSON que sirve los datasets ya curados (FAOSTAT y EVA),
   con filtrado y paginación en el servidor (esto es lo que hace la
   app "dinámica": el explorador de datos de R1.html no lee un JSON
@@ -16,6 +17,10 @@ Dos familias de esquema conviven aquí:
   (AreaSembrada, AreaCosechada, Produccion, Rendimiento).
 Por eso compute_quality/api_dataset reciben la configuración de
 columnas de cada dataset en vez de asumir un único esquema fijo.
+
+La lógica de calidad (esquemas, perfilamiento, dimensiones) vive en
+`app.quality` (Python puro, sin Flask) para poder reutilizarla también
+desde `scripts/clean_datasets.py`.
 """
 from __future__ import annotations
 
@@ -24,57 +29,28 @@ from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, render_template, request
 
+from app.quality import (
+    DATASET_SCHEMA,
+    DATASETS,
+    QUALITY_REQUIREMENTS,
+    _count_duplicates,
+    _rows_as_dicts,
+    _to_float,
+    build_problem_inventory,
+    compute_dimensions,
+    compute_quality,
+    profile_columns,
+)
+
+DIMENSION_LABELS = ["completitud", "exactitud", "consistencia", "unicidad", "validez", "actualidad"]
+
 project_bp = Blueprint("project", __name__)
-
-# Nombre lógico -> archivo físico dentro de app/static/data/R1
-DATASETS = {
-    "qcl": "qcl.json",
-    "qcl_basicos": "qcl_basicos.json",
-    "fs": "fs.json",
-    "eva_basicos": "eva_basicos.json",
-}
-
-# Configuración de columnas por dataset: qué campo es la "clave" para
-# detectar duplicados, cuáles son numéricas (para completitud/validez),
-# y cuáles son las columnas "categóricas" que la API expone para filtrar
-# y que el explorador de datos usa para poblar sus selects.
-DATASET_SCHEMA = {
-    "qcl": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "qcl_basicos": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "fs": {
-        "key_fields": ("Área", "Producto", "Elemento", "Año"),
-        "numeric_fields": ("Valor",),
-        "filter_fields": {"producto": "Producto", "elemento": "Elemento"},
-        "year_field": "Año",
-        "display_columns": ["Área", "Producto", "Elemento", "Año", "Unidad", "Valor"],
-    },
-    "eva_basicos": {
-        "key_fields": ("CodigoMunicipioDane", "Cultivo", "DesagregacionCultivo", "Anio", "Periodo"),
-        "numeric_fields": ("AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"),
-        "filter_fields": {"producto": "Cultivo", "elemento": "Departamento"},
-        "year_field": "Anio",
-        "display_columns": ["Departamento", "Municipio", "Cultivo", "Anio", "Periodo",
-                             "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"],
-    },
-}
 
 _cache: dict[str, dict] = {}
 
 
 def _load_dataset(name: str) -> dict:
-    """Carga (con caché en memoria) uno de los datasets tabulares JSON."""
+    """Carga (con caché en memoria) la versión CRUDA (R1) de un dataset."""
     if name not in DATASETS:
         raise KeyError(name)
     if name in _cache:
@@ -87,78 +63,35 @@ def _load_dataset(name: str) -> dict:
     return data
 
 
-def _rows_as_dicts(dataset: dict) -> list[dict]:
-    cols = dataset["columns"]
-    return [dict(zip(cols, row)) for row in dataset["rows"]]
+def _load_treated_dataset(name: str) -> dict:
+    """Carga (con caché en memoria) la versión TRATADA (R2) de un dataset.
 
-
-def _to_float(value):
-    try:
-        return float(str(value).replace(",", "."))
-    except (TypeError, ValueError):
-        return None
-
-
-def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
-    """Diagnóstico de calidad calculado en vivo (no precalculado a mano).
-
-    Cubre completitud, unicidad y validez para CUALQUIER dataset
-    registrado en DATASET_SCHEMA (no asume un único esquema de columnas).
+    Generada offline por `scripts/clean_datasets.py` y commiteada en
+    `app/static/data/R2/`, siguiendo el mismo patrón que R1 (los scripts
+    son generadores offline, no se ejecutan en cada request).
     """
-    schema = DATASET_SCHEMA[schema_name]
-    key_fields = schema["key_fields"]
-    numeric_fields = schema["numeric_fields"]
+    cache_key = f"r2:{name}"
+    if name not in DATASETS:
+        raise KeyError(name)
+    if cache_key in _cache:
+        return _cache[cache_key]
 
-    rows = _rows_as_dicts(dataset)
-    total = len(rows)
-    if total == 0:
-        return dict(total=0, completeness=0, uniqueness=0, validity=0,
-                     duplicates=0, negatives=0, missing_valor=0, products=0)
+    path: Path = current_app.config["R2_JSON_DIR"] / DATASETS[name]
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _cache[cache_key] = data
+    return data
 
-    seen = set()
-    duplicates = 0
-    missing_numeric = 0
-    negatives = 0
-    products = set()
 
-    producto_field = schema["filter_fields"].get("producto")
-
-    for r in rows:
-        key = tuple(r.get(f) for f in key_fields)
-        if key in seen:
-            duplicates += 1
-        else:
-            seen.add(key)
-
-        row_has_missing = False
-        for nf in numeric_fields:
-            val = r.get(nf)
-            if val in (None, "", "NaN"):
-                row_has_missing = True
-            else:
-                fval = _to_float(val)
-                if fval is not None and fval < 0:
-                    negatives += 1
-        if row_has_missing:
-            missing_numeric += 1
-
-        if producto_field and r.get(producto_field):
-            products.add(r[producto_field])
-
-    completeness = round(100 * (total - missing_numeric) / total, 2)
-    uniqueness = round(100 * (total - duplicates) / total, 2)
-    validity = round(100 * max(0, total - negatives) / total, 2)
-
-    return dict(
-        total=total,
-        completeness=completeness,
-        uniqueness=uniqueness,
-        validity=validity,
-        duplicates=duplicates,
-        negatives=negatives,
-        missing_valor=missing_numeric,
-        products=len(products),
-    )
+def _load_treatment_log() -> dict:
+    cache_key = "r2:log"
+    if cache_key in _cache:
+        return _cache[cache_key]
+    path: Path = current_app.config["R2_JSON_DIR"] / "log_tratamiento.json"
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    _cache[cache_key] = data
+    return data
 
 
 @project_bp.route("/")
@@ -230,6 +163,90 @@ def r1():
     )
 
 
+@project_bp.route("/r2")
+def r2():
+    """Entregable R2: diagnóstico y calidad de los datos.
+
+    El perfilamiento + las 6 dimensiones sobre los 4 datasets (EVA incluye
+    48.932 filas) es costoso pero determinista: depende únicamente de los
+    JSON estáticos de R1/R2, que no cambian mientras el proceso vive. Se
+    calcula una sola vez por proceso y se cachea en memoria (mismo patrón
+    que `_load_dataset`), en vez de recalcularse en cada visita a la página.
+    """
+    if "r2:context" not in _cache:
+        _cache["r2:context"] = _build_r2_context()
+    return render_template("project/project/R2.html", **_cache["r2:context"])
+
+
+def _build_r2_context() -> dict:
+    with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
+        integracion = json.load(fh)
+    treatment_log = _load_treatment_log()
+
+    resultados = {}
+    all_rows_raw = {}
+    quality_compare = {}
+
+    for name in DATASETS:
+        schema = DATASET_SCHEMA[name]
+        crudo = _load_dataset(name)
+        tratado = _load_treated_dataset(name)
+        rows_crudo = _rows_as_dicts(crudo)
+        all_rows_raw[name] = rows_crudo
+
+        kwargs = dict(integracion=integracion) if schema.get("accuracy_check") == "cruce_eva_faostat" else {}
+        dimensiones_antes = compute_dimensions(crudo, name, **kwargs)
+        dimensiones_despues = compute_dimensions(tratado, name, **kwargs)
+
+        if name != "eva_basicos":
+            # "Antes" refleja el método de R1 (llave de unicidad sin 'Unidad');
+            # "después" ya usa la llave corregida (ver DATASET_SCHEMA[name]["unique_key_fields"]).
+            total = len(rows_crudo)
+            dup_antes = _count_duplicates(rows_crudo, schema["key_fields"])
+            dimensiones_antes["unicidad"] = round(100 * (total - dup_antes) / total, 2) if total else None
+
+        # perfil_despues (sobre la version tratada) no se muestra en la
+        # plantilla -- solo se perfila la version cruda, que ademas se
+        # reutiliza en build_problem_inventory() en vez de recalcularse.
+        resultados[name] = dict(
+            total=len(rows_crudo),
+            perfil_antes=profile_columns(rows_crudo, crudo["columns"], schema["column_meta"]),
+            dimensiones_antes=dimensiones_antes,
+            dimensiones_despues=dimensiones_despues,
+            requisitos=QUALITY_REQUIREMENTS[name],
+        )
+        quality_compare[name] = dict(
+            labels=DIMENSION_LABELS,
+            antes=[dimensiones_antes[d] for d in DIMENSION_LABELS],
+            despues=[dimensiones_despues[d] for d in DIMENSION_LABELS],
+        )
+
+    profiles_raw = {name: r["perfil_antes"] for name, r in resultados.items()}
+    inventario = build_problem_inventory(all_rows_raw, profiles=profiles_raw, integracion=integracion)
+    n_problemas_alto = sum(1 for p in inventario if p["nivel_impacto"] == "Alto")
+    n_problemas_medio = sum(1 for p in inventario if p["nivel_impacto"] == "Medio")
+    n_problemas_bajo = sum(1 for p in inventario if p["nivel_impacto"] == "Bajo")
+
+    dataset_labels = {
+        "eva_basicos": "EVA — producción municipal",
+        "qcl": "FAOSTAT — todos los productos",
+        "qcl_basicos": "FAOSTAT — cultivos básicos",
+        "fs": "FAOSTAT — seguridad alimentaria",
+    }
+
+    return dict(
+        resultados=resultados,
+        inventario=inventario,
+        n_problemas_alto=n_problemas_alto,
+        n_problemas_medio=n_problemas_medio,
+        n_problemas_bajo=n_problemas_bajo,
+        treatment_log=treatment_log,
+        quality_compare=quality_compare,
+        dataset_labels=dataset_labels,
+        dimension_labels=DIMENSION_LABELS,
+    )
+
+
 @project_bp.route("/api/dataset/<name>")
 def api_dataset(name):
     """Sirve un dataset filtrado y paginado en JSON.
@@ -241,10 +258,13 @@ def api_dataset(name):
       (Elemento en FAOSTAT, Departamento en EVA)
     - anio_min / anio_max: filtra por año
     - q: búsqueda libre sobre producto y elemento
+    - version: "crudo" (default, datos de R1) o "tratado" (datos de R2,
+      con las columnas de bandera del tratamiento aplicado)
     - page (default 1), page_size (default 25, máx 200)
     """
+    version = request.args.get("version", "crudo")
     try:
-        dataset = _load_dataset(name)
+        dataset = _load_treated_dataset(name) if version == "tratado" else _load_dataset(name)
     except KeyError:
         return jsonify(error=f"Dataset '{name}' no existe. Usa uno de: {list(DATASETS)}"), 404
 
@@ -309,3 +329,32 @@ def api_quality(name):
     except KeyError:
         return jsonify(error=f"Dataset '{name}' no existe."), 404
     return jsonify(dataset=name, **compute_quality(dataset, name))
+
+
+@project_bp.route("/api/profile/<name>")
+def api_profile(name):
+    """Perfilamiento por columna + las 6 dimensiones de calidad (entregable R2).
+
+    Query params:
+    - version: "crudo" (default, R1) o "tratado" (R2, con banderas de tratamiento).
+    """
+    version = request.args.get("version", "crudo")
+    try:
+        dataset = _load_treated_dataset(name) if version == "tratado" else _load_dataset(name)
+    except KeyError:
+        return jsonify(error=f"Dataset '{name}' no existe. Usa uno de: {list(DATASETS)}"), 404
+
+    schema = DATASET_SCHEMA[name]
+    rows = _rows_as_dicts(dataset)
+    kwargs = {}
+    if schema.get("accuracy_check") == "cruce_eva_faostat":
+        with open(current_app.config["R1_JSON_DIR"] / "integracion_eva_faostat.json", encoding="utf-8") as fh:
+            kwargs["integracion"] = json.load(fh)
+
+    return jsonify(
+        dataset=name,
+        version=version,
+        total=len(rows),
+        columns=profile_columns(rows, dataset["columns"], schema["column_meta"]),
+        dimensiones=compute_dimensions(dataset, name, **kwargs),
+    )

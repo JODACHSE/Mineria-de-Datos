@@ -58,6 +58,7 @@ class Config:
     # Rutas de datos
     DATA_DIR = BASE_DIR / "app" / "data"
     R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
+    R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
 
     # FAOSTAT (usado únicamente por scripts/fetch_faostat.py)
     FAOSTAT_TOKEN = os.environ.get("FAOSTAT_TOKEN", "")
