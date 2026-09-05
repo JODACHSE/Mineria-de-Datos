@@ -540,6 +540,55 @@ def nivel_impacto(pct_afectados: float, campo_critico: bool) -> str:
     return "Bajo"
 
 
+def _iqr_bounds_por_grupo(rows: list[dict], group_fields: tuple[str, ...], value_field: str) -> dict[tuple, tuple[float, float]]:
+    """Límites IQR (± 1.5×RIC) de `value_field`, calculados POR GRUPO
+    (`group_fields`) en vez de globalmente.
+
+    En los datasets FAOSTAT de formato largo, 'Valor' mezcla en una sola
+    columna magnitudes no comparables (producción en toneladas, existencias
+    en cabezas, rendimiento en kg/ha, indicadores en %, según el Producto y
+    el Elemento de cada fila); calcular un IQR global sobre esa columna
+    produciría cientos de "atípicos" que en realidad solo reflejan esa
+    heterogeneidad legítima. Agrupando por (Producto, Elemento) — cada
+    grupo SÍ comparte unidad — el chequeo vuelve a ser significativo.
+    """
+    valores_por_grupo: dict[tuple, list[float]] = defaultdict(list)
+    for r in rows:
+        v = _to_float(r.get(value_field))
+        if v is not None:
+            valores_por_grupo[tuple(r.get(f) for f in group_fields)].append(v)
+
+    bounds = {}
+    for k, vals in valores_por_grupo.items():
+        if len(vals) < 4:  # el rango intercuartílico no es significativo con muestras muy pequeñas
+            continue
+        ordenados = sorted(vals)
+        q1, q3 = _percentile(ordenados, 0.25), _percentile(ordenados, 0.75)
+        iqr = q3 - q1
+        bounds[k] = (q1 - 1.5 * iqr, q3 + 1.5 * iqr)
+    return bounds
+
+
+def _outliers_grupo_iqr(rows: list[dict], group_fields: tuple[str, ...], value_field: str) -> tuple[int, int]:
+    """Cuenta outliers de `value_field` usando límites IQR por grupo (ver
+    `_iqr_bounds_por_grupo`). Devuelve (n_outliers, n_evaluados) — los
+    grupos con menos de 4 valores no se evalúan (RIC no significativo)."""
+    bounds = _iqr_bounds_por_grupo(rows, group_fields, value_field)
+    n_outliers, n_evaluados = 0, 0
+    for r in rows:
+        v = _to_float(r.get(value_field))
+        if v is None:
+            continue
+        k = tuple(r.get(f) for f in group_fields)
+        if k not in bounds:
+            continue
+        n_evaluados += 1
+        lo, hi = bounds[k]
+        if v < lo or v > hi:
+            n_outliers += 1
+    return n_outliers, n_evaluados
+
+
 def _hallazgo_duplicados_por_unidad(rows: list[dict], key_fields: tuple[str, ...]) -> tuple[int, int]:
     """Agrupa por `key_fields` SIN 'Unidad' y cuenta cuántos grupos mezclan más
     de una Unidad distinta (p. ej. huevos en toneladas Y en 1000 unidades) —
@@ -576,9 +625,11 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
     inventario: list[dict] = []
     _id_counter: dict[str, int] = defaultdict(int)
 
-    def _add(dataset, variable, descripcion, n_afectados, total, dimension, evidencia, causa_probable):
+    def _add(dataset, variable, descripcion, n_afectados, total, dimension, evidencia, causa_probable,
+              campo_critico=None):
         pct = round(100 * n_afectados / total, 2) if total else 0.0
-        campo_critico = variable in DATASET_SCHEMA[dataset]["campos_criticos"]
+        if campo_critico is None:
+            campo_critico = variable in DATASET_SCHEMA[dataset]["campos_criticos"]
         _id_counter[dataset] += 1
         inventario.append(dict(
             id=f"{dataset}-{_id_counter[dataset]:02d}",
@@ -593,6 +644,12 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
             causa_probable=causa_probable,
         ))
 
+    # Datasets FAOSTAT de formato largo: la columna 'Valor' mezcla productos
+    # y elementos con unidades distintas, así que su outlier IQR *global* no
+    # es significativo (ver _outliers_grupo_iqr) y se excluye del bucle
+    # automático; se reemplaza por un hallazgo narrativo agrupado más abajo.
+    faostat_datasets = {n for n, s in DATASET_SCHEMA.items() if s.get("consistency_check") == "unidad_por_elemento"}
+
     for name, rows in all_rows.items():
         schema = DATASET_SCHEMA[name]
         total = len(rows)
@@ -600,32 +657,34 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
             continue
         profile = profile_columns(rows, list(schema["column_meta"].keys()), schema["column_meta"])
         for col, p in profile.items():
+            campo_critico = col in schema["campos_criticos"]
             if p["n_nulos"] > 0:
                 _add(name, col, f"{p['n_nulos']} valores nulos o vacíos en '{col}'.",
                      p["n_nulos"], total, "Completitud",
                      f"app.quality.profile_columns('{name}')['{col}'].n_nulos",
-                     "Ausencia de reporte o de validación de campo obligatorio en la fuente.")
+                     "Ausencia de reporte o de validación de campo obligatorio en la fuente.", campo_critico)
             if p.get("fuera_de_rango", 0) > 0:
                 _add(name, col, f"{p['fuera_de_rango']} valores fuera del rango esperado en '{col}'.",
                      p["fuera_de_rango"], total, "Validez",
                      f"app.quality.profile_columns('{name}')['{col}'].fuera_de_rango",
-                     "Errores de captura o ausencia de validaciones de rango en el origen.")
+                     "Errores de captura o ausencia de validaciones de rango en el origen.", campo_critico)
             if p.get("fuera_de_dominio", 0) > 0:
                 _add(name, col, f"{p['fuera_de_dominio']} valores fuera del dominio permitido en '{col}'.",
                      p["fuera_de_dominio"], total, "Validez",
                      f"app.quality.profile_columns('{name}')['{col}'].fuera_de_dominio",
-                     "Variantes de categoría no homologadas o error de digitación.")
+                     "Variantes de categoría no homologadas o error de digitación.", campo_critico)
             if p.get("no_conforme_patron", 0) > 0:
                 _add(name, col, f"{p['no_conforme_patron']} valores que no cumplen el formato esperado en '{col}'.",
                      p["no_conforme_patron"], total, "Validez",
                      f"app.quality.profile_columns('{name}')['{col}'].no_conforme_patron",
-                     "Formato inconsistente entre fuentes o entre periodos de carga.")
-            if p.get("outliers_iqr", 0) > 0:
+                     "Formato inconsistente entre fuentes o entre periodos de carga.", campo_critico)
+            if p.get("outliers_iqr", 0) > 0 and not (name in faostat_datasets and col == "Valor"):
                 _add(name, col, f"{p['outliers_iqr']} valores atípicos (± 1.5×RIC) en '{col}'.",
                      p["outliers_iqr"], total, "Exactitud",
                      f"app.quality.profile_columns('{name}')['{col}'].outliers_iqr",
                      "Variabilidad real del fenómeno (municipios/productos de gran escala) o error de "
-                     "captura puntual — requiere revisión caso a caso, no se elimina automáticamente.")
+                     "captura puntual — requiere revisión caso a caso, no se elimina automáticamente.",
+                     campo_critico)
 
     if "eva_basicos" in all_rows:
         rows = all_rows["eva_basicos"]
@@ -636,19 +695,31 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
                  n_incons, n_verif, "Consistencia",
                  "app.quality._consistencia_area_vs_sembrada sobre eva_basicos.json",
                  "Posible re-siembra dentro del mismo semestre o error de reporte municipal "
-                 "(autorreporte sin validación cruzada).")
+                 "(autorreporte sin validación cruzada).", campo_critico=True)
 
-    if "qcl" in all_rows:
-        rows = all_rows["qcl"]
-        n_grupos_multi, n_filas_afectadas = _hallazgo_duplicados_por_unidad(rows, DATASET_SCHEMA["qcl"]["key_fields"])
+    for name in faostat_datasets & all_rows.keys():
+        rows = all_rows[name]
+        n_grupos_multi, n_filas_afectadas = _hallazgo_duplicados_por_unidad(rows, DATASET_SCHEMA[name]["key_fields"])
         if n_filas_afectadas:
-            _add("qcl", "Producto / Unidad",
+            _add(name, "Producto / Unidad",
                  f"{n_grupos_multi} combinaciones (Área,Producto,Elemento,Año) reportan el mismo indicador en más "
                  f"de una Unidad (p. ej. huevos en 'toneladas' y en '1000 No.'), afectando {n_filas_afectadas} filas; "
                  "la llave de unicidad original de R1 (sin 'Unidad') las contaba como duplicados.",
                  n_filas_afectadas, len(rows), "Unicidad",
-                 "app.quality._hallazgo_duplicados_por_unidad sobre qcl.json",
-                 "Definición de llave de unicidad incompleta: no se incluyó 'Unidad' al validar duplicados en R1.")
+                 f"app.quality._hallazgo_duplicados_por_unidad sobre {name}.json",
+                 "Definición de llave de unicidad incompleta: no se incluyó 'Unidad' al validar duplicados en R1.",
+                 campo_critico=True)
+
+        n_out, n_eval = _outliers_grupo_iqr(rows, ("Producto", "Elemento"), "Valor")
+        if n_out:
+            _add(name, "Valor (por Producto, Elemento)",
+                 f"{n_out} de {n_eval} valores evaluables son atípicos (± 1.5×RIC) dentro de su propia serie "
+                 "(Producto, Elemento) — no se calculó globalmente para no mezclar magnitudes distintas "
+                 "(toneladas, cabezas, kg/ha, %, etc.).",
+                 n_out, n_eval, "Exactitud",
+                 f"app.quality._outliers_grupo_iqr sobre {name}.json, agrupado por (Producto, Elemento)",
+                 "Variabilidad real de la serie (años atípicos por clima o mercado) o error de captura "
+                 "puntual — requiere revisión caso a caso.", campo_critico=True)
 
     if "fs" in all_rows:
         rows = all_rows["fs"]
@@ -660,6 +731,7 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], integracion: dict |
                  "cumplen Lower bound ≤ Valor ≤ Upper bound.",
                  n_problema, n_verif, "Exactitud",
                  "app.quality._exactitud_ci_bounds sobre fs.json",
-                 "Redondeo o desfase entre la estimación puntual y el intervalo publicado por FAO/SOFI.")
+                 "Redondeo o desfase entre la estimación puntual y el intervalo publicado por FAO/SOFI.",
+                 campo_critico=True)
 
     return inventario

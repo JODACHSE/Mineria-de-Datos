@@ -36,6 +36,13 @@
       "justificacion": "25 filas usan, para su combinación (Producto, Elemento), una Unidad distinta a la modal; se marcan con '_flag_unidad_atipica' para revisión, sin alterar el valor reportado."
     },
     {
+      "dataset": "qcl",
+      "accion": "Tratamiento justificado de atípicos en 'Valor' (± 1.5×RIC por Producto/Elemento)",
+      "n_afectados": 327,
+      "decision": "flag",
+      "justificacion": "327 valores atípicos dentro de su propia serie (Producto, Elemento); se marcan con '_outlier_iqr_valor' y NO se eliminan — variabilidad real de la serie (clima, mercado) o error puntual, requiere revisión caso a caso."
+    },
+    {
       "dataset": "qcl_basicos",
       "accion": "Corrección de la llave de unicidad (+ 'Unidad')",
       "n_afectados": 0,
@@ -71,6 +78,13 @@
       "justificacion": "Todas las filas usan la Unidad modal de su combinación (Producto, Elemento)."
     },
     {
+      "dataset": "qcl_basicos",
+      "accion": "Tratamiento justificado de atípicos en 'Valor' (± 1.5×RIC por Producto/Elemento)",
+      "n_afectados": 7,
+      "decision": "flag",
+      "justificacion": "7 valores atípicos dentro de su propia serie (Producto, Elemento); se marcan con '_outlier_iqr_valor' y NO se eliminan — variabilidad real de la serie (clima, mercado) o error puntual, requiere revisión caso a caso."
+    },
+    {
       "dataset": "fs",
       "accion": "Corrección de la llave de unicidad (+ 'Unidad')",
       "n_afectados": 0,
@@ -104,6 +118,13 @@
       "n_afectados": 0,
       "decision": "sin_accion",
       "justificacion": "Todas las filas usan la Unidad modal de su combinación (Producto, Elemento)."
+    },
+    {
+      "dataset": "fs",
+      "accion": "Tratamiento justificado de atípicos en 'Valor' (± 1.5×RIC por Producto/Elemento)",
+      "n_afectados": 3,
+      "decision": "flag",
+      "justificacion": "3 valores atípicos dentro de su propia serie (Producto, Elemento); se marcan con '_outlier_iqr_valor' y NO se eliminan — variabilidad real de la serie (clima, mercado) o error puntual, requiere revisión caso a caso."
     },
     {
       "dataset": "eva_basicos",

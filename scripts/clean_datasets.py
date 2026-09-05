@@ -50,6 +50,7 @@ from app.quality import (  # noqa: E402
     DATASETS,
     _count_duplicates,
     _hallazgo_duplicados_por_unidad,
+    _iqr_bounds_por_grupo,
     _percentile,
     _rows_as_dicts,
     _to_float,
@@ -285,6 +286,28 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
             f"{n_atipica} filas usan, para su combinación (Producto, Elemento), una Unidad distinta a la "
             "modal; se marcan con '_flag_unidad_atipica' para revisión, sin alterar el valor reportado."
             if n_atipica else "Todas las filas usan la Unidad modal de su combinación (Producto, Elemento)."
+        ),
+    ))
+
+    # 6) Tratamiento justificado de atípicos en 'Valor', agrupado por
+    #    (Producto, Elemento) — ver app.quality._iqr_bounds_por_grupo: un
+    #    IQR global sobre 'Valor' mezclaría magnitudes no comparables.
+    bounds = _iqr_bounds_por_grupo(rows, ("Producto", "Elemento"), "Valor")
+    n_out = 0
+    for r in rows:
+        v = _to_float(r.get("Valor"))
+        k = (r.get("Producto"), r.get("Elemento"))
+        flag = v is not None and k in bounds and (v < bounds[k][0] or v > bounds[k][1])
+        r["_outlier_iqr_valor"] = flag
+        n_out += int(flag)
+    acciones.append(dict(
+        dataset=schema_name, accion="Tratamiento justificado de atípicos en 'Valor' (± 1.5×RIC por Producto/Elemento)",
+        n_afectados=n_out, decision="flag" if n_out else "sin_accion",
+        justificacion=(
+            f"{n_out} valores atípicos dentro de su propia serie (Producto, Elemento); se marcan con "
+            "'_outlier_iqr_valor' y NO se eliminan — variabilidad real de la serie (clima, mercado) o "
+            "error puntual, requiere revisión caso a caso."
+            if n_out else "No se encontraron valores atípicos dentro de sus series (Producto, Elemento)."
         ),
     ))
 
