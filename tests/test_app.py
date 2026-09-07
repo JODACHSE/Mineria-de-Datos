@@ -101,3 +101,43 @@ def test_api_quality(client):
 def test_404_page(client):
     resp = client.get("/ruta-que-no-existe")
     assert resp.status_code == 404
+
+
+def test_r2_ok(client):
+    resp = client.get("/r2")
+    assert resp.status_code == 200
+    assert b"calidad" in resp.data.lower()
+
+
+def test_api_profile_eva_basicos(client):
+    resp = client.get("/api/profile/eva_basicos")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["total"] > 10000
+    assert len(data["columns"]) == 18
+    assert set(data["dimensiones"]) == {
+        "completitud", "exactitud", "consistencia", "unicidad", "validez", "actualidad",
+    }
+
+
+def test_api_profile_not_found(client):
+    resp = client.get("/api/profile/no-existe")
+    assert resp.status_code == 404
+
+
+def test_api_dataset_version_tratado(client):
+    resp = client.get("/api/dataset/eva_basicos?version=tratado&page_size=5")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["total"] <= 48932
+    # la version tratada agrega columnas de bandera que la cruda no tiene
+    assert any(c.startswith("_flag") or c.startswith("_outlier") for c in data["columns"])
+
+
+def test_api_quality_sin_regresion_tras_refactor(client):
+    """R1 no debe cambiar de comportamiento tras extraer app/quality.py."""
+    resp = client.get("/api/quality/eva_basicos")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["total"] > 10000
+    assert 0 <= data["completeness"] <= 100

@@ -5,7 +5,12 @@ Sitio web en **Flask** que presenta el entregable **R1 · Del problema a
 los datos**: problema y contexto, preguntas analíticas, fuentes, dataset
 inicial, diccionario de datos, caracterización, diagnóstico de calidad,
 limitaciones y evidencia visual, con un explorador de datos interactivo
-respaldado por una API propia.
+respaldado por una API propia; y el entregable **R2 · Diagnóstico y
+calidad de los datos**: perfilamiento por columna, las 6 dimensiones de
+calidad (completitud, exactitud, consistencia, unicidad, validez,
+actualidad) con métricas verificables, inventario de problemas, análisis
+de causas, integración/homologación y un tratamiento real (no solo
+documentado) aplicado a los 4 datasets, con comparación antes/después.
 
 **Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
 Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
@@ -22,6 +27,13 @@ Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
 - **Diagnóstico de calidad en vivo**: completitud, unicidad y validez se
   calculan en cada solicitud (`/api/quality/<nombre>`), no están
   hard-codeados en la plantilla.
+- **R2 · Calidad de datos**: perfilamiento por columna y las 6 dimensiones
+  de calidad se calculan en vivo (`/api/profile/<nombre>`) sobre la
+  versión cruda y la versión tratada de cada dataset
+  (`/api/dataset/<nombre>?version=tratado`); el tratamiento real
+  (`scripts/clean_datasets.py`) nunca elimina filas ni fabrica valores —
+  corrige lo no ambiguo (tipos, llave de unicidad, fechas) y marca el
+  resto con banderas (`_flag_*`, `_outlier_*`).
 - **Diseño de marca Wololo**: retícula técnica ("instrumento de campo") +
   tarjetas neumórficas, tema claro/oscuro (el oscuro retoma los colores
   exactos del escudo Wololo: verde pino + gris pizarra), tipografía
@@ -58,12 +70,14 @@ Mineria de Datos/
 │   │   ├── eva_basicos_colombia.csv      # EVA real, sin modificar
 │   │   └── faostat_*.csv
 │   ├── routes/                   # blueprints: project.py, lessons.py (blueprint 'entregables')
+│   ├── quality.py                # esquemas, perfilamiento, 6 dimensiones e inventario (R2)
 │   ├── etapas.py                 # las 8 etapas/entregables (global de plantilla)
 │   ├── static/
 │   │   ├── assets/fonts|img/     # tipografías (CDN) e imágenes
 │   │   ├── css/styles.css        # sistema de diseño
-│   │   ├── data/R1/*.json        # datasets curados: fs, qcl, qcl_basicos,
+│   │   ├── data/R1/*.json        # datasets curados (crudos): fs, qcl, qcl_basicos,
 │   │   │                         # eva_basicos, integracion_eva_faostat
+│   │   ├── data/R2/*.json        # datasets tratados (con banderas) + log_tratamiento.json
 │   │   ├── js/index.js
 │   │   └── favicon.ico
 │   ├── templates/
@@ -72,14 +86,17 @@ Mineria de Datos/
 │   │   ├── entregables/          # index.html, about.html
 │   │   └── project/
 │   │       ├── index.html
-│   │       └── project/R1.html
+│   │       └── project/R1.html, R2.html
 │   ├── __init__.py               # application factory
 │   └── config.py
 ├── scripts/
 │   ├── fetch_faostat.py          # descarga reproducible vía API
 │   ├── rebuild_chart.py          # regenera JSON de FAOSTAT desde los CSV
-│   └── process_eva.py            # limpia y regenera eva_basicos.json + integración
-├── tests/
+│   ├── process_eva.py            # limpia y regenera eva_basicos.json + integración (R1)
+│   └── clean_datasets.py         # tratamiento real de calidad de los 4 datasets (R2)
+├── docs/
+│   └── informe-tecnico-etapa2.md # informe técnico de la Etapa 2
+├── tests/                        # test_app.py (rutas) + test_quality.py (perfilamiento/dimensiones)
 ├── setup.sh / setup.bat          # arranque en un solo comando
 ├── .env / .gitignore
 ├── requirements.txt
@@ -127,13 +144,18 @@ python run.py
 |------|-------------|
 | `/` | Landing del proyecto |
 | `/r1` | Entregable R1 completo |
+| `/r2` | Entregable R2: diagnóstico y calidad de los datos |
 | `/entregables` | Hoja de ruta con las 8 etapas del proyecto |
 | `/sobre-nosotros` | El equipo Wololo y la afiliación académica |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados/filtrados (JSON) |
-| `/api/quality/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Diagnóstico de calidad recalculado |
+| `/api/quality/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Diagnóstico de calidad recalculado (R1) |
+| `/api/profile/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Perfilamiento por columna + 6 dimensiones (R2) |
 
 Parámetros soportados por `/api/dataset/<name>`: `q`, `producto`,
-`elemento`, `anio_min`, `anio_max`, `page`, `page_size`.
+`elemento`, `anio_min`, `anio_max`, `page`, `page_size`, y
+`version=crudo|tratado` (default `crudo`) para alternar entre la versión
+de R1 y la tratada de R2. `/api/profile/<name>` admite el mismo
+parámetro `version`.
 
 ## 🔁 Reproducir la descarga de datos
 
@@ -144,6 +166,9 @@ python scripts/rebuild_chart.py     # o solo regenerar JSON de FAOSTAT desde los
 python scripts/process_eva.py       # limpia app/data/eva_basicos_colombia.csv y
                                      # regenera eva_basicos.json + la tabla de
                                      # integración EVA↔FAOSTAT
+python scripts/clean_datasets.py    # tratamiento real de calidad (R2): lee
+                                     # app/static/data/R1/*.json y escribe
+                                     # app/static/data/R2/*.json + log_tratamiento.json
 ```
 
 El dataset EVA (48.932 registros reales de producción municipal, 6

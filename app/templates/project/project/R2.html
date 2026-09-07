@@ -1,0 +1,408 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}R2 · Diagnóstico y calidad de los datos — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .r1-hero{ padding:2.6rem 0 1rem; }
+  .r1-hero h1{ font-size:clamp(2rem,5.4vw,3.4rem); }
+  .problem-card{ margin-bottom:1.1rem; }
+  .problem-card__head{ display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; margin-bottom:.6rem; }
+  .problem-card__head b{ font-size:1rem; }
+  .problem-card dl{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:.6rem 1.2rem; margin:.8rem 0 0; }
+  .problem-card dt{ font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-soft); }
+  .problem-card dd{ margin:0; font-size:.86rem; }
+  table.data-table.wrap th, table.data-table.wrap td{ white-space:normal; vertical-align:top; }
+  .req-ok{ color:var(--leaf); }
+  [data-theme="dark"] .req-ok{ color:var(--slate-light); }
+  .req-fail{ color:var(--chili); }
+  .compare-controls{ display:flex; justify-content:flex-end; margin-bottom:.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="r1-hero container">
+  <span class="eyebrow reveal">Entregable · R2</span>
+  <h1 class="reveal">Diagnóstico y<br><span class="accent">calidad de los datos</span></h1>
+  <p class="reveal" style="max-width:64ch;">
+    Perfilamiento, 6 dimensiones de calidad, inventario de problemas y tratamiento real
+    aplicado a los 4 datasets de <strong>{{ proyecto_tema | capitalize }}</strong>
+    (EVA municipal + 3 tablas FAOSTAT). Ningún registro se elimina ni se fabrica un valor:
+    lo que no se puede corregir sin ambigüedad queda documentado como bandera.
+  </p>
+  <div class="card-grid cols-4 reveal-stagger" style="margin-top:1.6rem;">
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">4</span><span class="lbl">Datasets perfilados y tratados</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ "{:,}".format(resultados.values() | map(attribute='total') | sum).replace(',', '.') }}</span><span class="lbl">Registros perfilados en total</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ inventario | length }}</span><span class="lbl">Problemas en el inventario · {{ n_problemas_alto }} de impacto alto</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ treatment_log.acciones | length }}</span><span class="lbl">Acciones de tratamiento aplicadas</span></span>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+<div class="r1-layout">
+
+  <!-- ================= TOC ================= -->
+  <aside class="toc neu-flat reveal">
+    <p class="toc__title">Etapa 2 · Submenú</p>
+    <ol>
+      <li><a href="#proposito">Propósito del dataset</a></li>
+      <li><a href="#perfilamiento">Perfilamiento</a></li>
+      <li><a href="#dimensiones">Dimensiones, métricas y requisitos</a></li>
+      <li><a href="#problemas">Inventario de problemas</a></li>
+      <li><a href="#causas">Causas probables</a></li>
+      <li><a href="#integracion">Integración y homologación</a></li>
+      <li><a href="#tratamiento">Plan de tratamiento aplicado</a></li>
+      <li><a href="#comparacion">Comparación antes / después</a></li>
+    </ol>
+    <p class="toc__title toc__title--extra">Contenido adicional</p>
+    <ul class="toc__extra">
+      <li><a href="#vista-datos">Explorador crudo / tratado</a></li>
+    </ul>
+  </aside>
+
+  <!-- ================= CONTENIDO ================= -->
+  <div>
+
+    <section id="proposito" class="r1-section reveal">
+      <h2>1 · Propósito y alcance de los datos</h2>
+      <p>
+        Los 4 datasets consolidados en R1 —<code class="mono">eva_basicos</code> (producción
+        municipal, MinAgricultura/UPRA), <code class="mono">qcl</code> y
+        <code class="mono">qcl_basicos</code> (producción agropecuaria nacional, FAOSTAT) y
+        <code class="mono">fs</code> (seguridad alimentaria, FAOSTAT)— se usan para sostener el
+        análisis de la paradoja <em>producción creciente vs. inseguridad alimentaria</em> en
+        Colombia (2000–2024). Ese uso previsto —comparar fuentes, agregar por cultivo/año/
+        territorio y cruzarlas entre sí— define qué se exige de su calidad: identificadores
+        únicos y confiables (códigos DANE, no nombres), variables numéricas completas y dentro
+        de rango, categorías homologadas entre EVA y FAOSTAT, y una vigencia razonable frente a
+        la fecha de análisis.
+      </p>
+      <p>
+        Este entregable perfila, mide y trata los <strong>4 datasets por igual</strong> (no solo
+        EVA): aunque EVA concentra la mayoría de los hallazgos por ser el dataset más grande y
+        detallado (48.932 filas, 18 columnas, nivel municipal), las 3 tablas FAOSTAT también se
+        someten al mismo perfilamiento, las mismas 6 dimensiones y el mismo tratamiento real.
+      </p>
+    </section>
+
+    <section id="perfilamiento" class="r1-section reveal">
+      <h2>2 · Perfilamiento por dataset</h2>
+      <p>
+        Calculado en vivo (Python puro, sin precálculo) sobre la versión cruda de cada dataset
+        (<code class="mono">app/quality.py::profile_columns</code>): cantidad de registros y
+        variables, tipo inferido, valores únicos, nulos, y para variables numéricas mínimo,
+        máximo, media y valores atípicos (± 1.5×rango intercuartílico). Los campos con
+        dominio/rango/patrón definido (p. ej. <code class="mono">Cultivo</code>,
+        <code class="mono">CodigoMunicipioDane</code>) muestran además cuántos valores no
+        conforman esa regla.
+      </p>
+      {% for name, label in dataset_labels.items() %}
+      {% set r = resultados[name] %}
+      <h3 style="margin-top:1.6rem;">{{ label }} — {{ "{:,}".format(r.total).replace(',', '.') }} registros</h3>
+      <div class="table-wrap neu-flat">
+        <table class="data-table wrap">
+          <thead><tr><th>Campo</th><th>Tipo</th><th>Nulos</th><th>Únicos</th><th>Detalle</th></tr></thead>
+          <tbody>
+            {% for col, p in r.perfil_antes.items() %}
+            <tr>
+              <td class="mono">{{ col }}</td>
+              <td>{{ p.tipo }}</td>
+              <td>{{ p.n_nulos }} ({{ p.pct_nulos }}%)</td>
+              <td>{{ p.n_unicos }}</td>
+              <td>
+                {% if p.tipo == 'numerico' %}
+                  mín {{ p.minimo }} · máx {{ p.maximo }} · media {{ p.media }} · atípicos {{ p.outliers_iqr }} ({{ p.outliers_iqr_pct }}%)
+                {% else %}
+                  {% for v, n in p.top_valores[:3] %}{{ v }} ({{ n }}){% if not loop.last %}, {% endif %}{% endfor %}
+                {% endif %}
+                {% if p.fuera_de_dominio is defined and p.fuera_de_dominio > 0 %}<br><span class="tag chili">{{ p.fuera_de_dominio }} fuera de dominio</span>{% endif %}
+                {% if p.fuera_de_rango is defined and p.fuera_de_rango > 0 %}<br><span class="tag chili">{{ p.fuera_de_rango }} fuera de rango</span>{% endif %}
+                {% if p.no_conforme_patron is defined and p.no_conforme_patron > 0 %}<br><span class="tag chili">{{ p.no_conforme_patron }} no conforme</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="dimensiones" class="r1-section reveal">
+      <h2>3 · Dimensiones de calidad, métricas y requisitos</h2>
+      <p>
+        Se evalúan las 6 dimensiones exigidas — completitud, exactitud, consistencia, unicidad,
+        validez y actualidad— con una fórmula verificable por dimensión (ver
+        <code class="mono">app/quality.py::compute_dimensions</code>). El requisito mínimo de
+        cada dimensión se definió según el uso previsto (sección 1): identificadores y valores
+        críticos casi sin nulos ni duplicados, vigencia razonable frente a un rezago
+        administrativo típico de fuentes agropecuarias oficiales. Cuando una dimensión no tiene
+        mecanismo de contraste disponible para un dataset, se muestra "No aplica" — nunca se
+        inventa un número.
+      </p>
+      {% for name, label in dataset_labels.items() %}
+      {% set r = resultados[name] %}
+      <h3 style="margin-top:1.6rem;">{{ label }}</h3>
+      <div class="neu card">
+        <div class="card-grid cols-2">
+          {% for dim in dimension_labels %}
+          {% set medido = r.dimensiones_antes[dim] %}
+          {% set requisito = r.requisitos[dim] %}
+          <div class="quality-metric">
+            <div class="quality-metric__row">
+              <span>{{ dim | capitalize }} <span class="tag" style="margin-left:.4em;">req. ≥ {{ requisito }}%</span></span>
+              <b>{{ medido if medido is not none else "No aplica" }}{{ "%" if medido is not none }}</b>
+            </div>
+            <div class="quality-bar neu-inset"><div class="quality-bar__fill" data-value="{{ medido if medido is not none else 0 }}"></div></div>
+            {% if medido is not none %}
+              <span class="{{ 'req-ok' if medido >= requisito else 'req-fail' }}" style="font-size:.74rem;">
+                {{ "Cumple el requisito" if medido >= requisito else "No cumple el requisito" }}
+              </span>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="problemas" class="r1-section reveal">
+      <h2>4 · Inventario de problemas</h2>
+      <p>
+        {{ inventario | length }} problemas identificados en la versión cruda de los 4 datasets:
+        <span class="tag chili">{{ n_problemas_alto }} de impacto alto</span>
+        <span class="tag amber">{{ n_problemas_medio }} medio</span>
+        <span class="tag leaf">{{ n_problemas_bajo }} bajo</span>.
+        El nivel de impacto combina el % de registros afectados con si el campo alimenta
+        directamente el análisis (regla en <code class="mono">app/quality.py::nivel_impacto</code>,
+        ver anexo del informe técnico).
+      </p>
+      {% for p in inventario %}
+      <div class="neu-flat card problem-card">
+        <div class="problem-card__head">
+          <span class="tag">{{ dataset_labels[p.dataset] }}</span>
+          <b>{{ p.variable }}</b>
+          <span class="tag {{ 'chili' if p.nivel_impacto == 'Alto' else ('amber' if p.nivel_impacto == 'Medio' else 'leaf') }}">
+            Impacto {{ p.nivel_impacto }}
+          </span>
+        </div>
+        <p class="card__text">{{ p.descripcion }}</p>
+        <dl>
+          <div><dt>Registros afectados</dt><dd>{{ "{:,}".format(p.n_afectados).replace(',', '.') }} ({{ p.pct_afectados }}%)</dd></div>
+          <div><dt>Dimensión</dt><dd>{{ p.dimension }}</dd></div>
+          <div><dt>Causa probable</dt><dd>{{ p.causa_probable }}</dd></div>
+          <div><dt>Evidencia</dt><dd class="mono" style="font-size:.76rem;">{{ p.evidencia }}</dd></div>
+        </dl>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="causas" class="r1-section reveal">
+      <h2>5 · Análisis de causas</h2>
+      <ul>
+        <li><strong>Ausencia de validaciones en el origen:</strong> los {{ resultados.qcl.perfil_antes['Valor'].n_nulos }}
+        valores nulos de <code class="mono">Valor</code> en <code class="mono">qcl</code> reflejan
+        series de FAOSTAT que simplemente no se midieron ese año — no hay un valor "correcto" que
+        imputar, y la fuente no impone un mínimo de cobertura temporal por serie.</li>
+        <li><strong>Autorreporte municipal sin validación cruzada:</strong> el 13.69% de las filas
+        de EVA con área cosechada mayor que la sembrada sugiere que ningún control impide que un
+        municipio reporte una re-siembra o un error de captura sin que el sistema lo detecte antes
+        de publicarse.</li>
+        <li><strong>Definición de llave de unicidad incompleta (defecto de R1):</strong> las 25
+        combinaciones de huevos reportadas en dos unidades (toneladas y 1000 unidades) se
+        contaban como "duplicados" en R1 porque la llave de verificación no incluía
+        <code class="mono">Unidad</code> — un error de diseño de la validación, no del dato.</li>
+        <li><strong>Conversión automática de tipos por la herramienta de procesamiento:</strong> el
+        CSV original de EVA sí trae los códigos DANE con cero inicial como texto (p. ej. "05001");
+        al construir <code class="mono">eva_basicos.json</code> en R1, la inferencia automática de
+        tipos de <code class="mono">pandas</code> los convirtió a entero y perdió el cero inicial
+        en los departamentos 01-09, afectando el 11.96% de las filas — un defecto real del
+        pipeline, no del dato fuente.</li>
+        <li><strong>Duplicidad/heterogeneidad legítima de fuentes:</strong> FAOSTAT reporta el
+        mismo <code class="mono">Elemento</code> (p. ej. "Producción") en unidades distintas según
+        si el producto es un cultivo o una especie pecuaria — no es un error, pero exige agrupar
+        por (Producto, Elemento) al calcular cualquier estadístico sobre <code class="mono">Valor</code>,
+        algo que el diagnóstico inicial de R1 no hacía.</li>
+        <li><strong>Falta de actualización:</strong> ningún dataset tiene datos posteriores a 2024;
+        frente a la fecha de este entregable (2026), la actualidad medida (dimensión 6) refleja ese
+        rezago con una fórmula explícita de antigüedad, no con una etiqueta subjetiva.</li>
+      </ul>
+    </section>
+
+    <section id="integracion" class="r1-section reveal">
+      <h2>6 · Integración y homologación</h2>
+      <p>
+        La homologación entre EVA y FAOSTAT ya se resolvió en R1 mediante un cruce de nombres de
+        cultivo (<code class="mono">CROP_MAPPING</code>, en <code class="mono">scripts/process_eva.py</code>),
+        reutilizado sin cambios por el tratamiento de esta etapa:
+      </p>
+      <div class="table-wrap neu-flat">
+        <table class="data-table">
+          <thead><tr><th>Cultivo (EVA)</th><th>Producto (FAOSTAT)</th></tr></thead>
+          <tbody>
+            {% for cultivo, producto in treatment_log.crop_mapping.items() %}
+            <tr><td>{{ cultivo }}</td><td>{{ producto }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:1rem;">
+        A esa homologación de categorías, R2 añade dos correcciones de esquema que también son
+        integración/homologación en sentido estricto:
+      </p>
+      <ul>
+        <li><strong>Llave de unicidad ampliada en FAOSTAT</strong> (<code class="mono">+ Unidad</code>):
+        homologa el criterio de identidad de fila entre datasets que antes lo tenían incompleto.</li>
+        <li><strong>Formato de código DANE homogéneo</strong> (texto de ancho fijo, 2 y 5 dígitos):
+        homologa la representación de <code class="mono">CodigoDeptoDane</code>/<code class="mono">CodigoMunicipioDane</code>
+        para que sea comparable con cualquier otra fuente oficial que use el estándar DANE (ENSIN, DANE-IPC).</li>
+        <li><strong><code class="mono">AnioNormalizado</code></strong> en los 3 datasets FAOSTAT:
+        homologa el formato temporal (año puntual vs. trienio) sin destruir el campo <code class="mono">Año</code> original.</li>
+      </ul>
+    </section>
+
+    <section id="tratamiento" class="r1-section reveal">
+      <h2>7 · Plan de tratamiento aplicado</h2>
+      <p>
+        Ejecutado por <code class="mono">scripts/clean_datasets.py</code> sobre la versión cruda
+        (R1) de los 4 datasets, generando la versión tratada en
+        <code class="mono">app/static/data/R2/</code>. Regla general: <strong>ningún registro se
+        elimina y ningún valor se fabrica</strong>; lo corregible sin ambigüedad se corrige
+        (tipos, llave de unicidad, fechas), lo demás se marca con una bandera nueva para que el
+        análisis aguas abajo decida cómo tratarlo.
+      </p>
+      {% for name, label in dataset_labels.items() %}
+      <h3 style="margin-top:1.6rem;">{{ label }}</h3>
+      <div class="table-wrap neu-flat">
+        <table class="data-table wrap">
+          <thead><tr><th>Acción</th><th>Registros afectados</th><th>Decisión</th><th>Justificación</th></tr></thead>
+          <tbody>
+            {% for a in treatment_log.acciones if a.dataset == name %}
+            <tr>
+              <td>{{ a.accion }}</td>
+              <td>{{ "{:,}".format(a.n_afectados).replace(',', '.') }}</td>
+              <td><span class="tag {{ 'chili' if a.decision == 'flag' else ('leaf' if a.decision in ['correccion','correccion_llave'] else '') }}">{{ a.decision }}</span></td>
+              <td>{{ a.justificacion }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="comparacion" class="r1-section reveal">
+      <h2>8 · Comparación antes / después</h2>
+      <p>
+        Como el tratamiento marca en vez de corregir en silencio, la mayoría de las 6 dimensiones
+        no cambia numéricamente entre la versión cruda y la tratada — eso es intencional, no un
+        error: el objetivo no era "subir el número" sino volver visibles y trazables problemas que
+        antes no lo eran. Dos excepciones sí muestran una mejora real y medible: la
+        <strong>unicidad de <code class="mono">qcl</code></strong> (99.73% → 100%, al corregir la
+        llave de unicidad) y la <strong>validez de <code class="mono">eva_basicos</code></strong>
+        (88.04% → 100%, al corregir el formato de los códigos DANE).
+      </p>
+      <div class="neu" style="padding:1.6rem;">
+        <div class="compare-controls">
+          <select id="compare-dataset-select" aria-label="Elegir dataset para comparar">
+            {% for name, label in dataset_labels.items() %}
+            <option value="{{ name }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="chart-frame">
+          <canvas id="compare-chart" aria-label="Comparación antes y después de las 6 dimensiones de calidad" role="img"></canvas>
+        </div>
+      </div>
+
+      {% for name, label in dataset_labels.items() %}
+      <h3 style="margin-top:1.8rem;">{{ label }}</h3>
+      <div class="table-wrap neu-flat">
+        <table class="data-table">
+          <thead><tr><th>Dimensión</th><th class="num">Antes</th><th class="num">Después</th><th class="num">Δ</th></tr></thead>
+          <tbody>
+            {% set r = resultados[name] %}
+            {% for dim in dimension_labels %}
+            {% set antes = r.dimensiones_antes[dim] %}
+            {% set despues = r.dimensiones_despues[dim] %}
+            <tr>
+              <td>{{ dim | capitalize }}</td>
+              <td class="num">{{ antes if antes is not none else "No aplica" }}{{ "%" if antes is not none }}</td>
+              <td class="num">{{ despues if despues is not none else "No aplica" }}{{ "%" if despues is not none }}</td>
+              <td class="num">{{ (despues - antes) | round(2) if antes is not none and despues is not none else "—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </section>
+
+    <section id="vista-datos" class="r1-section reveal">
+      <h2>Anexo · Explorador crudo / tratado</h2>
+      <p>
+        Mismo explorador de R1, con un selector adicional para comparar la versión cruda (R1) con
+        la tratada (R2). En "tratado" se agregan al final las columnas de bandera
+        (<code class="mono">_flag_*</code>, <code class="mono">_outlier_*</code>) como evidencia
+        directa de qué filas quedaron marcadas.
+      </p>
+      <div class="neu" id="data-explorer" data-dataset="eva_basicos" data-version="crudo" style="padding:1.6rem;">
+        <div class="explorer__controls">
+          <select data-role="dataset-select" aria-label="Elegir dataset">
+            <option value="eva_basicos" selected>EVA — cultivos básicos (municipal)</option>
+            <option value="qcl_basicos">FAOSTAT — cultivos básicos (nacional)</option>
+            <option value="qcl">FAOSTAT — todos los productos (nacional)</option>
+            <option value="fs">FAOSTAT — seguridad alimentaria</option>
+          </select>
+          <select data-role="version" aria-label="Elegir versión">
+            <option value="crudo" selected>Crudo (R1)</option>
+            <option value="tratado">Tratado (R2)</option>
+          </select>
+          <input type="search" placeholder="Buscar…" data-role="search" aria-label="Buscar">
+          <select data-role="producto" aria-label="Filtrar por producto"><option value="">Cargando…</option></select>
+          <select data-role="elemento" aria-label="Filtrar por elemento/departamento"><option value="">Cargando…</option></select>
+        </div>
+        <p class="explorer__meta">Cargando…</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="explorer__pagination">
+          <button class="neu-btn" data-role="prev" type="button">← Anterior</button>
+          <span data-role="page-info">1 / 1</span>
+          <button class="neu-btn" data-role="next" type="button">Siguiente →</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="callout reveal" style="margin-top:2rem;">
+      <p><strong>Producto R2:</strong> los 4 datasets quedan perfilados, medidos en 6 dimensiones
+      de calidad con métricas verificables, con {{ inventario | length }} problemas inventariados
+      y {{ treatment_log.acciones | length }} acciones de tratamiento aplicadas y documentadas —
+      sin eliminar registros ni fabricar valores. Los archivos tratados
+      (<code class="mono">app/static/data/R2/</code>) y el registro de tratamiento
+      (<code class="mono">log_tratamiento.json</code>) quedan versionados junto al código, listos
+      para el modelado de la siguiente etapa.</p>
+    </div>
+
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block pre_scripts %}
+<script>
+  window.__QUALITY_COMPARE__ = {{ quality_compare | tojson }};
+</script>
+{% endblock %}

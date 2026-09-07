@@ -12,7 +12,7 @@
       <ul class="nav-links" id="nav-links">
         <li><a href="{{ url_for('project.index') }}" class="{{ 'active' if request.endpoint=='project.index' }}">Inicio</a></li>
         <li class="nav-dropdown" id="etapasNavItem">
-          <a href="#" class="dropdown-toggle {{ 'active' if request.endpoint=='project.r1' or request.endpoint=='entregables.index' }}" id="etapasDropdown" role="button" aria-haspopup="true" aria-expanded="false">Etapas</a>
+          <a href="#" class="dropdown-toggle {{ 'active' if request.endpoint=='project.r1' or request.endpoint=='entregables.index' }}" id="etapasDropdown" role="button" aria-haspopup="true" aria-expanded="false">Etapas<span class="dropdown-caret" aria-hidden="true"></span></a>
           <ul class="dropdown-menu" aria-labelledby="etapasDropdown">
             {% for e in etapas %}
             <li>
