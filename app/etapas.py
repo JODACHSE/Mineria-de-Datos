@@ -16,6 +16,14 @@ ETAPAS = [
         "estado": "completado",
         "url_endpoint": "project.r1",
     },
+    {
+        "codigo": "R2",
+        "titulo": "Diagnóstico y calidad de los datos",
+        "resumen": "Perfilamiento, 6 dimensiones de calidad, inventario de problemas y tratamiento real "
+                   "aplicado a los 4 datasets (EVA + FAOSTAT).",
+        "estado": "completado",
+        "url_endpoint": "project.r2",
+    },
 ] + [
     {
         "codigo": f"R{n}",
@@ -24,7 +32,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(2, 9)
+    for n in range(3, 9)
 ]
 
 FASES_CRISP = [

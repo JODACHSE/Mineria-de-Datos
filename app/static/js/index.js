@@ -7,6 +7,7 @@
  *            5) TOC activo en scroll (R1)
  *            6) explorador de datos dinámico (fetch a /api/dataset/<n>)
  *            7) gráfico FAOSTAT (Chart.js)
+ *            8) gráfico comparativo de calidad antes/después (R2)
  * ========================================================================= */
 (() => {
   "use strict";
@@ -237,12 +238,14 @@
     const searchInput = explorer.querySelector("[data-role='search']");
     const productoSelect = explorer.querySelector("[data-role='producto']");
     const elementoSelect = explorer.querySelector("[data-role='elemento']");
+    const versionSelect = explorer.querySelector("[data-role='version']");
     const prevBtn = explorer.querySelector("[data-role='prev']");
     const nextBtn = explorer.querySelector("[data-role='next']");
     const pageInfo = explorer.querySelector("[data-role='page-info']");
 
     let state = {
       dataset: explorer.dataset.dataset,
+      version: explorer.dataset.version || "crudo",
       page: 1,
       page_size: 8,
       q: "",
@@ -265,6 +268,7 @@
       const params = new URLSearchParams({
         page: state.page,
         page_size: state.page_size,
+        version: state.version,
       });
       if (state.q) params.set("q", state.q);
       if (state.producto) params.set("producto", state.producto);
@@ -277,7 +281,10 @@
         const json = await res.json();
         if (json.error) throw new Error(json.error);
 
-        const cols = json.display_columns;
+        // En la versión "tratado" (R2) se muestran también las columnas de
+        // bandera (_flag_*, _outlier_*) como evidencia visible del tratamiento.
+        const flagCols = state.version === "tratado" ? json.columns.filter((c) => c.startsWith("_")) : [];
+        const cols = json.display_columns.concat(flagCols);
         thead.innerHTML = cols.map((c) => `<th>${c}</th>`).join("");
 
         const numericCols = new Set(["Valor", "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"]);
@@ -297,9 +304,12 @@
           .map((row) => {
             const cells = cols
               .map((c) => {
-                const val = row[c] ?? "—";
-                const display = numericCols.has(c) && typeof val === "number" ? val.toLocaleString("es-CO") : val;
-                return `<td class="${numericCols.has(c) ? "num" : ""}">${display}</td>`;
+                const raw = row[c];
+                let display = raw ?? "—";
+                if (typeof raw === "boolean") display = raw ? "Sí" : "No";
+                else if (numericCols.has(c) && typeof raw === "number") display = raw.toLocaleString("es-CO");
+                const cls = numericCols.has(c) ? "num" : raw === true ? "flag-on" : "";
+                return `<td class="${cls}">${display}</td>`;
               })
               .join("");
             return `<tr>${cells}</tr>`;
@@ -339,6 +349,11 @@
     });
     elementoSelect?.addEventListener("change", (e) => {
       state.elemento = e.target.value;
+      state.page = 1;
+      loadData();
+    });
+    versionSelect?.addEventListener("change", (e) => {
+      state.version = e.target.value;
       state.page = 1;
       loadData();
     });
@@ -455,6 +470,69 @@
         },
       },
     });
+  }
+
+  /* ----------------------------------------------------------------- *
+   * 8) GRÁFICO COMPARATIVO DE CALIDAD ANTES/DESPUÉS (R2)
+   *    window.__QUALITY_COMPARE__ = {dataset: {labels:[6 dims], antes:[...], despues:[...]}}
+   * ----------------------------------------------------------------- */
+  const compareCanvas = document.getElementById("compare-chart");
+  if (compareCanvas && window.Chart && window.__QUALITY_COMPARE__) {
+    const compareData = window.__QUALITY_COMPARE__;
+    const compareSelect = document.getElementById("compare-dataset-select");
+    const styles3 = getComputedStyle(document.documentElement);
+    const amber3 = styles3.getPropertyValue("--amber-bright").trim();
+    const leaf3 = styles3.getPropertyValue("--leaf").trim();
+    const textSoft3 = styles3.getPropertyValue("--ink-soft").trim();
+    const line3 = styles3.getPropertyValue("--line").trim();
+
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    let compareChart = null;
+
+    function renderCompare(dsKey) {
+      const d = compareData[dsKey];
+      if (!d) return;
+      const cfg = {
+        type: "bar",
+        data: {
+          labels: d.labels.map(cap),
+          datasets: [
+            { label: "Antes", data: d.antes.map((v) => v ?? 0), backgroundColor: amber3 },
+            { label: "Después", data: d.despues.map((v) => v ?? 0), backgroundColor: leaf3 },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: textSoft3, font: { family: "'Space Mono', monospace", size: 11 } } },
+            tooltip: {
+              backgroundColor: styles3.getPropertyValue("--bg-panel-2").trim(),
+              titleColor: textSoft3,
+              bodyColor: textSoft3,
+              borderColor: line3,
+              borderWidth: 1,
+              callbacks: {
+                label(ctx) {
+                  const raw = dsKey && compareData[dsKey] ? compareData[dsKey][ctx.datasetIndex === 0 ? "antes" : "despues"][ctx.dataIndex] : null;
+                  return `${ctx.dataset.label}: ${raw === null ? "No aplica" : raw + "%"}`;
+                },
+              },
+            },
+          },
+          scales: {
+            x: { ticks: { color: textSoft3 }, grid: { color: line3 } },
+            y: { min: 0, max: 100, ticks: { color: textSoft3 }, grid: { color: line3 } },
+          },
+        },
+      };
+      if (compareChart) compareChart.destroy();
+      compareChart = new Chart(compareCanvas, cfg);
+    }
+
+    const firstKey = compareSelect ? compareSelect.value : Object.keys(compareData)[0];
+    renderCompare(firstKey);
+    compareSelect?.addEventListener("change", (e) => renderCompare(e.target.value));
   }
 
   /* set current year in footer, if present */
