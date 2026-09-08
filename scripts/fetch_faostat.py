@@ -1,23 +1,4 @@
 """Descarga reproducible de datos FAOSTAT para Colombia.
-
-Uso:
-    python scripts/fetch_faostat.py
-
-Requiere la variable de entorno FAOSTAT_TOKEN (token JWT del Portal para
-Desarrolladores de FAOSTAT, https://faostatservices.fao.org). El token
-caduca a los 60 minutos: nunca se escribe en el código, solo se lee desde
-el entorno (.env).
-
-Este script:
-1. Autentica contra la API de FAOSTAT.
-2. Descarga los datasets FS (seguridad alimentaria) y QCL (cultivos y
-   ganadería) filtrados solo para Colombia (área FAO = 44).
-3. Filtra un subconjunto de cultivos básicos de la canasta alimentaria.
-4. Guarda el CSV original (sin modificar) en app/data/ y un JSON liviano
-   en app/static/data/R1/ para el explorador y los gráficos del sitio.
-
-Cumple el principio de trazabilidad: cualquier persona con su propio
-token puede volver a ejecutar este script y obtener los mismos datos.
 """
 from __future__ import annotations
 

@@ -1,38 +1,4 @@
 """Tratamiento real de calidad para los 4 datasets del proyecto (Etapa 2 / R2).
-
-Uso:
-    python scripts/clean_datasets.py
-
-Lee la versión ya curada de R1 (`app/static/data/R1/*.json` — ya tipificada
-y renombrada por `process_eva.py`/`rebuild_chart.py`, no se reprocesa el
-CSV crudo ni se duplica el parseo de formato numérico colombiano) y aplica
-las acciones de tratamiento descritas en el informe técnico de la Etapa 2:
-
-- Eliminación de duplicados (verificación; no se encontraron para eliminar).
-- Tratamiento de valores nulos: se documentan/flaggean, nunca se imputa un
-  valor que la fuente no reportó.
-- Corrección de tipos: se reutiliza la conversión ya hecha en R1.
-- Estandarización de texto (espacios/casing) en campos categóricos.
-- Estandarización temporal: `AnioNormalizado` en los datasets FAOSTAT
-  (algunos años vienen como trienio, p. ej. "2000-2002").
-- Corrección de la llave de unicidad en los datasets FAOSTAT (se le
-  agrega `Unidad`, ver hallazgo de los "huevos en dos unidades").
-- Validación de rangos (EVA: área cosechada > sembrada) y homologación de
-  unidad por elemento (FAOSTAT): se marcan con una bandera, NUNCA se
-  corrige el valor en silencio (no se sabe cuál campo es el erróneo).
-- Tratamiento justificado de valores atípicos (± 1.5×RIC): se marcan con
-  una bandera; no se eliminan, porque en este dominio (municipios o
-  productos de gran escala) suelen ser datos reales, no errores.
-
-Ninguna fila se elimina y ningún valor se fabrica: todo lo que no se
-puede corregir sin ambigüedad queda documentado como bandera nueva en el
-propio dataset tratado, para que el análisis aguas abajo decida cómo
-tratarlo. Escribe en `app/static/data/R2/`:
-- `{eva_basicos,qcl,qcl_basicos,fs}.json` — mismo formato {columns, rows}
-  que R1, con las columnas originales intactas + las banderas nuevas.
-- `log_tratamiento.json` — lista de acciones aplicadas (con su
-  justificación) + un resumen antes/después de las 6 dimensiones de
-  calidad por dataset, calculado por el propio script (no a mano).
 """
 from __future__ import annotations
 
