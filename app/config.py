@@ -21,7 +21,7 @@ class Config:
     PROYECTO_TEMA = "Seguridad alimentaria y producción agrícola"
     PROYECTO_COBERTURA = "Colombia (nacional)"
     PROYECTO_PERIODO = "2000 – 2024"
-    PROYECTO_ENTREGABLE = "R1 · Del problema a los datos"
+    PROYECTO_ENTREGABLE = "R2 · Diagnóstico y calidad de los datos"
 
     # --- Identidad del equipo (Wololo) --------------------------------
     BRAND_NAME = "Wololo"

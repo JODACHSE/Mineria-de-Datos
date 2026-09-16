@@ -144,7 +144,7 @@ def r1():
             break
 
     return render_template(
-        "project/project/R1.html",
+        "project/round/R1.html",
         quality=quality,
         fs_chart=fs_chart,
         integracion=integracion,
@@ -175,7 +175,7 @@ def r2():
     """
     if "r2:context" not in _cache:
         _cache["r2:context"] = _build_r2_context()
-    return render_template("project/project/R2.html", **_cache["r2:context"])
+    return render_template("project/round/R2.html", **_cache["r2:context"])
 
 
 def _build_r2_context() -> dict:

@@ -1,0 +1,28 @@
+{# Layout de reporte: cabecera con cifras, índice lateral con scrollspy y columna de contenido.
+   Las páginas hijas definen: report_code, report_title (html), report_lead, block report_stats,
+   toc_title, toc_items, toc_extra y block report_body. #}
+{% extends "layouts/base.html" %}
+
+{% block body_attrs %}data-bs-spy="scroll" data-bs-target="#toc" data-bs-offset="120" data-bs-smooth-scroll="true"{% endblock %}
+
+{% block content %}
+<section class="container pt-5 pb-4">
+  <p class="text-success fw-semibold small mb-1 reveal">Entregable · {{ report_code }}</p>
+  <h1 class="display-5 fw-bold lh-1 reveal">{{ report_title | safe }}</h1>
+  <p class="text-body-secondary mt-3 reveal" style="max-width:64ch;">{{ report_lead | safe }}</p>
+  <div class="row row-cols-2 row-cols-lg-4 g-3 mt-2">
+    {% block report_stats %}{% endblock %}
+  </div>
+</section>
+
+<div class="container pb-5">
+  <div class="row g-4 g-lg-5">
+    <aside class="col-lg-3">
+      {% include "components/toc.html" %}
+    </aside>
+    <div class="col-lg-9 report-body">
+      {% block report_body %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

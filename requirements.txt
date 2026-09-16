@@ -1,7 +1,4 @@
+# Dependencias de ejecución (lo que Render instala). Scripts de datos y tests: requirements-dev.txt
 Flask>=3.0,<4
 python-dotenv>=1.0,<2
-pandas>=2.2.3,<3
-requests>=2.32,<3
-faostat>=2.0,<3
-pytest>=8.2,<9
 gunicorn>=22.0,<24

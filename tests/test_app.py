@@ -20,7 +20,7 @@ def client():
 def test_index_ok(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "SEGURIDAD".encode() in resp.data
+    assert "Seguridad alimentaria".encode() in resp.data
 
 
 def test_r1_ok(client):
@@ -141,3 +141,29 @@ def test_api_quality_sin_regresion_tras_refactor(client):
     data = resp.get_json()
     assert data["total"] > 10000
     assert 0 <= data["completeness"] <= 100
+
+
+def test_404_page(client):
+    resp = client.get("/no-existe")
+    assert resp.status_code == 404
+    assert "Página no".encode("utf-8") in resp.data
+
+
+def test_api_dataset_version_tratado(client):
+    resp = client.get("/api/dataset/eva_basicos?version=tratado&page_size=3")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert any(c.startswith("_") for c in data["columns"])  # columnas de bandera
+
+
+def test_api_profile_fs(client):
+    resp = client.get("/api/profile/fs?version=tratado")
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["version"] == "tratado"
+    assert set(data["dimensiones"]) >= {"completitud", "unicidad", "validez"}
+
+
+def test_api_dataset_page_size_capped(client):
+    resp = client.get("/api/dataset/qcl?page_size=999")
+    assert resp.get_json()["page_size"] == 200

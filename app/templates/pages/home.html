@@ -1,0 +1,159 @@
+{% extends "layouts/base.html" %}
+{% from "macros/ui.html" import section_head, stat, tag, icon_card, callout %}
+
+{% block title %}{{ proyecto_tema | capitalize }} · {{ proyecto_cobertura }} — Inicio{% endblock %}
+
+{% block content %}
+
+{# ===== HERO ===== #}
+<section class="hero py-5 border-bottom">
+  <div class="container py-lg-4">
+    <div class="d-flex flex-wrap justify-content-between gap-2 small text-success fw-semibold mb-3 reveal">
+      <span><i class="bi bi-diagram-3 me-1"></i>Proyecto · Minería de datos</span>
+      <span class="text-body-secondary font-monospace">{{ proyecto_periodo }}</span>
+    </div>
+
+    <h1 class="display-3 fw-bold lh-1 mb-4 hero-title reveal">
+      Seguridad alimentaria<br>
+      <span class="text-success">y</span> producción
+      <span class="text-outline">agrícola</span>
+    </h1>
+
+    <div class="row g-4 g-lg-5 align-items-end">
+      <div class="col-lg-7">
+        <p class="lead reveal" style="max-width:56ch;">
+          Colombia produce en abundancia y, aun así, buena parte de sus territorios
+          convive con inseguridad alimentaria. Este proyecto caracteriza —con datos
+          oficiales, no con opinión— dónde, cuánto y con qué estabilidad se produce,
+          para señalar los territorios más vulnerables en la disponibilidad de
+          alimentos.
+        </p>
+        <div class="d-flex flex-wrap gap-2 mt-4 reveal">
+          <a href="{{ url_for('pages.r1') }}" class="btn btn-success btn-lg">Ver reporte R1 <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success btn-lg">Ver reporte R2</a>
+          <a href="{{ url_for('pages.r1') }}#vista-datos" class="btn btn-link btn-lg link-body-emphasis">Explorar los datos</a>
+        </div>
+        <p class="small text-body-secondary font-monospace mt-4 mb-0 reveal">
+          Un proyecto de {{ developers[0].nombre.split(' ')[0] }} {{ developers[0].nombre.split(' ')[1] }} &amp;
+          {{ developers[1].nombre.split(' ')[0] }} {{ developers[1].nombre.split(' ')[1] }} ·
+          <a href="{{ url_for('pages.about') }}" class="link-success">{{ universidad_nombre }} <i class="bi bi-arrow-right-short"></i></a>
+        </p>
+      </div>
+      <div class="col-lg-5">
+        <div class="row row-cols-1 row-cols-sm-3 row-cols-lg-1 g-3">
+          <div class="col">{{ stat(1104, "Municipios cubiertos por EVA (producción)") }}</div>
+          <div class="col">{{ stat("2000–2024", "Serie histórica FAOSTAT analizada", countup=False) }}</div>
+          <div class="col">{{ stat(6, "Cultivos básicos de la canasta alimentaria") }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ===== EL PROBLEMA ===== #}
+<section class="container py-5">
+  <div class="row g-4 align-items-end mb-4">
+    <div class="col-lg-7">
+      {{ section_head("El problema", "Producir mucho no es lo mismo<br>que estar seguro") }}
+    </div>
+    <div class="col-lg-5">
+      <p class="text-body-secondary mb-0 reveal">
+        Según la ENSIN 2015, más de la mitad de los hogares colombianos reportó
+        algún grado de inseguridad alimentaria — con mayor incidencia en zonas
+        rurales y de periferia, justo donde se concentra buena parte de la
+        producción del país.
+      </p>
+    </div>
+  </div>
+  <div class="row row-cols-1 row-cols-md-3 g-3">
+    {{ icon_card("bi-basket2", "Disponibilidad", "La producción agrícola local es el primer pilar de la seguridad alimentaria: sin oferta, no hay disponibilidad posible.") }}
+    {{ icon_card("bi-layers", "Concentración", "La oferta no se distribuye de forma pareja: se concentra en pocos departamentos, cultivos y ventanas de tiempo.") }}
+    {{ icon_card("bi-activity", "Variabilidad", "La producción es sensible al clima y a la estacionalidad; medir su volatilidad ayuda a anticipar riesgo.") }}
+  </div>
+</section>
+
+{# ===== PREGUNTAS ===== #}
+<section class="bg-body-tertiary py-5">
+  <div class="container">
+    {{ section_head("Preguntas del entregable R1", "Una pregunta principal,<br>cuatro rutas de entrada") }}
+
+    <div class="card border-success border-2 mb-3 reveal">
+      <div class="card-body">
+        {{ tag("Pregunta principal", "warning") }}
+        <p class="fs-5 mt-2 mb-0">
+          ¿Cómo se comporta la oferta de producción agrícola municipal en Colombia
+          (2019–2024) y qué patrones por región, cultivo y periodo permiten
+          identificar territorios vulnerables en la disponibilidad de alimentos?
+        </p>
+      </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+      {% for q in [
+        "¿Qué departamentos y municipios concentran la producción de cultivos básicos (maíz, arroz, papa, plátano, yuca, fríjol) y cómo ha evolucionado?",
+        "¿Cómo varía el rendimiento (t/ha) entre regiones y cultivos, y qué zonas muestran productividad persistentemente baja?",
+        "¿Qué cultivos y territorios presentan mayor variabilidad interanual de producción?",
+        "¿Existe relación entre la diversidad de cultivos de un municipio y la estabilidad de su producción total?"
+      ] %}
+      <div class="col">
+        <div class="card h-100 reveal">
+          <div class="card-body">
+            {{ tag("Secundaria · " ~ loop.index, "success") }}
+            <p class="mt-2 mb-0">{{ q }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-4 reveal">
+      <a href="{{ url_for('pages.r1') }}#preguntas" class="btn btn-outline-success">Ver el desarrollo completo en R1</a>
+    </div>
+  </div>
+</section>
+
+{# ===== FUENTES ===== #}
+<section class="container py-5">
+  {{ section_head("Fuentes de datos", "Dos escalas, una sola<br>lectura del territorio") }}
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    <div class="col">
+      <div class="card h-100 shadow-sm reveal">
+        <div class="card-body">
+          {{ tag("Secundaria · municipal", "warning") }}
+          <h3 class="h5 fw-bold mt-2">EVA · MinAgricultura / UPRA</h3>
+          <p class="card-text text-body-secondary mb-0">Evaluaciones Agropecuarias Municipales: producción agrícola oficial a nivel municipal, ~1.104 municipios y ~192 cultivos, publicada en Datos Abiertos Colombia.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card h-100 shadow-sm reveal">
+        <div class="card-body">
+          {{ tag("Secundaria · nacional", "warning") }}
+          <h3 class="h5 fw-bold mt-2">FAOSTAT · FAO</h3>
+          <p class="card-text text-body-secondary mb-0">Indicadores de seguridad alimentaria y producción de cultivos a nivel país, curados por la FAO. Descarga reproducible vía API con token propio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ===== CTA ===== #}
+<section class="container pb-5">
+  <div class="card bg-success-subtle border-success-subtle text-center reveal">
+    <div class="card-body p-4 p-lg-5">
+      <p class="text-success fw-semibold small mb-1">Productos R1 y R2</p>
+      <h2 class="fw-bold">El equipo entiende el problema<br>y tiene bases justificables</h2>
+      <p class="text-body-secondary mx-auto mt-3 mb-4" style="max-width:56ch;">
+        R1 no busca todavía el mejor modelo, sino una base sólida —problema, preguntas,
+        fuentes, dataset, diccionario y diagnóstico de calidad— para iniciar el
+        proceso de minería de conocimiento. R2 perfila, mide y trata esos datos.
+      </p>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{{ url_for('pages.r1') }}" class="btn btn-success">Abrir el reporte R1</a>
+        <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success">Abrir el reporte R2</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,116 @@
+{# ===========================================================================
+   macros/ui.html — componentes reutilizables construidos con clases de Bootstrap.
+   Ningún macro introduce CSS propio: solo composición de utilidades.
+   =========================================================================== #}
+
+{# Título de sección: etiqueta pequeña + h2 + (opcional) párrafo de apoyo. #}
+{% macro section_head(eyebrow, title, lead=None, center=False) %}
+<div class="mb-4 reveal {{ 'text-center' if center }}">
+  <p class="text-success fw-semibold small mb-1">{{ eyebrow }}</p>
+  <h2 class="fw-bold lh-sm mb-2">{{ title | safe }}</h2>
+  {% if lead %}<p class="text-body-secondary mb-0 {{ 'mx-auto' if center }}" style="max-width:60ch;">{{ lead | safe }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{# Cifra destacada. `value` se anima con count-up si es numérica (data-countup). #}
+{% macro stat(value, label, countup=True, size="fs-2") %}
+<div class="card h-100 border-0 bg-body-tertiary reveal">
+  <div class="card-body">
+    <div class="{{ size }} fw-bold lh-1 text-success font-monospace"
+         {% if countup and value is number %}data-countup="{{ value }}"{% endif %}>
+      {% if countup and value is number %}0{% else %}{{ value }}{% endif %}
+    </div>
+    <div class="small text-body-secondary mt-2">{{ label | safe }}</div>
+  </div>
+</div>
+{% endmacro %}
+
+{# Bloque de énfasis (reemplaza al antiguo .callout). Uso: {% call callout() %}...{% endcall %} #}
+{% macro callout(icon="bi-lightbulb", color="success") %}
+<div class="alert alert-{{ color }} border-0 border-start border-4 border-{{ color }} d-flex gap-3 reveal" role="note">
+  <i class="bi {{ icon }} fs-4 flex-shrink-0"></i>
+  <div class="mb-0">{{ caller() }}</div>
+</div>
+{% endmacro %}
+
+{# Etiqueta (badge) con color semántico de Bootstrap. #}
+{% macro tag(text, color="secondary", soft=True) %}
+{% if soft %}
+<span class="badge rounded-pill text-{{ color }}-emphasis bg-{{ color }}-subtle border border-{{ color }}-subtle">{{ text }}</span>
+{% else %}
+<span class="badge rounded-pill text-bg-{{ color }}">{{ text }}</span>
+{% endif %}
+{% endmacro %}
+
+{# Nivel de impacto -> color. #}
+{% macro impact_tag(level) %}
+{{ tag("Impacto " ~ level, "danger" if level == "Alto" else ("warning" if level == "Medio" else "success")) }}
+{% endmacro %}
+
+{# Barra de calidad con requisito opcional. La barra se anima al entrar en pantalla. #}
+{% macro quality_bar(label, value, req=None) %}
+{% set ok = value is not none and (req is none or value >= req) %}
+<div class="mb-3">
+  <div class="d-flex justify-content-between align-items-baseline small mb-1">
+    <span>{{ label }}{% if req is not none %} <span class="text-body-secondary">· req. ≥ {{ req }}%</span>{% endif %}</span>
+    <strong class="font-monospace">{{ (value ~ "%") if value is not none else "No aplica" }}</strong>
+  </div>
+  <div class="progress" role="progressbar" aria-label="{{ label }}" aria-valuenow="{{ value or 0 }}" aria-valuemin="0" aria-valuemax="100" style="height:.5rem;">
+    <div class="progress-bar {{ 'bg-success' if ok else 'bg-danger' }}" data-progress="{{ value or 0 }}" style="width:0%"></div>
+  </div>
+  {% if req is not none and value is not none %}
+  <div class="small mt-1 {{ 'text-success' if ok else 'text-danger' }}">
+    <i class="bi {{ 'bi-check-circle' if ok else 'bi-x-circle' }}"></i> {{ "Cumple el requisito" if ok else "No cumple el requisito" }}
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# Ficha de fuente de datos: tipo -> color, cuerpo como lista de definiciones. #}
+{% macro source_card(tipo, escala, titulo, items) %}
+{% set color = {"Primaria": "danger", "Secundaria": "warning", "Terciaria": "success"}[tipo] %}
+<div class="col">
+  <div class="card h-100 shadow-sm reveal">
+    <div class="card-body">
+      {{ tag(tipo ~ " · " ~ escala, color) }}
+      <h3 class="h5 fw-bold mt-3">{{ titulo | safe }}</h3>
+      <dl class="row small mb-0">
+        {% for k, v in items %}
+        <dt class="col-sm-4 text-body-secondary fw-normal">{{ k }}</dt>
+        <dd class="col-sm-8">{{ v | safe }}</dd>
+        {% endfor %}
+      </dl>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{# Tarjeta simple con icono. #}
+{% macro icon_card(icon, title, text, color="success") %}
+<div class="col">
+  <div class="card h-100 border-0 bg-body-tertiary reveal">
+    <div class="card-body">
+      <i class="bi {{ icon }} fs-2 text-{{ color }}"></i>
+      <h3 class="h5 fw-bold mt-2">{{ title }}</h3>
+      <p class="card-text text-body-secondary mb-0">{{ text }}</p>
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{# Encabezado de una sección de reporte (h2 numerado). #}
+{% macro report_h2(num, text) %}
+<h2 class="h3 fw-bold border-bottom pb-2 mb-3">
+  {% if num %}<span class="text-success font-monospace me-2">{{ num }}</span>{% endif %}{{ text }}
+</h2>
+{% endmacro %}
+
+{# Contenedor de tabla responsive con estilo homogéneo. #}
+{% macro table_open(wrap=False, extra="") %}
+<div class="table-responsive rounded border mb-3">
+  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}">
+{% endmacro %}
+{% macro table_close() %}
+  </table>
+</div>
+{% endmacro %}

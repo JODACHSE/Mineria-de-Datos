@@ -1,1 +1,1 @@
-"""Paquete de blueprints de la aplicación."""
+"""Blueprints de la aplicación: `pages` (HTML) y `api` (JSON)."""

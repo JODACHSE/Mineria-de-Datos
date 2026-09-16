@@ -1,0 +1,57 @@
+{# Explorador de datos paginado por la API de Flask. Espera: explorer_options, show_version (bool) #}
+<div class="card shadow-sm" id="data-explorer" data-dataset="eva_basicos" data-version="crudo">
+  <div class="card-body">
+    <div class="row g-2 mb-3">
+      <div class="col-md-{{ 3 if show_version else 4 }}">
+        <label class="form-label small text-body-secondary mb-1" for="explorer-dataset">Dataset</label>
+        <select class="form-select form-select-sm" id="explorer-dataset" data-role="dataset-select">
+          {% for value, label in explorer_options %}
+          <option value="{{ value }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% if show_version %}
+      <div class="col-md-2">
+        <label class="form-label small text-body-secondary mb-1" for="explorer-version">Versión</label>
+        <select class="form-select form-select-sm" id="explorer-version" data-role="version">
+          <option value="crudo" selected>Crudo (R1)</option>
+          <option value="tratado">Tratado (R2)</option>
+        </select>
+      </div>
+      {% endif %}
+      <div class="col-md-{{ 3 if show_version else 4 }}">
+        <label class="form-label small text-body-secondary mb-1" for="explorer-search">Buscar</label>
+        <input class="form-control form-control-sm" type="search" id="explorer-search" placeholder="Producto, departamento…" data-role="search">
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-body-secondary mb-1" for="explorer-producto">Producto</label>
+        <select class="form-select form-select-sm" id="explorer-producto" data-role="producto"><option value="">Cargando…</option></select>
+      </div>
+      <div class="col-6 col-md-2">
+        <label class="form-label small text-body-secondary mb-1 text-truncate w-100" for="explorer-elemento">Elemento</label>
+        <select class="form-select form-select-sm" id="explorer-elemento" data-role="elemento"><option value="">Cargando…</option></select>
+      </div>
+    </div>
+
+    <p class="small text-body-secondary font-monospace mb-2" data-role="meta" aria-live="polite">Cargando…</p>
+
+    <div class="table-responsive rounded border">
+      <table class="table table-sm table-striped table-hover text-nowrap mb-0" style="font-size:.82rem;">
+        <thead><tr></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+      <button class="btn btn-outline-success btn-sm" data-role="prev" type="button"><i class="bi bi-chevron-left"></i> Anterior</button>
+      <div class="d-flex align-items-center gap-2 small">
+        <label class="text-body-secondary" for="explorer-page-size">Filas</label>
+        <select class="form-select form-select-sm w-auto" id="explorer-page-size" data-role="page-size">
+          <option value="8" selected>8</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+        </select>
+        <span class="font-monospace" data-role="page-info">1 / 1</span>
+      </div>
+      <button class="btn btn-outline-success btn-sm" data-role="next" type="button">Siguiente <i class="bi bi-chevron-right"></i></button>
+    </div>
+  </div>
+</div>

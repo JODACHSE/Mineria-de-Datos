@@ -1,45 +1,49 @@
 """Application factory de la app Flask."""
-from flask import Flask
+from flask import Flask, render_template
 
 from .config import Config
 
 
 def create_app(config_class: type = Config) -> Flask:
-    """Crea y configura la instancia de la aplicación Flask."""
     app = Flask(__name__)
     app.config.from_object(config_class)
 
-    # --- Blueprints -------------------------------------------------
-    from .routes.project import project_bp
-    from .routes.lessons import lessons_bp
+    from .routes.api import api_bp
+    from .routes.pages import pages_bp
 
-    app.register_blueprint(project_bp)
-    app.register_blueprint(lessons_bp)
+    app.register_blueprint(pages_bp)
+    app.register_blueprint(api_bp)
 
-    # --- Contexto global para plantillas ------------------------------
     @app.context_processor
     def inject_globals():
         from .etapas import ETAPAS
+
+        cfg = app.config
         return {
-            "app_name": app.config["APP_NAME"],
-            "proyecto_tema": app.config["PROYECTO_TEMA"],
-            "proyecto_cobertura": app.config["PROYECTO_COBERTURA"],
-            "proyecto_periodo": app.config["PROYECTO_PERIODO"],
-            "proyecto_entregable": app.config["PROYECTO_ENTREGABLE"],
-            "brand_name": app.config["BRAND_NAME"],
-            "brand_tagline": app.config["BRAND_TAGLINE"],
-            "brand_year": app.config["BRAND_YEAR"],
-            "universidad_nombre": app.config["UNIVERSIDAD_NOMBRE"],
-            "universidad_url": app.config["UNIVERSIDAD_URL"],
-            "developers": app.config["DEVELOPERS"],
+            "app_name": cfg["APP_NAME"],
+            "proyecto_tema": cfg["PROYECTO_TEMA"],
+            "proyecto_cobertura": cfg["PROYECTO_COBERTURA"],
+            "proyecto_periodo": cfg["PROYECTO_PERIODO"],
+            "proyecto_entregable": cfg["PROYECTO_ENTREGABLE"],
+            "brand_name": cfg["BRAND_NAME"],
+            "brand_tagline": cfg["BRAND_TAGLINE"],
+            "universidad_nombre": cfg["UNIVERSIDAD_NOMBRE"],
+            "universidad_url": cfg["UNIVERSIDAD_URL"],
+            "developers": cfg["DEVELOPERS"],
             "etapas": ETAPAS,
-            "github_repo_url": app.config["GITHUB_REPO_URL"],
+            "github_repo_url": cfg["GITHUB_REPO_URL"],
         }
 
-    # --- Manejo de errores ------------------------------------------
+    @app.template_filter("miles")
+    def miles(value):
+        """12345 -> '12.345' (separador de miles colombiano)."""
+        try:
+            return f"{int(value):,}".replace(",", ".")
+        except (TypeError, ValueError):
+            return value
+
     @app.errorhandler(404)
     def not_found(_e):
-        from flask import render_template
-        return render_template("layouts/base.html", error_404=True), 404
+        return render_template("errors/404.html"), 404
 
     return app

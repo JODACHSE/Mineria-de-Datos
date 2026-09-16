@@ -1,0 +1,49 @@
+/* =========================================================================
+   app.css — lo mínimo que Bootstrap 5.3 no cubre por sí solo.
+   Colores, tipografía y temas claro/oscuro los aporta Bootstrap
+   (data-bs-theme); aquí solo: motion, layout fino y un par de detalles.
+   ========================================================================= */
+
+/* --- Marca ------------------------------------------------------------- */
+.letter-spacing-1 { letter-spacing: .08em; }
+.brand-mark { transition: transform .3s ease; }
+.navbar-brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+
+/* --- Hero: la palabra en contorno es el único gesto tipográfico -------- */
+.hero-title .text-outline {
+  color: transparent;
+  -webkit-text-stroke: 2px var(--bs-body-color);
+}
+.hero { background: linear-gradient(180deg, var(--bs-tertiary-bg) 0%, var(--bs-body-bg) 100%); }
+
+/* --- Cinta de metadatos ------------------------------------------------ */
+.ticker { overflow: hidden; }
+.ticker-track { display: inline-flex; white-space: nowrap; animation: ticker 60s linear infinite; }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes ticker { to { transform: translateX(-50%); } }
+
+/* --- Animación de entrada (IntersectionObserver añade .is-visible) ----- */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity .55s ease, transform .55s ease; }
+.reveal.is-visible { opacity: 1; transform: none; }
+.progress-bar[data-progress] { transition: width 1s cubic-bezier(.22,.61,.36,1); }
+
+/* --- Índice lateral de reportes ---------------------------------------- */
+.toc-sticky { position: sticky; top: 5.5rem; }
+.toc-list .nav-link { color: var(--bs-secondary-color); }
+.toc-list .nav-link.active { background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); }
+.report-body [id] { scroll-margin-top: 5.5rem; }
+
+/* --- Gráficos ----------------------------------------------------------- */
+.chart-frame { position: relative; height: clamp(260px, 45vw, 380px); }
+
+/* --- Botones de estado (sonido / tema) --------------------------------- */
+#sfx-toggle[data-sound="on"] .snd-off, #sfx-toggle[data-sound="off"] .snd-on { display: none; }
+[data-bs-theme="light"] .icon-sun, [data-bs-theme="dark"] .icon-moon { display: none; }
+.back-to-top { opacity: 0; pointer-events: none; transition: opacity .3s ease; }
+.back-to-top.show { opacity: 1; pointer-events: auto; }
+
+/* --- Accesibilidad ------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .ticker-track, .brand-mark, .progress-bar[data-progress] { animation: none; transition: none; }
+}
