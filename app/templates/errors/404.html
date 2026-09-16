@@ -1,0 +1,13 @@
+{% extends "layouts/base.html" %}
+{% block title %}Página no encontrada — {{ brand_name }}{% endblock %}
+{% block content %}
+<section class="container text-center py-5 my-5">
+  <p class="text-success fw-semibold small mb-1">Error 404</p>
+  <h1 class="display-4 fw-bold">Página no <span class="text-success">encontrada</span></h1>
+  <p class="text-body-secondary mx-auto my-3" style="max-width:44ch;">La ruta que buscas no existe. Puedes volver al inicio o revisar los reportes R1 y R2.</p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="{{ url_for('pages.index') }}" class="btn btn-success">Volver al inicio</a>
+    <a href="{{ url_for('pages.entregables') }}" class="btn btn-outline-success">Ver entregables</a>
+  </div>
+</section>
+{% endblock %}

@@ -91,7 +91,13 @@
 }
 
 *,*::before,*::after{ box-sizing:border-box; }
-html{ scroll-behavior:smooth; overflow-x:hidden; }
+/* overflow-x:hidden (en vez de clip) convertiría a html/body en un
+   "scroll container", lo que rompe position:sticky de sus descendientes
+   (p. ej. .toc) apenas empiezan a desplazarse — el navegador ancla el
+   sticky a ese contenedor en vez de al viewport y el elemento se
+   "despega" tras un scroll mínimo. overflow-x:clip recorta el
+   desbordamiento horizontal sin crear ese contenedor de scroll. */
+html{ scroll-behavior:smooth; overflow-x:clip; overflow-y:visible; }
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior:auto; }
   *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important; }
@@ -105,8 +111,11 @@ body{
   font-size:16px;
   line-height:1.6;
   transition:background var(--speed-med) var(--ease-out), color var(--speed-med) var(--ease-out);
-  overflow-x:hidden;
+  overflow-x:clip; overflow-y:visible;
 }
+/* Evita que la página de fondo se desplace mientras el menú móvil (o su
+   fondo oscurecido) está abierto encima. */
+body.nav-open{ overflow:hidden; }
 
 h1,h2,h3,h4,.font-display{
   font-family:var(--font-display);
@@ -122,6 +131,14 @@ a{ color:inherit; text-decoration:none; }
 code, .mono, .font-mono{ font-family:var(--font-mono); }
 ::selection{ background:var(--accent); color:var(--soil); }
 
+/* Listas de definición (<dl>/<dt>/<dd>): el navegador no les fija un
+   color propio, así que sin esta regla heredan el primer color explícito
+   de un ancestro. En este sitio eso podía terminar siendo el de Bootstrap
+   (ver corrección de .card más abajo), que es fijo y no sigue el tema.
+   Se fija aquí un color legible que SIEMPRE sigue el tema activo. */
+dt{ color:var(--text-soft); font-weight:600; }
+dd{ color:var(--text); margin:0 0 .5em; }
+
 button{ font-family:inherit; }
 
 a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-visible, select:focus-visible{
@@ -129,6 +146,18 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-vis
   outline-offset:3px;
   border-radius:4px;
 }
+
+/* ---------- Corrección de colisión con componentes de Bootstrap -------
+   Bootstrap 5 trae sus propios componentes .card y .dropdown-menu, que
+   fijan `color` a un valor oscuro CONSTANTE (--bs-body-color /
+   --bs-dropdown-color) sin relación con nuestro tema claro/oscuro. Como
+   este sitio reutiliza esas mismas clases para su propio sistema de
+   diseño (tarjetas neumórficas, menú "Etapas"), cualquier texto que no
+   tenga su propio color explícito (p. ej. los <dd> de las fichas de
+   fuentes, o los títulos de tarjeta) queda anclado a ese tono oscuro
+   fijo y se vuelve casi invisible en el tema oscuro. Esta regla anula
+   ese color fijo y lo hace seguir siempre la variable de tema del sitio. */
+.card, .dropdown-menu{ color:var(--text); }
 
 .container{
   width:100%;
@@ -238,11 +267,21 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-vis
 .icon-btn svg{ width:20px; height:20px; }
 
 /* ---------- Navbar ---------------------------------------------------*/
+/* El fondo difuminado va en un ::before (no directamente en .navbar)
+   porque backdrop-filter en un ancestro crea un "containing block" para
+   sus descendientes position:fixed (igual que transform/filter) — eso
+   encogía el panel del menú móvil (.nav-links) y su fondo oscurecido
+   (.nav-backdrop) al alto del propio header en vez de ocupar toda la
+   pantalla. El ::before es una caja aparte sin descendientes, así que
+   no arrastra ese problema. */
 .navbar{
   position:sticky; top:0; z-index:100;
+  border-bottom:1px solid var(--line);
+}
+.navbar::before{
+  content:""; position:absolute; inset:0; z-index:-1; pointer-events:none;
   background:color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--line);
 }
 .navbar__inner{
   display:flex; align-items:center; justify-content:space-between;
@@ -282,6 +321,16 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-vis
 
 .nav-tools{ display:flex; align-items:center; gap:.6rem; }
 .nav-toggle{ display:none; }
+/* El botón alterna entre el icono de "hamburguesa" y una "X" según
+   aria-expanded (que el JS ya mantiene sincronizado con el estado real
+   del menú) — así el ícono siempre refleja si el menú está abierto. */
+.nav-toggle .close-icon{ display:none; }
+.nav-toggle[aria-expanded="true"] .menu-icon{ display:none; }
+.nav-toggle[aria-expanded="true"] .close-icon{ display:block; }
+
+/* Fondo oscurecido tras el menú móvil. Inerte en escritorio: el menú
+   nunca se abre como panel ahí, así que no hay nada que oscurecer. */
+.nav-backdrop{ display:none; }
 
 /* dropdown "Etapas" — posicionamiento 100% en CSS (sin Popper.js de
    Bootstrap): Popper coloca el menú con un `transform` inline calculado
@@ -298,9 +347,17 @@ a:focus-visible, button:focus-visible, [tabindex]:focus-visible, input:focus-vis
    mismo pseudo-elemento. */
 .dropdown-caret{
   display:inline-block; width:6px; height:6px;
-  border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor;
+  /* Antes heredaba currentColor (gris, el mismo tono apagado del texto
+     inactivo del menú). Se fija al color de acento para que combine con
+     el resto de resaltados del menú (subrayado, ítems activos, etc.),
+     sin depender del estado hover/active del enlace. */
+  border-right:1.5px solid var(--accent); border-bottom:1.5px solid var(--accent);
   transform:rotate(45deg); margin-left:.4em; vertical-align:middle;
+  transition:transform var(--speed-fast) var(--ease-out);
 }
+/* Gira el chevron al abrir el submenú (misma clase .open que ya
+   controla la lógica JS existente) — puramente cosmético. */
+.nav-dropdown.open .dropdown-caret{ transform:rotate(225deg); }
 .dropdown-menu{
   display:block; /* visibilidad la controlan opacity/visibility, no display */
   position:absolute; top:100%; left:0; margin-top:.6rem;
@@ -469,7 +526,7 @@ table.data-table td.flag-on{ color:var(--chili); font-weight:600; }
 
 /* ---------- TOC lateral (R1) ------------------------------------------*/
 .r1-layout{ display:grid; grid-template-columns:250px 1fr; gap:3rem; align-items:start; }
-.toc{ position:sticky; top:6.5rem; padding:1.4rem 1.2rem; }
+.toc{ position:sticky; top:6.5rem; padding:1.4rem 1.2rem; will-change:transform; }
 .toc__title{ font-family:var(--font-mono); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; color:var(--text-soft); margin-bottom:.9rem; }
 .toc__title--extra{ margin-top:1.4rem; padding-top:1.1rem; border-top:1px dashed var(--line); }
 .toc ol{ list-style:none; margin:0; padding:0; counter-reset:toc; display:flex; flex-direction:column; gap:.55rem; }
@@ -518,7 +575,18 @@ table.data-table td.flag-on{ color:var(--chili); font-weight:600; }
 .footer ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.55rem; }
 .footer ul a{ font-size:.86rem; color:var(--text-soft); }
 .footer ul a:hover{ color:var(--accent); }
-.footer__bottom{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:.8rem; padding-top:1.4rem; border-top:1px solid var(--line); font-family:var(--font-mono); font-size:.74rem; color:var(--text-soft); }
+.footer__bottom{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  gap:.5rem; padding-top:1.4rem; border-top:1px solid var(--line);
+  font-family:var(--font-mono); font-size:.74rem; color:var(--text-soft);
+}
+.footer__bottom a{ color:var(--text-soft); }
+.footer__bottom a:hover{ color:var(--accent); }
+.footer__bottom-uni{ display:inline-flex; align-items:center; gap:.5em; }
+.footer__bottom-uni::before{
+  content:""; width:5px; height:5px; border-radius:50%; background:var(--accent);
+  display:inline-block;
+}
 
 /* ---------- Animaciones de entrada (scroll reveal) --------------------*/
 .reveal{ opacity:0; transform:translateY(28px); transition:opacity .7s var(--ease-out), transform .7s var(--ease-out); }
@@ -620,22 +688,53 @@ table.data-table td, table.data-table th{
 }
 @media (max-width: 640px){
   .nav-links{
-    position:fixed; inset:0 0 0 auto; width:78%; max-width:320px;
-    background:var(--bg); flex-direction:column; align-items:flex-start;
-    padding:5.5rem 1.6rem 2rem; gap:1.4rem; transform:translateX(100%);
+    position:fixed; inset:0 0 0 auto; width:82%; max-width:340px;
+    background:var(--bg); flex-direction:column; align-items:stretch;
+    padding:5.5rem 1.4rem 2rem; gap:.2rem; transform:translateX(100%);
     transition:transform var(--speed-med) var(--ease-out);
     border-left:1px solid var(--line);
+    box-shadow:-18px 0 36px var(--shadow-dark);
+    overflow-y:auto; -webkit-overflow-scrolling:touch;
+    z-index:106; /* por encima del fondo oscurecido */
   }
   .nav-links.open{ transform:translateX(0); }
-  .nav-toggle{ display:inline-flex; }
+  /* Filas de ancho completo, separadas, con más área táctil — antes los
+     enlaces eran una lista apretada con solo el texto como zona de
+     toque. */
+  .nav-links > li{ width:100%; border-bottom:1px solid var(--line); }
+  .nav-links > li:last-child{ border-bottom:none; }
+  .nav-links > li > a{ display:block; padding:1rem .3rem; font-size:.92rem; }
+  .nav-toggle{
+    display:inline-flex; position:relative; z-index:110; /* siempre
+      clicable por encima del panel del menú, incluso abierto */
+  }
   .nav-dropdown{ width:100%; }
   .dropdown-menu{
     position:static !important; float:none; width:100%;
-    box-shadow:none; margin-top:.8rem !important; background:var(--bg-panel-2);
+    box-shadow:none; margin-top:.4rem !important; margin-bottom:.6rem;
+    background:var(--bg-panel-2); border-radius:var(--radius-sm);
     transform:none !important; inset:auto !important;
     opacity:1; visibility:visible; pointer-events:auto; /* siempre expandido en el menú móvil, no depende de hover */
   }
+  /* Fondo oscurecido, clicable para cerrar el menú */
+  .nav-backdrop{
+    display:block; position:fixed; inset:0; z-index:104;
+    background:rgba(0,0,0,.5);
+    opacity:0; visibility:hidden; pointer-events:none;
+    transition:opacity var(--speed-med) var(--ease-out), visibility var(--speed-med);
+  }
+  .nav-backdrop.show{ opacity:1; visibility:visible; pointer-events:auto; }
   .footer__grid{ grid-template-columns:1fr; }
   .cols-4, .cols-3{ grid-template-columns:1fr; }
   .hero__title{ font-size:clamp(2.2rem, 12vw, 3.6rem); }
+}
+
+/* Pantallas muy angostas: se aprieta la fila de íconos del navbar
+   (sonido / tema / GitHub / menú) para que no se desborde ni se vea
+   apretujada junto a la marca. */
+@media (max-width: 400px){
+  .icon-btn{ width:38px; height:38px; }
+  .icon-btn svg{ width:17px; height:17px; }
+  .nav-tools{ gap:.35rem; }
+  .brand__caption{ display:none; }
 }

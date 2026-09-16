@@ -1,0 +1,18 @@
+{# Índice lateral con scrollspy nativo de Bootstrap.
+   Espera: toc_title (str), toc_items [(id, label)], toc_extra [(id, label)] #}
+<nav id="toc" class="toc-sticky reveal" aria-label="Índice de la página">
+  <p class="small fw-bold text-body-secondary mb-2">{{ toc_title }}</p>
+  <ol class="nav nav-pills flex-column small mb-3 toc-list">
+    {% for id, label in toc_items %}
+    <li class="nav-item"><a class="nav-link py-1" href="#{{ id }}">{{ label }}</a></li>
+    {% endfor %}
+  </ol>
+  {% if toc_extra %}
+  <p class="small fw-bold text-body-secondary mb-2">Contenido adicional</p>
+  <ul class="nav nav-pills flex-column small toc-list">
+    {% for id, label in toc_extra %}
+    <li class="nav-item"><a class="nav-link py-1" href="#{{ id }}">{{ label }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</nav>

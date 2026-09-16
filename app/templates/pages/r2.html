@@ -1,0 +1,344 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, impact_tag, callout, quality_bar, report_h2, table_open, table_close %}
+
+{% set report_code = "R2" %}
+{% set report_title = 'Diagnóstico y<br><span class="text-success">calidad de los datos</span>' %}
+{% set report_lead = "Perfilamiento, 6 dimensiones de calidad, inventario de problemas y tratamiento real aplicado a los 4 datasets de <strong>" ~ (proyecto_tema | capitalize) ~ "</strong> (EVA municipal + 3 tablas FAOSTAT). Ningún registro se elimina ni se fabrica un valor: lo que no se puede corregir sin ambigüedad queda documentado como bandera." %}
+{% set toc_title = "Etapa 2 · Submenú" %}
+{% set toc_items = [
+  ("proposito", "Propósito del dataset"),
+  ("perfilamiento", "Perfilamiento"),
+  ("dimensiones", "Dimensiones, métricas y requisitos"),
+  ("problemas", "Inventario de problemas"),
+  ("causas", "Causas probables"),
+  ("integracion", "Integración y homologación"),
+  ("tratamiento", "Plan de tratamiento aplicado"),
+  ("comparacion", "Comparación antes / después"),
+] %}
+{% set toc_extra = [("vista-datos", "Explorador crudo / tratado")] %}
+
+{% block title %}R2 · Diagnóstico y calidad de los datos — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(4, "Datasets perfilados y tratados") }}</div>
+<div class="col">{{ stat(n_registros_totales, "Registros perfilados en total") }}</div>
+<div class="col">{{ stat(inventario | length, "Problemas en el inventario · " ~ n_problemas_alto ~ " de impacto alto") }}</div>
+<div class="col">{{ stat(treatment_log.acciones | length, "Acciones de tratamiento aplicadas") }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+<section id="proposito" class="mb-5 reveal">
+  {{ report_h2("1", "Propósito y alcance de los datos") }}
+  <p>
+    Los 4 datasets consolidados en R1 —<code>eva_basicos</code> (producción
+    municipal, MinAgricultura/UPRA), <code>qcl</code> y
+    <code>qcl_basicos</code> (producción agropecuaria nacional, FAOSTAT) y
+    <code>fs</code> (seguridad alimentaria, FAOSTAT)— se usan para sostener el
+    análisis de la paradoja <em>producción creciente vs. inseguridad alimentaria</em> en
+    Colombia (2000–2024). Ese uso previsto —comparar fuentes, agregar por cultivo/año/
+    territorio y cruzarlas entre sí— define qué se exige de su calidad: identificadores
+    únicos y confiables (códigos DANE, no nombres), variables numéricas completas y dentro
+    de rango, categorías homologadas entre EVA y FAOSTAT, y una vigencia razonable frente a
+    la fecha de análisis.
+  </p>
+  <p>
+    Este entregable perfila, mide y trata los <strong>4 datasets por igual</strong> (no solo
+    EVA): aunque EVA concentra la mayoría de los hallazgos por ser el dataset más grande y
+    detallado (48.932 filas, 18 columnas, nivel municipal), las 3 tablas FAOSTAT también se
+    someten al mismo perfilamiento, las mismas 6 dimensiones y el mismo tratamiento real.
+  </p>
+</section>
+
+<section id="perfilamiento" class="mb-5 reveal">
+  {{ report_h2("2", "Perfilamiento por dataset") }}
+  <p>
+    Calculado en vivo (Python puro, sin precálculo) sobre la versión cruda de cada dataset
+    (<code>app/quality.py::profile_columns</code>): cantidad de registros y
+    variables, tipo inferido, valores únicos, nulos, y para variables numéricas mínimo,
+    máximo, media y valores atípicos (± 1.5×rango intercuartílico). Los campos con
+    dominio/rango/patrón definido (p. ej. <code>Cultivo</code>,
+    <code>CodigoMunicipioDane</code>) muestran además cuántos valores no
+    conforman esa regla.
+  </p>
+  {# Un tab por dataset para no apilar cuatro tablas largas. #}
+  <ul class="nav nav-tabs" role="tablist">
+    {% for name, label in dataset_labels.items() %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {{ 'active' if loop.first }}" data-bs-toggle="tab" data-bs-target="#perfil-{{ name }}" type="button" role="tab">{{ label.split(' — ')[1] | capitalize }}</button>
+    </li>
+    {% endfor %}
+  </ul>
+  <div class="tab-content border border-top-0 rounded-bottom p-3">
+    {% for name, label in dataset_labels.items() %}
+    {% set r = resultados[name] %}
+    <div class="tab-pane fade {{ 'show active' if loop.first }}" id="perfil-{{ name }}" role="tabpanel">
+      <p class="small text-body-secondary">{{ label }} — <strong>{{ r.total | miles }}</strong> registros</p>
+      {{ table_open(wrap=True, extra="small") }}
+        <thead><tr><th>Campo</th><th>Tipo</th><th>Nulos</th><th>Únicos</th><th>Detalle</th></tr></thead>
+        <tbody>
+          {% for col, p in r.perfil_antes.items() %}
+          <tr>
+            <td class="font-monospace">{{ col }}</td>
+            <td>{{ p.tipo }}</td>
+            <td>{{ p.n_nulos }} ({{ p.pct_nulos }}%)</td>
+            <td>{{ p.n_unicos }}</td>
+            <td>
+              {% if p.tipo == 'numerico' %}
+                mín {{ p.minimo }} · máx {{ p.maximo }} · media {{ p.media }} · atípicos {{ p.outliers_iqr }} ({{ p.outliers_iqr_pct }}%)
+              {% else %}
+                {% for v, n in p.top_valores[:3] %}{{ v }} ({{ n }}){% if not loop.last %}, {% endif %}{% endfor %}
+              {% endif %}
+              {% if p.fuera_de_dominio is defined and p.fuera_de_dominio > 0 %}<br>{{ tag(p.fuera_de_dominio ~ " fuera de dominio", "danger") }}{% endif %}
+              {% if p.fuera_de_rango is defined and p.fuera_de_rango > 0 %}<br>{{ tag(p.fuera_de_rango ~ " fuera de rango", "danger") }}{% endif %}
+              {% if p.no_conforme_patron is defined and p.no_conforme_patron > 0 %}<br>{{ tag(p.no_conforme_patron ~ " no conforme", "danger") }}{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="dimensiones" class="mb-5 reveal">
+  {{ report_h2("3", "Dimensiones de calidad, métricas y requisitos") }}
+  <p>
+    Se evalúan las 6 dimensiones exigidas — completitud, exactitud, consistencia, unicidad,
+    validez y actualidad— con una fórmula verificable por dimensión (ver
+    <code>app/quality.py::compute_dimensions</code>). El requisito mínimo de
+    cada dimensión se definió según el uso previsto (sección 1): identificadores y valores
+    críticos casi sin nulos ni duplicados, vigencia razonable frente a un rezago
+    administrativo típico de fuentes agropecuarias oficiales. Cuando una dimensión no tiene
+    mecanismo de contraste disponible para un dataset, se muestra "No aplica" — nunca se
+    inventa un número.
+  </p>
+  {% for name, label in dataset_labels.items() %}
+  {% set r = resultados[name] %}
+  <div class="card shadow-sm mb-3">
+    <div class="card-header fw-semibold">{{ label }}</div>
+    <div class="card-body">
+      <div class="row g-3">
+        {% for dim in dimension_labels %}
+        <div class="col-md-6">{{ quality_bar(dim | capitalize, r.dimensiones_antes[dim], r.requisitos[dim]) }}</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+
+<section id="problemas" class="mb-5 reveal">
+  {{ report_h2("4", "Inventario de problemas") }}
+  <p>
+    {{ inventario | length }} problemas identificados en la versión cruda de los 4 datasets:
+    {{ tag(n_problemas_alto ~ " de impacto alto", "danger") }}
+    {{ tag(n_problemas_medio ~ " medio", "warning") }}
+    {{ tag(n_problemas_bajo ~ " bajo", "success") }}.
+    El nivel de impacto combina el % de registros afectados con si el campo alimenta
+    directamente el análisis (regla en <code>app/quality.py::nivel_impacto</code>,
+    ver anexo del informe técnico).
+  </p>
+  <div class="accordion" id="inventario-acc">
+    {% for p in inventario %}
+    <div class="accordion-item">
+      <h3 class="accordion-header">
+        <button class="accordion-button collapsed gap-2 flex-wrap" type="button" data-bs-toggle="collapse" data-bs-target="#prob-{{ loop.index }}" aria-expanded="false">
+          {{ impact_tag(p.nivel_impacto) }}
+          <span class="fw-semibold font-monospace">{{ p.variable }}</span>
+          <span class="small text-body-secondary">{{ dataset_labels[p.dataset] }}</span>
+        </button>
+      </h3>
+      <div id="prob-{{ loop.index }}" class="accordion-collapse collapse" data-bs-parent="#inventario-acc">
+        <div class="accordion-body">
+          <p>{{ p.descripcion }}</p>
+          <dl class="row small mb-0">
+            <dt class="col-sm-3 text-body-secondary fw-normal">Registros afectados</dt><dd class="col-sm-9">{{ p.n_afectados | miles }} ({{ p.pct_afectados }}%)</dd>
+            <dt class="col-sm-3 text-body-secondary fw-normal">Dimensión</dt><dd class="col-sm-9">{{ p.dimension }}</dd>
+            <dt class="col-sm-3 text-body-secondary fw-normal">Causa probable</dt><dd class="col-sm-9">{{ p.causa_probable }}</dd>
+            <dt class="col-sm-3 text-body-secondary fw-normal">Evidencia</dt><dd class="col-sm-9 font-monospace">{{ p.evidencia }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="causas" class="mb-5 reveal">
+  {{ report_h2("5", "Análisis de causas") }}
+  <ul>
+    <li><strong>Ausencia de validaciones en el origen:</strong> los {{ resultados.qcl.perfil_antes['Valor'].n_nulos }}
+    valores nulos de <code>Valor</code> en <code>qcl</code> reflejan
+    series de FAOSTAT que simplemente no se midieron ese año — no hay un valor "correcto" que
+    imputar, y la fuente no impone un mínimo de cobertura temporal por serie.</li>
+    <li><strong>Autorreporte municipal sin validación cruzada:</strong> el 13.69% de las filas
+    de EVA con área cosechada mayor que la sembrada sugiere que ningún control impide que un
+    municipio reporte una re-siembra o un error de captura sin que el sistema lo detecte antes
+    de publicarse.</li>
+    <li><strong>Definición de llave de unicidad incompleta (defecto de R1):</strong> las 25
+    combinaciones de huevos reportadas en dos unidades (toneladas y 1000 unidades) se
+    contaban como "duplicados" en R1 porque la llave de verificación no incluía
+    <code>Unidad</code> — un error de diseño de la validación, no del dato.</li>
+    <li><strong>Conversión automática de tipos por la herramienta de procesamiento:</strong> el
+    CSV original de EVA sí trae los códigos DANE con cero inicial como texto (p. ej. "05001");
+    al construir <code>eva_basicos.json</code> en R1, la inferencia automática de
+    tipos de <code>pandas</code> los convirtió a entero y perdió el cero inicial
+    en los departamentos 01-09, afectando el 11.96% de las filas — un defecto real del
+    pipeline, no del dato fuente.</li>
+    <li><strong>Duplicidad/heterogeneidad legítima de fuentes:</strong> FAOSTAT reporta el
+    mismo <code>Elemento</code> (p. ej. "Producción") en unidades distintas según
+    si el producto es un cultivo o una especie pecuaria — no es un error, pero exige agrupar
+    por (Producto, Elemento) al calcular cualquier estadístico sobre <code>Valor</code>,
+    algo que el diagnóstico inicial de R1 no hacía.</li>
+    <li><strong>Falta de actualización:</strong> ningún dataset tiene datos posteriores a 2024;
+    frente a la fecha de este entregable (2026), la actualidad medida (dimensión 6) refleja ese
+    rezago con una fórmula explícita de antigüedad, no con una etiqueta subjetiva.</li>
+  </ul>
+</section>
+
+<section id="integracion" class="mb-5 reveal">
+  {{ report_h2("6", "Integración y homologación") }}
+  <p>
+    La homologación entre EVA y FAOSTAT ya se resolvió en R1 mediante un cruce de nombres de
+    cultivo (<code>CROP_MAPPING</code>, en <code>scripts/process_eva.py</code>),
+    reutilizado sin cambios por el tratamiento de esta etapa:
+  </p>
+  <div class="row">
+    <div class="col-md-6">
+      {{ table_open(extra="small") }}
+        <thead><tr><th>Cultivo (EVA)</th><th>Producto (FAOSTAT)</th></tr></thead>
+        <tbody>
+          {% for cultivo, producto in treatment_log.crop_mapping.items() %}
+          <tr><td>{{ cultivo }}</td><td>{{ producto }}</td></tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+  </div>
+  <p>
+    A esa homologación de categorías, R2 añade dos correcciones de esquema que también son
+    integración/homologación en sentido estricto:
+  </p>
+  <ul>
+    <li><strong>Llave de unicidad ampliada en FAOSTAT</strong> (<code>+ Unidad</code>):
+    homologa el criterio de identidad de fila entre datasets que antes lo tenían incompleto.</li>
+    <li><strong>Formato de código DANE homogéneo</strong> (texto de ancho fijo, 2 y 5 dígitos):
+    homologa la representación de <code>CodigoDeptoDane</code>/<code>CodigoMunicipioDane</code>
+    para que sea comparable con cualquier otra fuente oficial que use el estándar DANE (ENSIN, DANE-IPC).</li>
+    <li><strong><code>AnioNormalizado</code></strong> en los 3 datasets FAOSTAT:
+    homologa el formato temporal (año puntual vs. trienio) sin destruir el campo <code>Año</code> original.</li>
+  </ul>
+</section>
+
+<section id="tratamiento" class="mb-5 reveal">
+  {{ report_h2("7", "Plan de tratamiento aplicado") }}
+  <p>
+    Ejecutado por <code>scripts/clean_datasets.py</code> sobre la versión cruda
+    (R1) de los 4 datasets, generando la versión tratada en
+    <code>app/static/data/R2/</code>. Regla general: <strong>ningún registro se
+    elimina y ningún valor se fabrica</strong>; lo corregible sin ambigüedad se corrige
+    (tipos, llave de unicidad, fechas), lo demás se marca con una bandera nueva para que el
+    análisis aguas abajo decida cómo tratarlo.
+  </p>
+  {% for name, label in dataset_labels.items() %}
+  <h3 class="h6 fw-bold mt-4">{{ label }}</h3>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th>Acción</th><th>Registros afectados</th><th>Decisión</th><th>Justificación</th></tr></thead>
+    <tbody>
+      {% for a in treatment_log.acciones if a.dataset == name %}
+      <tr>
+        <td>{{ a.accion }}</td>
+        <td class="font-monospace">{{ a.n_afectados | miles }}</td>
+        <td>{{ tag(a.decision, "danger" if a.decision == "flag" else ("success" if a.decision in ["correccion", "correccion_llave"] else "secondary")) }}</td>
+        <td>{{ a.justificacion }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+  {% endfor %}
+</section>
+
+<section id="comparacion" class="mb-5 reveal">
+  {{ report_h2("8", "Comparación antes / después") }}
+  <p>
+    Como el tratamiento marca en vez de corregir en silencio, la mayoría de las 6 dimensiones
+    no cambia numéricamente entre la versión cruda y la tratada — eso es intencional, no un
+    error: el objetivo no era "subir el número" sino volver visibles y trazables problemas que
+    antes no lo eran. Dos excepciones sí muestran una mejora real y medible: la
+    <strong>unicidad de <code>qcl</code></strong> (99.73% → 100%, al corregir la
+    llave de unicidad) y la <strong>validez de <code>eva_basicos</code></strong>
+    (88.04% → 100%, al corregir el formato de los códigos DANE).
+  </p>
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="d-flex justify-content-end mb-3">
+        <select class="form-select form-select-sm w-auto" id="compare-dataset-select" aria-label="Elegir dataset para comparar">
+          {% for name, label in dataset_labels.items() %}
+          <option value="{{ name }}">{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="chart-frame">
+        <canvas id="compare-chart" aria-label="Comparación antes y después de las 6 dimensiones de calidad" role="img"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-cols-1 row-cols-xl-2 g-3">
+    {% for name, label in dataset_labels.items() %}
+    {% set r = resultados[name] %}
+    <div class="col">
+      <h3 class="h6 fw-bold">{{ label }}</h3>
+      {{ table_open(extra="small") }}
+        <thead><tr><th>Dimensión</th><th class="text-end">Antes</th><th class="text-end">Después</th><th class="text-end">Δ</th></tr></thead>
+        <tbody>
+          {% for dim in dimension_labels %}
+          {% set antes = r.dimensiones_antes[dim] %}
+          {% set despues = r.dimensiones_despues[dim] %}
+          {% set delta = (despues - antes) | round(2) if antes is not none and despues is not none else none %}
+          <tr>
+            <td>{{ dim | capitalize }}</td>
+            <td class="text-end font-monospace">{{ (antes ~ "%") if antes is not none else "No aplica" }}</td>
+            <td class="text-end font-monospace">{{ (despues ~ "%") if despues is not none else "No aplica" }}</td>
+            <td class="text-end font-monospace {{ 'text-success fw-bold' if delta and delta > 0 }}">{{ ("+" ~ delta) if delta and delta > 0 else (delta if delta is not none else "—") }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="vista-datos" class="mb-5 reveal">
+  {{ report_h2("", "Anexo · Explorador crudo / tratado") }}
+  <p>
+    Mismo explorador de R1, con un selector adicional para comparar la versión cruda (R1) con
+    la tratada (R2). En "tratado" se agregan al final las columnas de bandera
+    (<code>_flag_*</code>, <code>_outlier_*</code>) como evidencia
+    directa de qué filas quedaron marcadas.
+  </p>
+  {% with show_version = True %}{% include "components/data_explorer.html" %}{% endwith %}
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>Producto R2:</strong> los 4 datasets quedan perfilados, medidos en 6 dimensiones
+  de calidad con métricas verificables, con {{ inventario | length }} problemas inventariados
+  y {{ treatment_log.acciones | length }} acciones de tratamiento aplicadas y documentadas —
+  sin eliminar registros ni fabricar valores. Los archivos tratados
+  (<code>app/static/data/R2/</code>) y el registro de tratamiento
+  (<code>log_tratamiento.json</code>) quedan versionados junto al código, listos
+  para el modelado de la siguiente etapa.
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{ {"qualityCompare": quality_compare} | tojson }}</script>
+{% endblock %}

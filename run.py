@@ -1,3 +1,4 @@
+"""Punto de entrada. En producción Render ejecuta `gunicorn run:app`."""
 import os
 
 from dotenv import load_dotenv

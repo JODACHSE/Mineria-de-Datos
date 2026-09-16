@@ -1,0 +1,13 @@
+{# Cinta de metadatos del proyecto (decorativa; oculta a lectores de pantalla). #}
+<div class="ticker bg-success text-white small py-1" aria-hidden="true">
+  <div class="ticker-track font-monospace">
+    {% for _ in range(2) %}
+    <span class="px-4"><b>PROYECTO ACADÉMICO</b> {{ universidad_nombre }}</span>
+    <span class="px-4"><b>COBERTURA</b> {{ proyecto_cobertura }}</span>
+    <span class="px-4"><b>PERIODO</b> {{ proyecto_periodo }}</span>
+    <span class="px-4"><b>FUENTES</b> EVA · MinAgricultura/UPRA + FAOSTAT · FAO</span>
+    <span class="px-4"><b>ENTREGABLE ACTIVO</b> {{ proyecto_entregable }}</span>
+    <span class="px-4"><b>CULTIVOS BÁSICOS</b> Maíz · Arroz · Papa · Plátano · Yuca · Fríjol</span>
+    {% endfor %}
+  </div>
+</div>

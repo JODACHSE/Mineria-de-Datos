@@ -14,7 +14,7 @@ ETAPAS = [
         "titulo": "Del problema a los datos",
         "resumen": "Problema, preguntas analíticas, fuentes, dataset inicial, diccionario y diagnóstico de calidad.",
         "estado": "completado",
-        "url_endpoint": "project.r1",
+        "url_endpoint": "pages.r1",
     },
     {
         "codigo": "R2",
@@ -22,7 +22,7 @@ ETAPAS = [
         "resumen": "Perfilamiento, 6 dimensiones de calidad, inventario de problemas y tratamiento real "
                    "aplicado a los 4 datasets (EVA + FAOSTAT).",
         "estado": "completado",
-        "url_endpoint": "project.r2",
+        "url_endpoint": "pages.r2",
     },
 ] + [
     {

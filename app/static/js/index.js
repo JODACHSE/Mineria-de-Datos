@@ -109,13 +109,31 @@
    * ----------------------------------------------------------------- */
   const navToggle = document.getElementById("nav-toggle");
   const navLinks = document.getElementById("nav-links");
+  const navBackdrop = document.getElementById("nav-backdrop");
+
+  /* Un único punto de verdad para abrir/cerrar el menú móvil: sincroniza
+     el panel, el fondo oscurecido, el ícono hamburguesa/X (vía
+     aria-expanded) y el bloqueo de scroll del body. */
+  function setMobileNav(open) {
+    if (!navLinks) return;
+    navLinks.classList.toggle("open", open);
+    navToggle?.setAttribute("aria-expanded", String(open));
+    navToggle?.setAttribute("aria-label", open ? "Cerrar menú" : "Abrir menú");
+    navBackdrop?.classList.toggle("show", open);
+    document.body.classList.toggle("nav-open", open);
+  }
+
   if (navToggle && navLinks) {
-    navToggle.addEventListener("click", () => navLinks.classList.toggle("open"));
+    navToggle.addEventListener("click", () => setMobileNav(!navLinks.classList.contains("open")));
     // Cierra el menú móvil al elegir un enlace real, pero el toggle de
     // "Etapas" no navega a ningún sitio (href="#"): ese se maneja aparte.
     navLinks.querySelectorAll("a:not(.dropdown-toggle)").forEach((a) =>
-      a.addEventListener("click", () => navLinks.classList.remove("open"))
+      a.addEventListener("click", () => setMobileNav(false))
     );
+    navBackdrop?.addEventListener("click", () => setMobileNav(false));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setMobileNav(false);
+    });
   }
 
   /* Dropdown "Etapas": se abre con :hover vía CSS (ver styles.css) en
@@ -221,6 +239,46 @@
       { rootMargin: "-30% 0px -60% 0px", threshold: 0 }
     );
     sections.forEach((s) => tocObserver.observe(s));
+  }
+
+  /* ----------------------------------------------------------------- *
+   * 5b) EFECTO "BURBUJA" DEL TOC LATERAL
+   *    El TOC ya se mantiene a la izquierda del contenido mientras se
+   *    scrollea gracias a `position:sticky` (ver styles.css). Esto añade
+   *    un pequeño "arrastre" elástico encima: al scrollear, el menú se
+   *    desplaza levemente en sentido contrario y luego rebota de vuelta
+   *    a su posición con una curva de rebote (tipo burbuja). Es un
+   *    `transform` puramente visual — no toca el sticky real ni la
+   *    lógica de TOC activo de la sección 5.
+   * ----------------------------------------------------------------- */
+  const tocAside = document.querySelector(".toc");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (tocAside && !prefersReducedMotion) {
+    let lastY = window.scrollY;
+    let settleTimer = null;
+    let raf = null;
+
+    function onTocScroll() {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        // Por debajo de 980px el TOC deja de ser sticky (se vuelve una
+        // franja horizontal, ver styles.css) y el efecto no aplica.
+        if (window.innerWidth <= 980) return;
+        const y = window.scrollY;
+        const delta = y - lastY;
+        lastY = y;
+        const drag = Math.max(-16, Math.min(16, -delta * 1.5));
+        tocAside.style.transition = "transform .12s linear";
+        tocAside.style.transform = `translateY(${drag}px)`;
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(() => {
+          tocAside.style.transition = "transform .7s cubic-bezier(.34,1.56,.64,1)";
+          tocAside.style.transform = "translateY(0)";
+        }, 110);
+      });
+    }
+    window.addEventListener("scroll", onTocScroll, { passive: true });
   }
 
   /* ----------------------------------------------------------------- *

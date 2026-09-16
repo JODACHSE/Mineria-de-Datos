@@ -1,0 +1,607 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}R1 · Del problema a los datos — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .r1-hero{ padding:2.6rem 0 1rem; }
+  .r1-hero h1{ font-size:clamp(2rem,5.4vw,3.4rem); }
+  .source-card{ display:flex; flex-direction:column; gap:.35rem; }
+  .source-card dt{ font-family:var(--font-mono); font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--text-soft); margin-top:.6rem; }
+  .source-card dd{ margin:0; font-size:.86rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<section class="r1-hero container">
+  <span class="eyebrow reveal">Entregable · {{ proyecto_entregable }}</span>
+  <h1 class="reveal">Del problema<br><span class="accent">a los datos</span></h1>
+  <p class="reveal" style="max-width:60ch;">
+    Tema: <strong>{{ proyecto_tema | capitalize }}</strong> · Cobertura: {{ proyecto_cobertura }} ·
+    Periodo analizado: {{ proyecto_periodo }}.
+  </p>
+  <div class="card-grid cols-4 reveal-stagger" style="margin-top:1.6rem;">
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ "{:,}".format(n_registros_totales).replace(',', '.') }}</span><span class="lbl">Registros consolidados (EVA + FAOSTAT)</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ "{:,}".format(n_registros_eva).replace(',', '.') }}</span><span class="lbl">Registros EVA · {{ eva_municipios_codigo }} municipios</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat"><span class="num" style="font-size:1.6rem;">{{ eva_departamentos }}</span><span class="lbl">Departamentos con datos EVA</span></span>
+    </div>
+    <div class="neu-flat card" style="padding:1.1rem 1.3rem;">
+      <span class="hero__stat">
+        <span class="num" style="font-size:1.6rem;">{{ ultimo_valor if ultimo_valor is not none else "s/d" }}%</span>
+        <span class="lbl">Subalimentación Colombia · {{ ultimo_anio or "última medición" }}</span>
+      </span>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+<div class="r1-layout">
+
+  <!-- ================= TOC ================= -->
+  <aside class="toc neu-flat reveal">
+    <p class="toc__title">Etapa 1 · Submenú</p>
+    <ol>
+      <li><a href="#problema">Problema y contexto</a></li>
+      <li><a href="#preguntas">Pregunta principal y preguntas secundarias</a></li>
+      <li><a href="#necesidades">Necesidades de información</a></li>
+      <li><a href="#fuentes">Fuentes de datos</a></li>
+      <li><a href="#dataset">Dataset</a></li>
+      <li><a href="#diccionario">Diccionario de datos</a></li>
+      <li><a href="#calidad">Calidad inicial de los datos</a></li>
+      <li><a href="#limitaciones">Limitaciones y consideraciones</a></li>
+    </ol>
+    <p class="toc__title toc__title--extra">Contenido adicional</p>
+    <ul class="toc__extra">
+      <li><a href="#caracterizacion">Registros y variables</a></li>
+      <li><a href="#integracion">Integración de fuentes</a></li>
+      <li><a href="#vista-datos">Explorador de datos</a></li>
+      <li><a href="#evidencia">Evidencia visual</a></li>
+    </ul>
+  </aside>
+
+  <!-- ================= CONTENIDO ================= -->
+  <div>
+
+    <section id="problema" class="r1-section reveal">
+      <h2>1 · Problema y contexto</h2>
+
+      <h3>Escala global</h3>
+      <p>
+        Según el informe <em>El Estado de la Seguridad Alimentaria y la Nutrición en el Mundo
+        2026</em> (FAO, IFAD, UNICEF, PMA y OMS), en 2025 alrededor del <strong>7,8 % de la
+        población mundial</strong> (≈645 millones de personas) enfrentó hambre — la tercera
+        caída anual consecutiva, pero aún por encima de los niveles prepandemia. En América
+        Latina y el Caribe la prevalencia de subalimentación bajó a <strong>5,1 %</strong> en
+        2024, frente a un pico de 6,1 % en 2020.
+      </p>
+
+      <h3>Escala nacional — Colombia</h3>
+      <p>
+        Colombia posee una amplia frontera agrícola y una gran diversidad de cultivos, pero
+        enfrenta una <strong>paradoja</strong>: produce en volumen creciente y, al mismo
+        tiempo, según datos propios de FAOSTAT, la prevalencia de subalimentación del país se
+        ubicó en {{ ultimo_valor if ultimo_valor is not none else "s/d" }}% en {{ ultimo_anio }}
+        — por debajo del promedio global y regional — mientras que la inseguridad alimentaria
+        moderada o grave en el hogar (un indicador distinto, de percepción) mostró una
+        tendencia al alza en la última década según la misma fuente. Según la <strong>ENSIN
+        2015</strong>, más de la mitad de los hogares colombianos reportó algún grado de
+        inseguridad alimentaria en el hogar, con mayor incidencia en zonas rurales.
+      </p>
+
+      <h3>Escala regional — municipios</h3>
+      <p>
+        La producción agrícola no está distribuida de forma homogénea dentro del país: con el
+        dataset EVA integrado en este entregable ({{ "{:,}".format(n_registros_eva).replace(',', '.') }}
+        registros de 6 cultivos básicos, {{ eva_departamentos }} departamentos y
+        {{ eva_municipios_codigo }} municipios) ya es posible observar concentración
+        geográfica, estacionalidad semestral y variabilidad interanual real en la oferta de
+        alimentos básicos.
+      </p>
+
+      <div class="callout">
+        <p><strong>Del problema real al problema de datos:</strong> no buscamos "resolver el
+        hambre", sino caracterizar con evidencia —en las tres escalas— la oferta de producción
+        agrícola y sus patrones (por región, cultivo y tiempo) para identificar zonas de baja
+        productividad o alta variabilidad que puedan asociarse a riesgo de disponibilidad
+        alimentaria.</p>
+      </div>
+    </section>
+
+    <section id="preguntas" class="r1-section reveal">
+      <h2>2 · Pregunta principal y preguntas secundarias</h2>
+      <h3>Pregunta principal</h3>
+      <p>
+        ¿Cómo se comporta la oferta de producción agrícola municipal en Colombia (2019–2024) —
+        en el contexto de las tendencias nacional y global de seguridad alimentaria— y qué
+        patrones por región, cultivo y periodo permiten identificar territorios vulnerables en
+        la <strong>disponibilidad</strong> de alimentos?
+      </p>
+      <h3>Preguntas secundarias</h3>
+      <ol class="plain">
+        <li>¿Qué departamentos y municipios <strong>concentran</strong> la producción de
+          cultivos básicos de la canasta alimentaria (maíz, arroz, papa, plátano, yuca,
+          fríjol) y cómo ha evolucionado entre 2019 y 2024? <em>(escala regional)</em></li>
+        <li>¿Cómo se compara la producción agregada nacional (EVA) frente a las cifras
+          reportadas por FAOSTAT para los mismos cultivos y años, y qué explica las
+          diferencias? <em>(escala nacional vs. fuente terciaria)</em></li>
+        <li>¿Qué cultivos y territorios presentan mayor <strong>variabilidad interanual</strong>
+          de producción, y coincide esa variabilidad con periodos de mayor prevalencia de
+          subalimentación reportados por FAOSTAT/OWID a escala global-regional? <em>(escala
+          global-regional)</em></li>
+        <li>¿Existe relación entre la <strong>diversidad de cultivos</strong> producida por
+          municipio y la magnitud/estabilidad de su producción total?</li>
+      </ol>
+      <div class="callout">
+        <p><strong>Evitamos</strong> preguntas demasiado generales ("¿por qué hay hambre?"),
+        de opinión, o cuya respuesta ya está en el enunciado.</p>
+      </div>
+    </section>
+
+    <section id="necesidades" class="r1-section reveal">
+      <h2>3 · Necesidades de información</h2>
+      <p>Cada pregunta se traduce en necesidades concretas de información:</p>
+      <ul>
+        <li><strong>Entidades:</strong> municipio, departamento, país, cultivo, periodo/evento productivo.</li>
+        <li><strong>Variables relevantes:</strong> área sembrada, área cosechada, producción (t), rendimiento (t/ha), grupo y ciclo del cultivo, indicadores de seguridad alimentaria (% subalimentación, % inseguridad alimentaria).</li>
+        <li><strong>Periodo de análisis:</strong> 2019–2024 para producción municipal (EVA); 2000–2023 para indicadores de seguridad alimentaria (FAOSTAT), con contexto global 2022–2025 (SOFI/OWID/Banco Mundial).</li>
+        <li><strong>Cobertura geográfica:</strong> global (contexto) → nacional Colombia (FAOSTAT) → regional/municipal (EVA, 32 departamentos).</li>
+        <li><strong>Población / unidad de análisis:</strong> combinación municipio-cultivo-periodo (oferta agrícola); país-indicador-año (seguridad alimentaria).</li>
+        <li><strong>Nivel de granularidad requerido:</strong> semestral y municipal para producción; anual y nacional para seguridad alimentaria — la granularidad municipal es la más fina disponible sin necesidad de recolección propia.</li>
+        <li><strong>Variables comparables entre escalas:</strong> "Cultivo/Producto" y "Año" son las llaves que permiten cruzar EVA (regional) con FAOSTAT (nacional) y con Banco Mundial/OWID (global) — ver <a href="#integracion">Integración de fuentes</a>.</li>
+      </ul>
+      <div class="callout">
+        <p><strong>Deseable vs. disponible:</strong> lo ideal sería cruzar producción con
+        indicadores de seguridad alimentaria a nivel municipal y anual; en la práctica esos
+        indicadores (ENSIN) existen a escala nacional/regional y con menor frecuencia (última
+        edición 2015), por lo que se incorporan como fuente primaria de contexto, no como
+        variable municipal cruzable directamente (ver Limitaciones).</p>
+      </div>
+    </section>
+
+    <section id="fuentes" class="r1-section reveal">
+      <h2>4 · Fuentes de datos</h2>
+      <p>
+        Se documentan 6 fuentes — dos por cada tipo exigido (primaria, secundaria, terciaria) —
+        cubriendo las tres escalas del análisis (global, nacional, regional).
+      </p>
+
+      <div class="card-grid cols-2 reveal-stagger" style="margin-bottom:1rem;">
+
+        <!-- PRIMARIA 1: EVA -->
+        <div class="neu card source-card">
+          <span class="tag chili">Primaria · Regional</span>
+          <h3 class="card__title" style="margin-top:.5rem;">EVA — Evaluaciones Agropecuarias Municipales</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>Unidad de Planificación Rural Agropecuaria (UPRA), Ministerio de Agricultura y Desarrollo Rural</dd>
+            <dt>URL</dt><dd><a href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">datos.gov.co/.../uejq-wxrr</a></dd>
+            <dt>Tipo de fuente</dt><dd>Primaria — conciliación directa de registros administrativos y conocimiento técnico municipal (encuesta/observación en campo, no una republicación)</dd>
+            <dt>Cobertura geográfica</dt><dd>32 departamentos · {{ eva_municipios_codigo }} municipios (código DANE) en este extracto</dd>
+            <dt>Periodo disponible</dt><dd>2019–2024, semestral (A/B)</dd>
+            <dt>Formato</dt><dd>CSV (exportación filtrada desde portal Socrata)</dd>
+            <dt>Método de adquisición</dt><dd>Exportación CSV filtrada por cultivo (6 básicos) desde el portal de Datos Abiertos Colombia</dd>
+            <dt>N.º aproximado de registros</dt><dd><strong>{{ "{:,}".format(n_registros_eva).replace(',', '.') }}</strong> en este extracto (dataset completo, con los ~192 cultivos, supera varios cientos de miles)</dd>
+            <dt>Variables disponibles</dt><dd>18 — departamento, municipio, cultivo, área sembrada/cosechada, producción, rendimiento, ciclo, estado físico, etc.</dd>
+            <dt>Fecha de consulta</dt><dd>27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>Datos abiertos, uso libre con atribución a UPRA/MinAgricultura</dd>
+          </dl>
+        </div>
+
+        <!-- PRIMARIA 2: ENSIN -->
+        <div class="neu card source-card">
+          <span class="tag chili">Primaria · Nacional</span>
+          <h3 class="card__title" style="margin-top:.5rem;">ENSIN 2015 — Encuesta Nacional de Situación Nutricional</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>ICBF, Ministerio de Salud y Protección Social, INS, Prosperidad Social</dd>
+            <dt>URL</dt><dd><a href="https://www.icbf.gov.co/bienestar/nutricion/encuesta-nacional-situacion-nutricional" target="_blank" rel="noopener">icbf.gov.co/.../encuesta-nacional-situacion-nutricional</a></dd>
+            <dt>Tipo de fuente</dt><dd>Primaria — encuesta directa a hogares con muestreo probabilístico</dd>
+            <dt>Cobertura geográfica</dt><dd>Nacional, con desagregación regional; 295 municipios visitados</dd>
+            <dt>Periodo disponible</dt><dd>2015 (última edición; previas 2005, 2010)</dd>
+            <dt>Formato</dt><dd>Informes PDF + microdatos</dd>
+            <dt>Método de adquisición</dt><dd>Consulta de informe público de resultados generales</dd>
+            <dt>N.º aproximado de registros</dt><dd>151.343 personas de 44.202 hogares encuestados</dd>
+            <dt>Variables disponibles</dt><dd>Inseguridad alimentaria en el hogar, desnutrición crónica, lactancia, determinantes socioeconómicos</dd>
+            <dt>Fecha de consulta</dt><dd>27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>Publicación institucional de acceso público</dd>
+          </dl>
+        </div>
+
+        <!-- SECUNDARIA 1: FAOSTAT -->
+        <div class="neu card source-card">
+          <span class="tag amber">Secundaria · Nacional/Global</span>
+          <h3 class="card__title" style="margin-top:.5rem;">FAOSTAT — FS &amp; QCL</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>FAO — División de Estadística</dd>
+            <dt>URL</dt><dd><a href="https://www.fao.org/faostat/en/#data" target="_blank" rel="noopener">fao.org/faostat</a></dd>
+            <dt>Tipo de fuente</dt><dd>Secundaria — la FAO recopila y republica cifras ya reportadas por Colombia y otros países miembro</dd>
+            <dt>Cobertura geográfica</dt><dd>Global (~245 países); filtrado a Colombia (código FAO 44) en este proyecto</dd>
+            <dt>Periodo disponible</dt><dd>FS: 2000–2023 (trienios); QCL: 2000–2024</dd>
+            <dt>Formato</dt><dd>CSV / API (paquete Python <code class="mono">faostat</code>)</dd>
+            <dt>Método de adquisición</dt><dd>API programática — <code class="mono">scripts/fetch_faostat.py</code></dd>
+            <dt>N.º aproximado de registros</dt><dd>FS: {{ quality.fs.total }} · QCL: {{ quality.qcl.total }}</dd>
+            <dt>Variables disponibles</dt><dd>Área, Producto, Elemento, Año, Unidad, Valor</dd>
+            <dt>Fecha de consulta</dt><dd>26–27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>CC BY-4.0, atribución a FAO</dd>
+          </dl>
+        </div>
+
+        <!-- SECUNDARIA 2: DANE -->
+        <div class="neu card source-card">
+          <span class="tag amber">Secundaria · Nacional/Regional</span>
+          <h3 class="card__title" style="margin-top:.5rem;">DANE — IPC, grupo Alimentos</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>Departamento Administrativo Nacional de Estadística (DANE)</dd>
+            <dt>URL</dt><dd><a href="https://www.dane.gov.co/index.php/estadisticas-por-tema/precios-y-costos/indice-de-precios-al-consumidor-ipc/ipc-historico" target="_blank" rel="noopener">dane.gov.co/.../ipc-historico</a></dd>
+            <dt>Tipo de fuente</dt><dd>Secundaria — estadística oficial ya procesada y publicada por la entidad</dd>
+            <dt>Cobertura geográfica</dt><dd>Nacional, 38 ciudades</dd>
+            <dt>Periodo disponible</dt><dd>Serie mensual desde 1954 (base actual 2018)</dd>
+            <dt>Formato</dt><dd>Series Excel/CSV descargables</dd>
+            <dt>Método de adquisición</dt><dd>Descarga de series históricas publicadas</dd>
+            <dt>N.º aproximado de registros</dt><dd>443 artículos de la canasta, medidos mensualmente; división "Alimentos y bebidas no alcohólicas" usada como referencia de acceso económico</dd>
+            <dt>Variables disponibles</dt><dd>Índice de precios por división/grupo, variación mensual y anual</dd>
+            <dt>Fecha de consulta</dt><dd>27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>Datos abiertos, uso estadístico público</dd>
+          </dl>
+        </div>
+
+        <!-- TERCIARIA 1: World Bank -->
+        <div class="neu card source-card">
+          <span class="tag leaf">Terciaria · Global</span>
+          <h3 class="card__title" style="margin-top:.5rem;">World Bank Open Data</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>Grupo Banco Mundial</dd>
+            <dt>URL</dt><dd><a href="https://data.worldbank.org/indicator/SN.ITK.DEFC.ZS" target="_blank" rel="noopener">data.worldbank.org/indicator/SN.ITK.DEFC.ZS</a></dd>
+            <dt>Tipo de fuente</dt><dd>Terciaria — el indicador "Prevalencia de subalimentación" redistribuye datos originalmente producidos por la FAO (confirmado en su propia ficha metodológica)</dd>
+            <dt>Cobertura geográfica</dt><dd>Global (~217 países/agregados)</dd>
+            <dt>Periodo disponible</dt><dd>2001–2023</dd>
+            <dt>Formato</dt><dd>CSV / API</dd>
+            <dt>Método de adquisición</dt><dd>Descarga CSV desde el portal</dd>
+            <dt>N.º aproximado de registros</dt><dd>~23 años × 1 país usados como referencia (Colombia); serie global completa ≈ 5.000 registros</dd>
+            <dt>Variables disponibles</dt><dd>% de población subalimentada, PIB agrícola, tierra arable, entre otros indicadores de desarrollo</dd>
+            <dt>Fecha de consulta</dt><dd>27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>CC BY-4.0</dd>
+          </dl>
+        </div>
+
+        <!-- TERCIARIA 2: OWID -->
+        <div class="neu card source-card">
+          <span class="tag leaf">Terciaria · Global</span>
+          <h3 class="card__title" style="margin-top:.5rem;">Our World in Data — Hunger &amp; Undernourishment</h3>
+          <dl>
+            <dt>Institución responsable</dt><dd>Global Change Data Lab / Universidad de Oxford</dd>
+            <dt>URL</dt><dd><a href="https://ourworldindata.org/hunger-and-undernourishment" target="_blank" rel="noopener">ourworldindata.org/hunger-and-undernourishment</a></dd>
+            <dt>Tipo de fuente</dt><dd>Terciaria — "FAO (2025), con procesamiento propio de Our World in Data" (nota de atribución explícita en la fuente)</dd>
+            <dt>Cobertura geográfica</dt><dd>Global, con desagregación regional y por país</dd>
+            <dt>Periodo disponible</dt><dd>2000–2022</dd>
+            <dt>Formato</dt><dd>CSV descargable + gráficos interactivos</dd>
+            <dt>Método de adquisición</dt><dd>Descarga CSV desde el gráfico "Prevalence of Undernourishment"</dd>
+            <dt>N.º aproximado de registros</dt><dd>Variable según indicador; serie mundial+regiones ≈ 4.500 registros</dd>
+            <dt>Variables disponibles</dt><dd>Prevalencia de subalimentación, inseguridad alimentaria severa, personas afectadas</dd>
+            <dt>Fecha de consulta</dt><dd>27 de agosto de 2026</dd>
+            <dt>Restricciones de uso</dt><dd>CC BY 4.0</dd>
+          </dl>
+        </div>
+
+      </div>
+
+      <div class="callout" style="margin-top:1rem;">
+        <p><strong>Justificación (pertinencia · confiabilidad · actualidad · cobertura):</strong>
+        EVA y ENSIN aportan evidencia de primera mano en las escalas regional y nacional,
+        recolectada mediante metodologías oficiales documentadas. FAOSTAT y DANE republican
+        estadísticas ya validadas por sus productores originales, permitiendo comparabilidad
+        internacional. World Bank y OWID integran múltiples fuentes (incluida la propia FAO)
+        para dar contexto global inmediato sin duplicar la recolección. Juntas, las 6 fuentes
+        cubren las tres escalas exigidas con trazabilidad y reproducibilidad garantizadas.</p>
+      </div>
+    </section>
+
+    <section id="dataset" class="r1-section reveal">
+      <h2>5 · Dataset</h2>
+      <p class="eyebrow" style="margin-bottom:1rem;">Descripción del dataset inicial consolidado</p>
+
+      <div class="card-grid cols-4 reveal-stagger" style="margin-bottom:1.6rem;">
+        <div class="neu-flat card" style="padding:1rem;"><span class="hero__stat"><span class="num" style="font-size:1.4rem;">{{ "{:,}".format(n_registros_totales).replace(',', '.') }}</span><span class="lbl">Registros totales (≥10.000 ✓)</span></span></div>
+        <div class="neu-flat card" style="padding:1rem;"><span class="hero__stat"><span class="num" style="font-size:1.4rem;">18+6</span><span class="lbl">Variables (EVA + FAOSTAT, ≥10 ✓)</span></span></div>
+        <div class="neu-flat card" style="padding:1rem;"><span class="hero__stat"><span class="num" style="font-size:1.4rem;">4</span><span class="lbl">Numéricas continuas (≥3 ✓)</span></span></div>
+        <div class="neu-flat card" style="padding:1rem;"><span class="hero__stat"><span class="num" style="font-size:1.4rem;">7</span><span class="lbl">Categóricas (≥3 ✓)</span></span></div>
+      </div>
+
+      <h3>Dataset principal — EVA, producción agrícola municipal</h3>
+      <div class="table-wrap neu-flat" style="margin-bottom:1.6rem;">
+        <table class="data-table">
+          <tbody>
+            <tr><th>Nombre</th><td>Evaluaciones Agropecuarias Municipales – EVA. 2019–2024. Base Agrícola (extracto: 6 cultivos básicos)</td></tr>
+            <tr><th>Productor</th><td>Min. de Agricultura y Desarrollo Rural / UPRA</td></tr>
+            <tr><th>Volumen</th><td><strong>{{ "{:,}".format(n_registros_eva).replace(',', '.') }}</strong> registros</td></tr>
+            <tr><th>Variables</th><td>18 (4 numéricas: área sembrada, área cosechada, producción, rendimiento)</td></tr>
+            <tr><th>Cobertura geográfica</th><td>{{ eva_departamentos }} departamentos · {{ eva_municipios_codigo }} municipios (código DANE) · {{ eva_municipios_nombre }} nombres únicos de municipio</td></tr>
+            <tr><th>Cobertura temporal</th><td>2019–2024, semestral</td></tr>
+            <tr><th>Trazabilidad</th><td>CSV original conservado sin modificar en <code class="mono">app/data/eva_basicos_colombia.csv</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:2rem;">Dataset complementario — FAOSTAT (nacional/global)</h3>
+      <div class="table-wrap neu-flat">
+        <table class="data-table">
+          <tbody>
+            <tr><th>Nombre</th><td>FAOSTAT · Suite of Food Security Indicators (FS) + Crops and livestock products (QCL)</td></tr>
+            <tr><th>Productor</th><td>FAO — Statistics Division (ESS)</td></tr>
+            <tr><th>Volumen</th><td>FS: {{ quality.fs.total }} · QCL: {{ quality.qcl.total }} registros</td></tr>
+            <tr><th>Unidad de análisis</th><td>País (o territorio) · Indicador/Producto · Año</td></tr>
+            <tr><th>Licencia</th><td>CC BY-4.0 (atribución a FAO)</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout" style="margin-top:1.6rem;">
+        <p><strong>Posibilidad de integración:</strong> EVA (regional) y FAOSTAT (nacional) se
+        integran mediante las variables comunes <code class="mono">Cultivo</code> y
+        <code class="mono">Año</code> — ver la sección <a href="#integracion">Integración de
+        fuentes</a>, donde se agrega EVA a nivel nacional y se contrasta contra FAOSTAT para
+        los 6 cultivos básicos.</p>
+      </div>
+    </section>
+
+    <section id="diccionario" class="r1-section reveal">
+      <h2>6 · Diccionario de datos</h2>
+
+      <h3>EVA — producción municipal (18 variables)</h3>
+      <div class="table-wrap neu-flat" style="margin-bottom:2rem;">
+        <table class="data-table">
+          <thead>
+            <tr><th>Campo</th><th>Descripción</th><th>Tipo</th><th>Dominio / unidad</th><th>Fuente</th><th>Ejemplo</th><th>Observaciones</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>CodigoDeptoDane</td><td>Código DANE del departamento</td><td>Categórico</td><td>2 dígitos</td><td>EVA</td><td>05</td><td>Llave geográfica estable</td></tr>
+            <tr><td>Departamento</td><td>Nombre del departamento</td><td>Categórico</td><td>32 valores</td><td>EVA</td><td>Antioquia</td><td>—</td></tr>
+            <tr><td>CodigoMunicipioDane</td><td>Código DANE del municipio</td><td>Categórico</td><td>5 dígitos</td><td>EVA</td><td>05030</td><td>Llave real; el nombre de municipio se repite entre departamentos</td></tr>
+            <tr><td>Municipio</td><td>Nombre del municipio</td><td>Categórico</td><td>Texto</td><td>EVA</td><td>Amagá</td><td>No usar solo como llave (nombres duplicados)</td></tr>
+            <tr><td>GrupoCultivo / Subgrupo</td><td>Clasificación agronómica</td><td>Categórico</td><td>Cereales, Raíces y tubérculos…</td><td>EVA</td><td>Cereales</td><td>—</td></tr>
+            <tr><td>Cultivo</td><td>Cultivo básico (filtro aplicado)</td><td>Categórico</td><td>Maíz, Arroz, Papa, Plátano, Yuca, Frijol</td><td>EVA</td><td>Arroz</td><td>Llave de integración con FAOSTAT</td></tr>
+            <tr><td>DesagregacionCultivo</td><td>Variedad o manejo específico</td><td>Categórico</td><td>Texto</td><td>EVA</td><td>Arroz secano manual</td><td>Más granular que "Cultivo"</td></tr>
+            <tr><td>Anio</td><td>Año calendario</td><td>Temporal</td><td>2019–2024</td><td>EVA</td><td>2022</td><td>Llave de integración con FAOSTAT</td></tr>
+            <tr><td>Periodo</td><td>Semestre productivo</td><td>Temporal</td><td>AAAA / AAAAA / AAAAB</td><td>EVA</td><td>2022B</td><td>18 valores distintos; algunos cultivos son anuales (sin A/B)</td></tr>
+            <tr><td>AreaSembrada</td><td>Área sembrada</td><td>Numérico continuo</td><td>Hectáreas, ≥0</td><td>EVA</td><td>2.00</td><td>Convertido de formato CO (coma decimal)</td></tr>
+            <tr><td>AreaCosechada</td><td>Área cosechada</td><td>Numérico continuo</td><td>Hectáreas, ≥0</td><td>EVA</td><td>0.50</td><td>13,69% de filas &gt; área sembrada (ver Calidad)</td></tr>
+            <tr><td>Produccion</td><td>Producción total</td><td>Numérico continuo</td><td>Toneladas, ≥0</td><td>EVA</td><td>0.89</td><td>—</td></tr>
+            <tr><td>Rendimiento</td><td>Producción / área cosechada</td><td>Numérico continuo</td><td>t/ha, ≥0</td><td>EVA</td><td>1.78</td><td>Consistente con Producción/AreaCosechada (diff. media &lt;0.001)</td></tr>
+            <tr><td>CicloCultivo</td><td>Ciclo del cultivo</td><td>Categórico</td><td>Transitorio, Permanente</td><td>EVA</td><td>Transitorio</td><td>—</td></tr>
+            <tr><td>EstadoFisico</td><td>Estado físico del producto reportado</td><td>Categórico</td><td>Grano seco, En fresco, Paddy…</td><td>EVA</td><td>Paddy o cáscara verde</td><td>Afecta comparabilidad de unidades entre cultivos</td></tr>
+            <tr><td>CodigoCultivo / NombreCientifico</td><td>Identificadores agronómicos</td><td>Categórico</td><td>Texto/numérico</td><td>EVA</td><td>1010102 / Oryza sativa</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>FAOSTAT — formato largo (aplica a fs.json, qcl.json, qcl_basicos.json)</h3>
+      <div class="table-wrap neu-flat">
+        <table class="data-table">
+          <thead>
+            <tr><th>Campo</th><th>Descripción</th><th>Tipo</th><th>Dominio / unidad</th><th>Fuente</th><th>Ejemplo</th><th>Observaciones</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Área</td><td>País / territorio</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Colombia</td><td>Filtrado solo a Colombia</td></tr>
+            <tr><td>Elemento</td><td>Medida o indicador</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Producción</td><td>En FS suele ser "Valor"</td></tr>
+            <tr><td>Producto</td><td>Cultivo (QCL) o indicador (FS)</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Maíz</td><td>Llave de integración con EVA</td></tr>
+            <tr><td>Año</td><td>Año o trienio de referencia</td><td>Temporal</td><td>1961–2024</td><td>FAOSTAT</td><td>2000-2002</td><td>FS reporta promedios de 3 años</td></tr>
+            <tr><td>Unidad</td><td>Unidad de medida del valor</td><td>Categórico</td><td>t, %, kg/ha…</td><td>FAOSTAT</td><td>toneladas</td><td>Varía según el elemento</td></tr>
+            <tr><td>Valor</td><td>Valor medido</td><td>Numérico continuo</td><td>≥ 0</td><td>FAOSTAT</td><td>27638.53</td><td>Puede faltar en algunos años</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="caracterizacion" class="r1-section reveal">
+      <h2>Anexo · Caracterización de registros y variables</h2>
+      <ul>
+        <li><strong>Unidad de análisis (EVA):</strong> combinación municipio · cultivo · periodo — la oferta de un cultivo, en un municipio, en un semestre.</li>
+        <li><strong>Unidad de análisis (FAOSTAT):</strong> combinación país · producto/indicador · año.</li>
+        <li><strong>Registro:</strong> una fila = una observación de esa unidad, con sus áreas, producción y rendimiento (EVA) o su valor e indicador (FAOSTAT).</li>
+        <li><strong>Población:</strong> la totalidad de eventos productivos semestrales de los 6 cultivos básicos, en todos los municipios de Colombia con reporte EVA 2019–2024.</li>
+      </ul>
+      <h3>Tipos de variables (consolidado)</h3>
+      <div class="card-grid cols-3 reveal-stagger">
+        <div class="neu-flat card">
+          <span class="tag leaf">Categóricas (7)</span>
+          <p class="card__text" style="margin-top:.6rem;">Departamento, municipio, cultivo, grupo, ciclo, estado físico, elemento/indicador (FAOSTAT).</p>
+        </div>
+        <div class="neu-flat card">
+          <span class="tag amber">Numéricas (4)</span>
+          <p class="card__text" style="margin-top:.6rem;">Área sembrada, área cosechada, producción, rendimiento (continuas, EVA) + Valor (FAOSTAT).</p>
+        </div>
+        <div class="neu-flat card">
+          <span class="tag chili">Temporales / espaciales</span>
+          <p class="card__text" style="margin-top:.6rem;">Año y periodo (tiempo); códigos DANE de departamento/municipio y país FAO (espacio/geografía).</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="calidad" class="r1-section reveal">
+      <h2>7 · Calidad inicial de los datos</h2>
+      <p>
+        En R1 solo <strong>diagnosticamos</strong>; la limpieza profunda se hará en un
+        entregable posterior. Las métricas siguientes se calculan en vivo desde
+        <code class="mono">app/routes/project.py</code> cada vez que se abre esta página
+        (<a href="{{ url_for('project.api_quality', name='eva_basicos') }}">ver /api/quality/eva_basicos</a>).
+      </p>
+
+      {% for key, label in [('eva_basicos','EVA — producción municipal (eva_basicos.json)'), ('qcl_basicos','FAOSTAT — cultivos básicos (qcl_basicos.json)'), ('fs','FAOSTAT — seguridad alimentaria (fs.json)')] %}
+      {% set qd = quality[key] %}
+      <h3 style="margin-top:1.6rem;">{{ label }}</h3>
+      <div class="neu card">
+        <div class="card-grid cols-2">
+          <div class="quality-metric">
+            <div class="quality-metric__row"><span>Completitud (variables numéricas no nulas)</span><b>{{ qd.completeness }}%</b></div>
+            <div class="quality-bar neu-inset"><div class="quality-bar__fill" data-value="{{ qd.completeness }}"></div></div>
+          </div>
+          <div class="quality-metric">
+            <div class="quality-metric__row"><span>Unicidad (sin duplicados de clave)</span><b>{{ qd.uniqueness }}%</b></div>
+            <div class="quality-bar neu-inset"><div class="quality-bar__fill" data-value="{{ qd.uniqueness }}"></div></div>
+          </div>
+          <div class="quality-metric">
+            <div class="quality-metric__row"><span>Validez (valores ≥ 0)</span><b>{{ qd.validity }}%</b></div>
+            <div class="quality-bar neu-inset"><div class="quality-bar__fill" data-value="{{ qd.validity }}"></div></div>
+          </div>
+          <div class="quality-metric">
+            <div class="quality-metric__row"><span>Registros totales</span><b>{{ qd.total }}</b></div>
+            <p style="font-size:.78rem; margin:0;">{{ qd.duplicates }} duplicados de clave · {{ qd.missing_valor }} filas con algún valor numérico vacío · {{ qd.negatives }} valores negativos</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+      <h3 style="margin-top:1.8rem;">Consistencia — hallazgos reales</h3>
+      <ul>
+        <li><strong>Formato numérico:</strong> el CSV original de EVA usa notación colombiana (punto = miles, coma = decimal — ej. <code class="mono">"1.499,40"</code>); se convirtió a punto decimal estándar antes de cargarlo en la app.</li>
+        <li><strong>Área cosechada &gt; área sembrada:</strong> <strong>{{ eva_incons_area_pct }}%</strong> ({{ eva_incons_area }} de {{ n_registros_eva }}) de los registros EVA muestran esta inconsistencia lógica — requiere revisión en el siguiente entregable (posible re-siembra en el mismo semestre o error de reporte municipal).</li>
+        <li><strong>Nombres de municipio no son llave única:</strong> {{ eva_municipios_nombre }} nombres distintos de municipio representan en realidad {{ eva_municipios_codigo }} municipios — varios nombres (ej. "Albania", "Argelia") se repiten en más de un departamento. Solo <code class="mono">CodigoMunicipioDane</code> es una llave confiable.</li>
+        <li><strong>Rendimiento reportado vs. calculado:</strong> <code class="mono">Producción / Área cosechada</code> coincide con el campo <code class="mono">Rendimiento</code> con una diferencia media &lt;0,001 — buena señal de consistencia interna de EVA.</li>
+      </ul>
+
+      <div class="callout">
+        <p><strong>Problema de integración detectado:</strong> al agregar EVA a nivel nacional
+        y contrastarlo con FAOSTAT para los mismos cultivos y años, aparecen diferencias
+        sistemáticas de entre -21% y +216% según el cultivo (ver <a href="#integracion">
+        Integración de fuentes</a>) — probablemente porque EVA registra toda la producción
+        reportada municipalmente (incluyendo autoconsumo) mientras FAOSTAT puede aplicar
+        ajustes o excluir ciertos circuitos de comercialización. Es un hallazgo real que debe
+        documentarse, no un error de carga.</p>
+      </div>
+    </section>
+
+    <section id="limitaciones" class="r1-section reveal">
+      <h2>8 · Limitaciones y consideraciones</h2>
+      <ul>
+        <li><strong>Autorreporte municipal:</strong> EVA se construye con información conciliada por los municipios, lo que puede generar subregistro y heterogeneidad en la calidad entre territorios.</li>
+        <li><strong>Inconsistencia área sembrada/cosechada:</strong> {{ eva_incons_area_pct }}% de los registros requieren revisión antes de cualquier modelado (ver Calidad).</li>
+        <li><strong>Discrepancia EVA↔FAOSTAT:</strong> las cifras agregadas de EVA no coinciden exactamente con FAOSTAT (ver Integración) — cualquier análisis debe declarar explícitamente cuál fuente usa y por qué.</li>
+        <li><strong>No capta autoconsumo comparable:</strong> aunque EVA sí registra producción municipal total, no distingue consumo doméstico de mercado, lo que dificulta relacionarla directamente con "acceso" a alimentos.</li>
+        <li><strong>Disponibilidad ≠ acceso:</strong> la seguridad alimentaria también depende del acceso económico (IPC-DANE) y del uso; la producción mide sobre todo la disponibilidad.</li>
+        <li><strong>Distinta escala geográfica:</strong> FAOSTAT y Banco Mundial/OWID reportan a nivel país, EVA a nivel municipal; a nivel municipal la seguridad alimentaria solo puede aproximarse con referencias como ENSIN (no anual, última 2015, 295 municipios).</li>
+        <li><strong>Sesgo climático/coyuntural:</strong> años con fenómenos como El Niño/La Niña afectan producción y rendimientos, y deben interpretarse con cautela.</li>
+      </ul>
+    </section>
+
+    <section id="integracion" class="r1-section reveal">
+      <h2>Anexo · Integración de fuentes (EVA ↔ FAOSTAT)</h2>
+      <p>
+        Se agregó EVA a escala nacional (suma de <code class="mono">Producción</code> por
+        <code class="mono">Cultivo</code> y <code class="mono">Año</code>) y se cruzó con la
+        producción nacional reportada por FAOSTAT (dataset QCL) para los mismos 6 cultivos y
+        años, usando esas dos variables como llave de integración. Esto demuestra
+        concretamente la <strong>posibilidad de integrar las fuentes por variables
+        geográficas/temporales</strong> exigida en el entregable, y además produce un hallazgo
+        real de calidad (ver sección 7).
+      </p>
+      <div class="table-wrap neu-flat">
+        <table class="data-table">
+          <thead><tr><th>Año</th><th>Cultivo</th><th class="num">Producción EVA (t)</th><th class="num">Producción FAOSTAT (t)</th><th class="num">Diferencia</th></tr></thead>
+          <tbody>
+            {% for row in integracion.rows %}
+            <tr>
+              <td>{{ row[0]|int }}</td>
+              <td>{{ row[1] }}</td>
+              <td class="num">{{ "{:,.0f}".format(row[2]).replace(',', '.') }}</td>
+              <td class="num">{{ "{:,.0f}".format(row[3]).replace(',', '.') }}</td>
+              <td class="num">{{ row[4] }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:.8rem; font-size:.82rem;">
+        Elaboración propia a partir de EVA (UPRA/MinAgricultura) y FAOSTAT (FAO). Los signos
+        negativos indican que EVA reportó menos que FAOSTAT ese año; sucede en Maíz a partir
+        de 2022.
+      </p>
+    </section>
+
+    <section id="vista-datos" class="r1-section reveal">
+      <h2>Anexo · Explorador del dataset</h2>
+      <p>
+        Tabla interactiva con filtros y paginación resueltos por el backend de Flask: no se
+        descarga el archivo completo al navegador, se negocia página por página. Cambia de
+        dataset con el selector.
+      </p>
+
+      <div class="neu" id="data-explorer" data-dataset="eva_basicos" style="padding:1.6rem;">
+        <div class="explorer__controls">
+          <select data-role="dataset-select" aria-label="Elegir dataset">
+            <option value="eva_basicos" selected>EVA — cultivos básicos (municipal)</option>
+            <option value="qcl_basicos">FAOSTAT — cultivos básicos (nacional)</option>
+            <option value="qcl">FAOSTAT — todos los productos (nacional)</option>
+            <option value="fs">FAOSTAT — seguridad alimentaria</option>
+          </select>
+          <input type="search" placeholder="Buscar…" data-role="search" aria-label="Buscar">
+          <select data-role="producto" aria-label="Filtrar por producto"><option value="">Cargando…</option></select>
+          <select data-role="elemento" aria-label="Filtrar por elemento/departamento"><option value="">Cargando…</option></select>
+        </div>
+        <p class="explorer__meta">Cargando…</p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead><tr></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="explorer__pagination">
+          <button class="neu-btn" data-role="prev" type="button">← Anterior</button>
+          <span data-role="page-info">1 / 1</span>
+          <button class="neu-btn" data-role="next" type="button">Siguiente →</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="evidencia" class="r1-section reveal">
+      <h2>Anexo · Evidencia visual</h2>
+      <p>
+        Serie histórica de indicadores FAOSTAT (dataset <code class="mono">FS</code>) para
+        Colombia, renderizada con Chart.js.
+      </p>
+      <div class="neu" style="padding:1.6rem;">
+        <div class="chart-frame">
+          <canvas id="fs-chart" aria-label="Serie histórica de indicadores de seguridad alimentaria en Colombia" role="img"></canvas>
+        </div>
+      </div>
+      <p style="margin-top:.8rem; font-size:.82rem;">Fuente: FAOSTAT · Suite of Food Security Indicators (FAO). Elaboración propia.</p>
+
+      <p style="margin-top:2rem;">
+        Comparación de producción nacional agregada: EVA (municipal, agregado) vs. FAOSTAT,
+        por cultivo, último año disponible (2024).
+      </p>
+      <div class="neu" style="padding:1.6rem;">
+        <div class="chart-frame">
+          <canvas id="integracion-chart" aria-label="Comparación de producción EVA vs FAOSTAT por cultivo en 2024" role="img"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <div class="callout reveal" style="margin-top:2rem;">
+      <p><strong>Producto R1:</strong> el equipo entiende el problema en tres escalas y cuenta
+      con 6 fuentes documentadas y un dataset consolidado de más de
+      {{ "{:,}".format(n_registros_totales).replace(',', '.') }} registros reales
+      —incluyendo producción municipal genuina de EVA— para iniciar el proceso de minería. R1
+      no busca aún el mejor modelo, sino una base sólida y honesta para descubrir
+      conocimiento.</p>
+    </div>
+
+  </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block pre_scripts %}
+{# Este bloque se renderiza ANTES de index.js (ver layouts/base.html), por
+   eso window.__FS_CHART__ debe ir aquí y no en extra_scripts: index.js lee
+   esta variable en cuanto se ejecuta, así que si se definiera después
+   siempre llegaría "undefined" y el gráfico nunca se dibujaría. #}
+<script>
+  window.__FS_CHART__ = {{ fs_chart | tojson }};
+  window.__INTEGRACION__ = {{ integracion | tojson }};
+</script>
+{% endblock %}

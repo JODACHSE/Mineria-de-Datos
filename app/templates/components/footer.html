@@ -1,58 +1,52 @@
-<footer class="footer">
+<footer class="bg-body-tertiary border-top mt-5 py-5">
   <div class="container">
-    <div class="footer__grid">
-      <div>
-        <a href="{{ url_for('project.index') }}" class="brand" style="margin-bottom:1rem;">
-          <img class="brand__mark" src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="Escudo de Wololo" style="width:30px;height:30px;">
-          <span class="brand__text-group">
-            <span class="brand__text">{{ brand_name | upper }}</span>
-          </span>
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <a class="d-inline-flex align-items-center gap-2 text-decoration-none text-body mb-2" href="{{ url_for('pages.index') }}">
+          <img src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="" width="30" height="30" class="rounded-circle">
+          <span class="fw-bold">{{ brand_name | upper }}</span>
         </a>
-        <p style="max-width:34ch; font-size:.88rem;">
-          Proyecto académico del curso de Minería de Datos en la
-          {{ universidad_nombre }}. Caracteriza la oferta de producción
-          agrícola en Colombia y su relación con la disponibilidad de
-          alimentos, a partir de fuentes oficiales abiertas.
+        <p class="small text-body-secondary mb-0" style="max-width:36ch;">
+          Proyecto académico del curso de Minería de Datos en la {{ universidad_nombre }}.
+          Caracteriza la oferta de producción agrícola en Colombia y su relación con la
+          disponibilidad de alimentos, a partir de fuentes oficiales abiertas.
         </p>
       </div>
-      <div>
-        <h4 class="font-mono">Proyecto</h4>
-        <ul>
-          <li><a href="{{ url_for('project.index') }}">Inicio</a></li>
-          <li><a href="{{ url_for('entregables.index') }}">Entregables</a></li>
-          <li><a href="{{ url_for('project.r1') }}">Reporte R1</a></li>
-          <li><a href="{{ url_for('project.r1') }}#limitaciones">Limitaciones</a></li>
+      <div class="col-6 col-md-4 col-lg-2">
+        <h2 class="h6 fw-bold">Proyecto</h2>
+        <ul class="list-unstyled small">
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.index') }}">Inicio</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.entregables') }}">Entregables</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r1') }}">Reporte R1</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r2') }}">Reporte R2</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r1') }}#limitaciones">Limitaciones</a></li>
         </ul>
       </div>
-      <div>
-        <h4 class="font-mono">Equipo</h4>
-        <ul>
-          <li><a href="{{ url_for('entregables.about') }}">Sobre nosotros</a></li>
+      <div class="col-6 col-md-4 col-lg-3">
+        <h2 class="h6 fw-bold">Equipo</h2>
+        <ul class="list-unstyled small">
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.about') }}">Sobre nosotros</a></li>
           {% for dev in developers %}
-          <li><a href="{{ dev.github_url }}" target="_blank" rel="noopener">{{ dev.nombre.split(' ')[0] }} {{ dev.nombre.split(' ')[1] }}</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ dev.github_url }}" target="_blank" rel="noopener">{{ dev.nombre.split(' ')[0] }} {{ dev.nombre.split(' ')[1] }}</a></li>
           {% endfor %}
-          <li><a href="{{ universidad_url }}" target="_blank" rel="noopener">{{ universidad_nombre }}</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ universidad_url }}" target="_blank" rel="noopener">{{ universidad_nombre }}</a></li>
         </ul>
       </div>
-      <div>
-        <h4 class="font-mono">Fuentes &amp; API</h4>
-        <ul>
-          <li><a href="{{ github_repo_url }}" target="_blank" rel="noopener">Repositorio en GitHub</a></li>
-          <li><a href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">EVA · MinAgricultura/UPRA</a></li>
-          <li><a href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT · FAO</a></li>
-          <li><a href="{{ url_for('project.api_dataset', name='qcl_basicos') }}">/api/dataset/qcl_basicos</a></li>
-          <li><a href="{{ url_for('project.api_quality', name='fs') }}">/api/quality/fs</a></li>
+      <div class="col-md-4 col-lg-3">
+        <h2 class="h6 fw-bold">Fuentes &amp; API</h2>
+        <ul class="list-unstyled small">
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ github_repo_url }}" target="_blank" rel="noopener">Repositorio en GitHub</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">EVA · MinAgricultura/UPRA</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT · FAO</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover font-monospace" href="{{ url_for('api.dataset', name='qcl_basicos') }}">/api/dataset/qcl_basicos</a></li>
+          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover font-monospace" href="{{ url_for('api.quality', name='fs') }}">/api/quality/fs</a></li>
         </ul>
       </div>
     </div>
-
-    <div class="footer__bottom">
+    <hr>
+    <div class="d-flex flex-column flex-md-row justify-content-between gap-2 small text-body-secondary">
       <span>© <span id="current-year">2026</span> {{ brand_name }} — {{ proyecto_tema | capitalize }}. Datos: FAO / MinAgricultura, uso académico.</span>
-      <span>Construido con Flask · Chart.js · Neumorfismo</span>
+      <span>Construido con Flask · Bootstrap 5.3 · Chart.js</span>
     </div>
   </div>
 </footer>
-
-<button class="icon-btn back-to-top" id="back-to-top" aria-label="Volver arriba">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-</button>
