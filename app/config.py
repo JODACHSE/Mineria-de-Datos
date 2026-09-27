@@ -21,7 +21,7 @@ class Config:
     PROYECTO_TEMA = "Seguridad alimentaria y producción agrícola"
     PROYECTO_COBERTURA = "Colombia (nacional)"
     PROYECTO_PERIODO = "2000 – 2024"
-    PROYECTO_ENTREGABLE = "R2 · Diagnóstico y calidad de los datos"
+    PROYECTO_ENTREGABLE = "R3 · Tratamiento ETL con SSIS"
 
     # --- Identidad del equipo (Wololo) --------------------------------
     BRAND_NAME = "Wololo"
@@ -59,7 +59,7 @@ class Config:
     DATA_DIR = BASE_DIR / "app" / "data"
     R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
-
-    # FAOSTAT (usado únicamente por scripts/fetch_faostat.py)
+    R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
+    VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "")
     FAOSTAT_TOKEN = os.environ.get("FAOSTAT_TOKEN", "")
     FAOSTAT_AREA_COLOMBIA = "44"

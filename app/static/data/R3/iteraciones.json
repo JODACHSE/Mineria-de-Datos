@@ -1,0 +1,188 @@
+{
+  "generado_por": "scripts/etapa3_iteraciones.py",
+  "nota": "Réplica en Python de las reglas de EVA.dtsx y FAOSTAT.dtsx sobre los CSV originales. Los conteos deben coincidir con las tablas *_Limpios y *_Revision de cada lote en SSIS.",
+  "eva": {
+    "original": {
+      "recibidos": 48932,
+      "duplicados": 0,
+      "convertibles": 48932,
+      "vacias": 0,
+      "negativos": 0,
+      "area_incoherente": 6700,
+      "formato_coma": 48932,
+      "area_sembrada_cero": 1327,
+      "municipios": 1098,
+      "departamentos": 32
+    },
+    "ejemplos": {
+      "corregido": {
+        "IdStg": 2,
+        "campo": "Produccion",
+        "original": "1.499,40",
+        "limpio": "1499.40",
+        "municipio": "Apartadó",
+        "cultivo": "Arroz",
+        "periodo": "2019A"
+      }
+    },
+    "iteraciones": {
+      "I1": {
+        "recibidos": 48932,
+        "aceptados": 48932,
+        "revision": {},
+        "total_revision": 0,
+        "sin_explicar": 0,
+        "atipicos": null,
+        "ejemplo_consistencia": null
+      },
+      "I2": {
+        "recibidos": 48932,
+        "aceptados": 42232,
+        "revision": {
+          "EVA-CONS": 6700
+        },
+        "total_revision": 6700,
+        "sin_explicar": 0,
+        "atipicos": null,
+        "ejemplo_consistencia": {
+          "IdStg": 9,
+          "Departamento": "Antioquia",
+          "Municipio": "Apartadó",
+          "CodigoMunicipioDane": "05045",
+          "Cultivo": "Arroz",
+          "Periodo": "2022B",
+          "AreaSembrada": "638,00",
+          "AreaCosechada": "878,00"
+        }
+      },
+      "I3": {
+        "recibidos": 48932,
+        "aceptados": 42232,
+        "revision": {
+          "EVA-CONS": 6700
+        },
+        "total_revision": 6700,
+        "sin_explicar": 0,
+        "atipicos": {
+          "AreaSembrada": 5850,
+          "alguna": 7908,
+          "AreaCosechada": 5192,
+          "Produccion": 5415,
+          "Rendimiento": 1511
+        },
+        "ejemplo_consistencia": {
+          "IdStg": 9,
+          "Departamento": "Antioquia",
+          "Municipio": "Apartadó",
+          "CodigoMunicipioDane": "05045",
+          "Cultivo": "Arroz",
+          "Periodo": "2022B",
+          "AreaSembrada": "638,00",
+          "AreaCosechada": "878,00"
+        }
+      }
+    }
+  },
+  "faostat": {
+    "original": {
+      "recibidos": 10786,
+      "duplicados": 0,
+      "duplicados_sin_unidad": 0,
+      "nulos": 280,
+      "convertibles": 10504,
+      "no_convertibles": 2,
+      "negativos": 0,
+      "anio_rango": 611,
+      "grupos_unidad_multiple": 0,
+      "producto_mayor_50": 1650,
+      "producto_mayor_50_por_dataset": {
+        "QCL": 533,
+        "FS": 1117
+      },
+      "grupos_iqr": 471,
+      "grupos_sin_valor": 8,
+      "filas_grupos_sin_valor": 200,
+      "por_dataset": {
+        "QCL": 9274,
+        "QCLBasicos": 374,
+        "FS": 1138
+      }
+    },
+    "iteraciones": {
+      "I1": {
+        "recibidos": 10786,
+        "aceptados": 10784,
+        "revision": {
+          "FAO-CNV": 2
+        },
+        "total_revision": 2,
+        "sin_explicar": 0,
+        "valor_nulo_aceptado": 280,
+        "atipicos": null,
+        "por_dataset": {
+          "QCL": 9274,
+          "QCLBasicos": 374,
+          "FS": 1138
+        },
+        "ejemplo_conversion": {
+          "IdStg": 10415,
+          "Dataset": "FS",
+          "Producto": "Número de niños menores de 5 años afectados por emaciación (millones)",
+          "Anio": "2000",
+          "Unidad": "millones de No.",
+          "Valor": "<0.1"
+        }
+      },
+      "I2": {
+        "recibidos": 10786,
+        "aceptados": 10784,
+        "revision": {
+          "FAO-CNV": 2
+        },
+        "total_revision": 2,
+        "sin_explicar": 0,
+        "valor_nulo_aceptado": 280,
+        "atipicos": null,
+        "por_dataset": {
+          "QCL": 9274,
+          "QCLBasicos": 374,
+          "FS": 1138
+        },
+        "ejemplo_conversion": {
+          "IdStg": 10415,
+          "Dataset": "FS",
+          "Producto": "Número de niños menores de 5 años afectados por emaciación (millones)",
+          "Anio": "2000",
+          "Unidad": "millones de No.",
+          "Valor": "<0.1"
+        }
+      },
+      "I3": {
+        "recibidos": 10786,
+        "aceptados": 10784,
+        "revision": {
+          "FAO-CNV": 2
+        },
+        "total_revision": 2,
+        "sin_explicar": 0,
+        "valor_nulo_aceptado": 280,
+        "atipicos": {
+          "valor": 337
+        },
+        "por_dataset": {
+          "QCL": 9274,
+          "QCLBasicos": 374,
+          "FS": 1138
+        },
+        "ejemplo_conversion": {
+          "IdStg": 10415,
+          "Dataset": "FS",
+          "Producto": "Número de niños menores de 5 años afectados por emaciación (millones)",
+          "Anio": "2000",
+          "Unidad": "millones de No.",
+          "Valor": "<0.1"
+        }
+      }
+    }
+  }
+}

@@ -2,8 +2,9 @@
 
 Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
 Sitio web en **Flask** que publica los entregables **R1 · Del problema a los
-datos** y **R2 · Diagnóstico y calidad de los datos**, con un explorador de
-datos y métricas de calidad servidas por una API propia.
+datos**, **R2 · Diagnóstico y calidad de los datos** y **R3 · Tratamiento ETL
+con SSIS**, con un explorador de datos y métricas de calidad servidas por una
+API propia.
 
 **Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
 Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
@@ -64,11 +65,12 @@ Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
 │   │   ├── data/R1|R2/      # datasets curados / tratados + log_tratamiento.json
 │   │   └── assets/img/
 │   └── data/                # CSV originales (trazabilidad)
-├── scripts/                 # fetch_faostat, rebuild_chart, process_eva, clean_datasets
+├── etapa3/                  # R3: solución SSIS (EVA.dtsx, FAOSTAT.dtsx) + scripts SQL y catálogos
+├── scripts/                 # fetch_faostat, rebuild_chart, process_eva, clean_datasets, etapa3_iteraciones
 ├── tests/                   # pytest: rutas, API y calidad
 ├── .github/workflows/ci.yml # pytest en cada push
 ├── render.yaml · Procfile · .python-version
-├── requirements.txt · requirements-dev.txt
+├── requirements.txt · requirements-dev.txt   
 ├── setup.sh · setup.bat · .env.example
 └── run.py
 ```
@@ -105,7 +107,7 @@ python run.py
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Landing |
-| `/r1` · `/r2` | Entregables |
+| `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
 | `/entregables` | Hoja de ruta (8 etapas) |
 | `/sobre-nosotros` | Equipo |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
@@ -133,3 +135,14 @@ pytest
 EVA (MinAgricultura/UPRA, datos abiertos) · FAOSTAT (FAO, CC BY-4.0) ·
 ENSIN 2015 (ICBF/MinSalud) · DANE (IPC) · World Bank Open Data (CC BY-4.0) ·
 Our World in Data (CC BY 4.0). Uso estrictamente académico.
+
+## Etapa 3 · Tratamiento ETL con SSIS
+
+- Página: `/r3` — resumen, reglas, diagramas de los paquetes, resultados de las tres
+  iteraciones, comparación de calidad, ejemplos, prueba de re-ejecución, video y descarga
+  del informe (`app/static/etapa3/`).
+- Paquetes y SQL: ver [`etapa3/README.md`](etapa3/README.md).
+- Resultados de las iteraciones: `python scripts/etapa3_iteraciones.py`
+  → `app/static/data/R3/iteraciones.json`.
+- Video: definir `VIDEO_ETAPA3_URL` (YouTube o Google Drive público) en `.env` o en las
+  variables de entorno de Render para que se embeba en `/r3`.

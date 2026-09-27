@@ -24,8 +24,8 @@ instance/
 # Logs
 *.log
 
-# ETL
-scripts/R3/.vs/
-scripts/R3/**/bin/
-scripts/R3/**/obj/
-*.suo
+# SSIS / Visual Studio
+.vs/
+etapa3/ssis/**/bin/
+etapa3/ssis/**/obj/
+*.dtproj.user

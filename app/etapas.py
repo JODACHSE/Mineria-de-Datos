@@ -24,6 +24,14 @@ ETAPAS = [
         "estado": "completado",
         "url_endpoint": "pages.r2",
     },
+    {
+        "codigo": "R3",
+        "titulo": "Tratamiento ETL con SSIS",
+        "resumen": "Paquetes SSIS EVA y FAOSTAT con staging, reglas de limpieza, rama de revisión, "
+                   "tres iteraciones, indicadores y verificación de re-ejecución sin duplicados.",
+        "estado": "completado",
+        "url_endpoint": "pages.r3",
+    },
 ] + [
     {
         "codigo": f"R{n}",
@@ -32,7 +40,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(3, 9)
+    for n in range(4, 9)
 ]
 
 FASES_CRISP = [

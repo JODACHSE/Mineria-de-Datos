@@ -38,7 +38,7 @@
               <a class="nav-link {{ 'active' if request.endpoint == 'pages.index' }}" href="{{ url_for('pages.index') }}">Inicio</a>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ('pages.r1','pages.r2','pages.entregables') }}"
+              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ('pages.r1','pages.r2','pages.r3','pages.entregables') }}"
                  href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Etapas</a>
               <ul class="dropdown-menu dropdown-menu-lg-end shadow">
                 {% for e in etapas %}
