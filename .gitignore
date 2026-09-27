@@ -23,3 +23,9 @@ instance/
 
 # Logs
 *.log
+
+# ETL
+scripts/R3/.vs/
+scripts/R3/**/bin/
+scripts/R3/**/obj/
+*.suo
