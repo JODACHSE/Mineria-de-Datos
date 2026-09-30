@@ -111,6 +111,35 @@ function compareChart(data) {
   });
 }
 
+function iteracionesChart(data) {
+  const canvas = document.getElementById("iteraciones-chart");
+  if (!canvas || !data) return;
+  const labels = [...data.labels.map((l) => `EVA ${l}`), ...data.labels.map((l) => `FAOSTAT ${l}`)];
+  const acept = [...data.eva.aceptados, ...data.faostat.aceptados];
+  const rev = [...data.eva.revision, ...data.faostat.revision];
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Aceptados", data: acept, backgroundColor: p.success, borderRadius: 4, stack: "s" },
+          { label: "Enviados a revisión", data: rev, backgroundColor: p.warning, borderRadius: 4, stack: "s" },
+        ],
+      },
+      options: {
+        ...base,
+        scales: { x: { ...base.scales.x, stacked: true }, y: { ...base.scales.y, stacked: true } },
+        plugins: { ...base.plugins, tooltip: { ...base.plugins.tooltip, callbacks: {
+          label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.raw)}`,
+        } } },
+      },
+    };
+  });
+}
+
 export function initCharts() {
   if (!window.Chart) return;
   const node = document.getElementById("page-data");
@@ -118,5 +147,6 @@ export function initCharts() {
   fsChart(data.fsChart);
   integracionChart(data.integracion);
   compareChart(data.qualityCompare);
+  iteracionesChart(data.iteraciones);
   document.addEventListener("themechange", () => charts.forEach((redraw) => redraw()));
 }

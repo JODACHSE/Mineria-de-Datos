@@ -31,6 +31,7 @@
         <div class="d-flex flex-wrap gap-2 mt-4 reveal">
           <a href="{{ url_for('pages.r1') }}" class="btn btn-success btn-lg">Ver reporte R1 <i class="bi bi-arrow-right ms-1"></i></a>
           <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success btn-lg">Ver reporte R2</a>
+          <a href="{{ url_for('pages.r3') }}" class="btn btn-outline-success btn-lg">Ver reporte R3</a>
           <a href="{{ url_for('pages.r1') }}#vista-datos" class="btn btn-link btn-lg link-body-emphasis">Explorar los datos</a>
         </div>
         <p class="small text-body-secondary font-monospace mt-4 mb-0 reveal">
@@ -141,16 +142,18 @@
 <section class="container pb-5">
   <div class="card bg-success-subtle border-success-subtle text-center reveal">
     <div class="card-body p-4 p-lg-5">
-      <p class="text-success fw-semibold small mb-1">Productos R1 y R2</p>
+      <p class="text-success fw-semibold small mb-1">Productos R1, R2 y R3</p>
       <h2 class="fw-bold">El equipo entiende el problema<br>y tiene bases justificables</h2>
       <p class="text-body-secondary mx-auto mt-3 mb-4" style="max-width:56ch;">
         R1 no busca todavía el mejor modelo, sino una base sólida —problema, preguntas,
         fuentes, dataset, diccionario y diagnóstico de calidad— para iniciar el
-        proceso de minería de conocimiento. R2 perfila, mide y trata esos datos.
+        proceso de minería de conocimiento. R2 perfila, mide y trata esos datos, y R3
+        automatiza ese tratamiento con paquetes SSIS verificables y repetibles.
       </p>
       <div class="d-flex flex-wrap justify-content-center gap-2">
         <a href="{{ url_for('pages.r1') }}" class="btn btn-success">Abrir el reporte R1</a>
         <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success">Abrir el reporte R2</a>
+        <a href="{{ url_for('pages.r3') }}" class="btn btn-outline-success">Abrir el reporte R3</a>
       </div>
     </div>
   </div>

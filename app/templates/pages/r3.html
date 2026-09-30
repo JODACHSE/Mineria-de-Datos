@@ -1,0 +1,351 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+
+{% set report_code = "R3" %}
+{% set report_title = 'Tratamiento ETL<br><span class="text-success">con SSIS</span>' %}
+{% set report_lead = "Dos paquetes de SQL Server Integration Services —<code>EVA.dtsx</code> y <code>FAOSTAT.dtsx</code>— llevan los datos crudos a una zona de staging, aplican las reglas de calidad definidas a partir del diagnóstico de R2 y separan los registros en <strong>limpios</strong> y <strong>en revisión</strong>, conservando el valor original y el motivo. Tres iteraciones, cero filas perdidas sin explicación y re-ejecución sin duplicados." %}
+{% set toc_title = "Etapa 3 · Submenú" %}
+{% set toc_items = [
+  ("resumen", "Resumen de la etapa"),
+  ("informe", "Informe técnico y video"),
+  ("reglas", "Reglas de tratamiento"),
+  ("diseno", "Diseño de los paquetes"),
+  ("iteraciones", "Tres iteraciones"),
+  ("comparacion", "Comparación de calidad"),
+  ("ejemplos", "Datos corregidos y en revisión"),
+  ("reejecucion", "Re-ejecución sin duplicados"),
+  ("reproducir", "Cómo reproducirlo"),
+] %}
+{% set toc_extra = [] %}
+
+{% block title %}R3 · Tratamiento ETL con SSIS — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(2, "Paquetes SSIS (EVA y FAOSTAT)") }}</div>
+<div class="col">{{ stat(eva.original.recibidos + fao.original.recibidos, "Registros procesados por iteración") }}</div>
+<div class="col">{{ stat(eva_i3.total_revision + fao_i3.total_revision, "Registros enviados a revisión con su motivo") }}</div>
+<div class="col">{{ stat(eva_i3.sin_explicar + fao_i3.sin_explicar, "Filas perdidas sin explicación") }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+<section id="resumen" class="mb-5 reveal">
+  {{ report_h2("1", "Resumen de lo que se hizo") }}
+  <p>
+    En la etapa 2 diagnosticamos la calidad de EVA (48.932 registros municipales) y de las tres tablas
+    de FAOSTAT (10.786 registros). En esta etapa convertimos ese diagnóstico en un proceso ETL
+    automático, repetible y trazable en SSIS:
+  </p>
+  <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+    {% for icon, titulo, texto in [
+      ("bi-database-down", "Staging sin alterar", "Los CSV se cargan tal cual (todo como texto) en stg_EVA y stg_FAOSTAT, con IdLote, archivo de origen y número de fila."),
+      ("bi-funnel", "Reglas de limpieza", "Derived Column, Data Conversion, Lookup y Conditional Split corrigen formatos, validan catálogos y separan lo inválido."),
+      ("bi-inbox", "Rama de revisión", "Cada registro separado conserva su valor original, la regla que lo separó y el motivo, en EVA_Revision y FAOSTAT_Revision."),
+      ("bi-flag", "Atípicos marcados, no borrados", "Límites IQR por cultivo o por producto|elemento y unidad modal: se marcan con banderas en la tabla de limpios."),
+      ("bi-arrow-repeat", "Tres iteraciones", "Cada iteración agregó reglas a partir de lo que mostró la anterior, con conciliación Recibidos = Aceptados + Revisión."),
+      ("bi-shield-check", "Idempotencia", "usp_AbrirLote borra en cascada lo cargado por la misma clave de lote antes de volver a cargar: repetir no duplica."),
+    ] %}
+    <div class="col">
+      <div class="card h-100 border-0 bg-body-tertiary">
+        <div class="card-body">
+          <i class="bi {{ icon }} fs-3 text-success"></i>
+          <h3 class="h6 fw-bold mt-2 mb-1">{{ titulo }}</h3>
+          <p class="small text-body-secondary mb-0">{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% call callout("bi-check2-circle") %}
+    <strong>Resultado final (iteración 3):</strong>
+    EVA {{ eva_i3.aceptados | miles }} aceptados y {{ eva_i3.total_revision | miles }} en revisión
+    (área cosechada mayor que la sembrada); {{ eva_i3.atipicos.alguna | miles }} aceptados con bandera de atípico.
+    FAOSTAT {{ fao_i3.aceptados | miles }} aceptados y {{ fao_i3.total_revision }} en revisión
+    (valor "&lt;0.1" no numérico); {{ fao_i3.atipicos.valor }} valores atípicos marcados.
+  {% endcall %}
+</section>
+
+<section id="informe" class="mb-5 reveal">
+  {{ report_h2("2", "Informe técnico y video de demostración") }}
+  <div class="row g-3">
+    <div class="col-lg-5">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+          <h3 class="h5 fw-bold mt-2">Informe técnico paso a paso</h3>
+          <p class="small text-body-secondary flex-grow-1">
+            Diagnóstico y reglas, Control Flow y Data Flow de los dos paquetes, configuración de cada
+            componente, manejo de errores, las tres iteraciones, indicadores, ejemplos y prueba de
+            re-ejecución.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-success" href="{{ url_for('static', filename=informe_pdf) }}" download>
+              <i class="bi bi-download me-1"></i>Descargar PDF</a>
+            <a class="btn btn-outline-success" href="{{ url_for('static', filename=informe_docx) }}" download>
+              <i class="bi bi-file-earmark-word me-1"></i>Descargar Word</a>
+            <a class="btn btn-link link-success" href="{{ url_for('static', filename=informe_pdf) }}" target="_blank" rel="noopener">Ver en el navegador</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h3 class="h5 fw-bold"><i class="bi bi-camera-video me-2 text-success"></i>Video de demostración</h3>
+          {% if video_embed %}
+          <div class="ratio ratio-16x9 rounded overflow-hidden border">
+            <iframe src="{{ video_embed }}" title="Video de demostración de la etapa 3" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+          </div>
+          <a class="small link-success d-inline-block mt-2" href="{{ video_url }}" target="_blank" rel="noopener">Abrir el video en una pestaña nueva <i class="bi bi-box-arrow-up-right"></i></a>
+          {% else %}
+          <div class="ratio ratio-16x9 rounded border bg-body-tertiary">
+            <div class="d-flex flex-column align-items-center justify-content-center text-center p-3">
+              <i class="bi bi-play-circle fs-1 text-body-secondary"></i>
+              <p class="small text-body-secondary mb-0 mt-2">El video se mostrará aquí cuando se configure la
+                variable <code>VIDEO_ETAPA3_URL</code> con el enlace público.</p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="reglas" class="mb-5 reveal">
+  {{ report_h2("3", "Reglas de tratamiento") }}
+  <p>
+    Cada problema del diagnóstico de R2 tiene una regla con código propio (guardada en
+    <code>cat.Regla</code>). Lo que tiene una corrección obvia se corrige; lo que requiere criterio
+    humano va a revisión; lo extremo pero posible se marca.
+  </p>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th>Paquete</th><th>Código</th><th>Problema</th><th>Campo</th><th>Acción</th><th>Justificación</th></tr></thead>
+    <tbody>
+      {% for paq, cod, prob, campo, accion, just in reglas %}
+      <tr>
+        <td>{{ tag(paq, "success" if paq == "EVA" else "info") }}</td>
+        <td class="font-monospace">{{ cod }}</td>
+        <td>{{ prob }}</td><td>{{ campo }}</td><td>{{ accion }}</td><td class="text-body-secondary">{{ just }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+<section id="diseno" class="mb-5 reveal">
+  {{ report_h2("4", "Diseño de los paquetes") }}
+  <p>
+    Control Flow común: <code>SQL_Inicio</code> (abre el lote) → extracción a staging →
+    numeración de filas → límites IQR (y unidad modal en FAOSTAT) → limpieza → <code>SQL_Fin</code>.
+    Un Event Handler <code>OnError</code> registra cualquier fallo en <code>audit.Log</code> y cierra
+    el lote como fallido. Los diagramas se reconstruyeron a partir del diseñador guardado en cada
+    <code>.dtsx</code>.
+  </p>
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for img, titulo in diagramas %}
+    <div class="col">
+      <figure class="card h-100 mb-0">
+        <a href="{{ url_for('static', filename=img) }}" target="_blank" rel="noopener">
+          <img src="{{ url_for('static', filename=img) }}" class="card-img-top bg-white p-2" alt="{{ titulo }}" loading="lazy" style="max-height:320px;object-fit:contain;">
+        </a>
+        <figcaption class="card-body py-2 small text-body-secondary">{{ titulo }}</figcaption>
+      </figure>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="iteraciones" class="mb-5 reveal">
+  {{ report_h2("5", "Resultados de las tres iteraciones") }}
+  <p>
+    Cada iteración se ejecutó con su propia clave de lote. Los hallazgos de una justificaron los
+    ajustes de la siguiente. En todas se cumple <strong>Recibidos = Aceptados + Revisión</strong>.
+  </p>
+  <div class="chart-frame mb-4"><canvas id="iteraciones-chart" aria-label="Aceptados y enviados a revisión por iteración"></canvas></div>
+
+  {% for titulo, filas, color in [("EVA — producción municipal", eva_filas, "success"), ("FAOSTAT — QCL + QCL básicos + FS", fao_filas, "info")] %}
+  <h3 class="h5 fw-bold mt-4">{{ titulo }}</h3>
+  {{ table_open(extra="small") }}
+    <thead><tr><th>Lote</th><th class="text-end">Recibidos</th><th class="text-end">Aceptados</th><th class="text-end">Duplicados</th><th class="text-end">Revisión</th><th class="text-end">Sin explicar</th><th class="text-end">% aceptación</th></tr></thead>
+    <tbody>
+      {% for f in filas %}
+      <tr>
+        <td class="font-monospace">{{ f.lote }}</td>
+        <td class="text-end font-monospace">{{ f.recibidos | miles }}</td>
+        <td class="text-end font-monospace">{{ f.aceptados | miles }}</td>
+        <td class="text-end font-monospace">{{ f.duplicados | miles }}</td>
+        <td class="text-end font-monospace">{{ f.revision | miles }}</td>
+        <td class="text-end font-monospace {{ 'text-success fw-bold' if f.sin_explicar == 0 else 'text-danger fw-bold' }}">{{ f.sin_explicar }}</td>
+        <td class="text-end font-monospace">{{ '%g' | format(f.aceptacion) }} %</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+  <div class="accordion mb-3" id="acc-{{ loop.index }}">
+    {% for f in filas %}
+    <div class="accordion-item">
+      <h4 class="accordion-header">
+        <button class="accordion-button collapsed small" type="button" data-bs-toggle="collapse" data-bs-target="#it-{{ loop.index }}-{{ f.iteracion }}-{{ color }}">
+          <span class="font-monospace me-2">{{ f.iteracion }}</span> Ajustes y hallazgos
+        </button>
+      </h4>
+      <div id="it-{{ loop.index }}-{{ f.iteracion }}-{{ color }}" class="accordion-collapse collapse">
+        <div class="accordion-body small">
+          <p class="mb-2"><strong>Ajustes:</strong> {{ f.ajuste }}</p>
+          <p class="mb-2"><strong>Hallazgo:</strong> {{ f.hallazgo }}</p>
+          {% if f.revision_detalle %}
+          <p class="mb-0"><strong>Revisión por regla:</strong>
+            {% for regla, n in f.revision_detalle.items() %}{{ tag(regla ~ " · " ~ (n | miles), "warning") }} {% endfor %}</p>
+          {% endif %}
+          {% if f.atipicos %}
+          <p class="mb-0 mt-2"><strong>Banderas:</strong>
+            {% for k, n in f.atipicos.items() %}{{ tag(k ~ " · " ~ (n | miles), "secondary") }} {% endfor %}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  <p class="small text-body-secondary">
+    Conteos calculados con <code>scripts/etapa3_iteraciones.py</code>, que replica en Python las reglas
+    de los paquetes sobre los CSV originales, y contrastados con la consulta de conciliación de
+    <code>etapa3/sql/04_consultas_verificacion.sql</code>.
+  </p>
+</section>
+
+<section id="comparacion" class="mb-5 reveal">
+  {{ report_h2("6", "Comparación de la calidad: original vs. iteraciones") }}
+  {% for paquete, filas in indicadores.items() %}
+  <h3 class="h6 fw-bold mt-3">{{ paquete }}</h3>
+  {{ table_open(extra="small") }}
+    <thead><tr><th>Indicador</th><th class="text-end">Original</th><th class="text-end">I1</th><th class="text-end">I2</th><th class="text-end">I3</th></tr></thead>
+    <tbody>
+      {% for nombre, orig, its in filas %}
+      <tr>
+        <td>{{ nombre }}</td>
+        <td class="text-end font-monospace">{{ ('%g' | format(orig)) ~ " %" if orig is not none else "—" }}</td>
+        {% for v in its %}
+        <td class="text-end font-monospace {{ 'text-success fw-bold' if v is not none and orig is not none and v > orig }}">{{ ('%g' | format(v)) ~ " %" if v is not none else "sin medir" }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+  {% endfor %}
+  <div class="row g-3">
+    <div class="col-md-6">
+      <div class="card h-100 border-success-subtle"><div class="card-body small">
+        <h3 class="h6 fw-bold text-success"><i class="bi bi-graph-up-arrow me-1"></i>Mejoras</h3>
+        <ul class="mb-0">
+          <li>Consistencia de áreas en EVA: de 86,31 % a 100 % (6.700 filas separadas con su motivo).</li>
+          <li>Formato numérico de EVA: de 0 % a 100 % con punto decimal.</li>
+          <li>FAOSTAT: 611 años en rango partidos en inicio y fin; 2 valores de texto separados.</li>
+          <li>Atípicos identificados: {{ eva_i3.atipicos.alguna | miles }} en EVA y {{ fao_i3.atipicos.valor }} en FAOSTAT, sin eliminar.</li>
+        </ul>
+      </div></div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-warning-subtle"><div class="card-body small">
+        <h3 class="h6 fw-bold text-warning-emphasis"><i class="bi bi-exclamation-triangle me-1"></i>Pendientes</h3>
+        <ul class="mb-0">
+          <li>FAOSTAT: el Union All recorta <code>Producto</code> a 50 caracteres ({{ fao.original.producto_mayor_50 | miles }} filas).</li>
+          <li>FAOSTAT: conectar la salida No Match de <code>LKP_Regla</code>.</li>
+          <li>EVA: parametrizar la versión de reglas en <code>LKP_Regla</code>.</li>
+          <li>Afinar el criterio de atípicos (distribuciones muy sesgadas) y gestionar la cola de revisión.</li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="ejemplos" class="mb-5 reveal">
+  {{ report_h2("7", "Un dato corregido y un registro en revisión") }}
+  <div class="row g-3">
+    {% set c = eva.ejemplos.corregido %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm"><div class="card-body">
+        {{ tag("Corregido · EVA_Limpios", "success") }}
+        <p class="small text-body-secondary mt-2 mb-1">Fila {{ c.IdStg }} · {{ c.municipio }} · {{ c.cultivo }} · {{ c.periodo }}</p>
+        <p class="mb-0"><code>{{ c.campo }}</code>: <span class="font-monospace text-danger">"{{ c.original }}"</span>
+          <i class="bi bi-arrow-right mx-1"></i><span class="font-monospace text-success">{{ c.limpio }}</span></p>
+        <p class="small text-body-secondary mb-0 mt-2">Doble REPLACE: se quita el punto de miles y la coma pasa a punto decimal.</p>
+      </div></div>
+    </div>
+    {% set r = eva_i3.ejemplo_consistencia %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm"><div class="card-body">
+        {{ tag("En revisión · EVA-CONS", "warning") }}
+        <p class="small text-body-secondary mt-2 mb-1">Fila {{ r.IdStg }} · {{ r.Municipio }} ({{ r.CodigoMunicipioDane }}) · {{ r.Cultivo }} · {{ r.Periodo }}</p>
+        <p class="mb-0">AreaCosechada <span class="font-monospace">"{{ r.AreaCosechada }}"</span> &gt; AreaSembrada <span class="font-monospace">"{{ r.AreaSembrada }}"</span></p>
+        <p class="small text-body-secondary mb-0 mt-2">Se guarda en <code>EVA_Revision</code> con el valor original y el motivo
+          "AreaCosechada (X) mayor que AreaSembrada (Y)".</p>
+      </div></div>
+    </div>
+    {% set f = fao_i3.ejemplo_conversion %}
+    {% if f %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm"><div class="card-body">
+        {{ tag("En revisión · FAO-CNV", "warning") }}
+        <p class="small text-body-secondary mt-2 mb-1">{{ f.Dataset }} · {{ f.Producto }} · {{ f.Anio }}</p>
+        <p class="mb-0">Valor <span class="font-monospace">"{{ f.Valor }}"</span> no se puede convertir a decimal.</p>
+      </div></div>
+    </div>
+    {% endif %}
+    <div class="col-md-6">
+      <div class="card h-100 shadow-sm"><div class="card-body">
+        {{ tag("Corregido · FAOSTAT_Limpios", "success") }}
+        <p class="small text-body-secondary mt-2 mb-1">FS · suficiencia del suministro de energía</p>
+        <p class="mb-0"><code>CodigoAnio</code> <span class="font-monospace">"20002002"</span>
+          <i class="bi bi-arrow-right mx-1"></i><span class="font-monospace">AnioInicio 2000 · AnioFin 2002</span></p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="reejecucion" class="mb-5 reveal">
+  {{ report_h2("8", "Re-ejecución del mismo lote sin duplicados") }}
+  <p>
+    Al ejecutar un paquete con una clave de lote que ya existe, <code>etl.usp_AbrirLote</code> borra en
+    cascada lo que ese lote cargó (staging, limpios, revisión, límites IQR y unidades), registra
+    <code>LOTE_REABIERTO</code> y vuelve a cargar con el mismo <code>IdLote</code>. Resultado esperado
+    para el mismo lote en dos ejecuciones:
+  </p>
+  {{ table_open(extra="small") }}
+    <thead><tr><th>Lote</th><th class="text-end">Staging</th><th class="text-end">Limpios</th><th class="text-end">Revisión</th><th class="text-end">Claves repetidas</th></tr></thead>
+    <tbody>
+      <tr><td class="font-monospace">EVA-I3</td><td class="text-end font-monospace">{{ eva_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ eva_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ eva_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>
+      <tr><td class="font-monospace">FAOSTAT-I3</td><td class="text-end font-monospace">{{ fao_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ fao_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ fao_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>
+    </tbody>
+  {{ table_close() }}
+</section>
+
+<section id="reproducir" class="mb-5 reveal">
+  {{ report_h2("9", "Cómo reproducirlo") }}
+  <ol class="small">
+    <li>Ejecutar en SQL Server, en orden, <code>etapa3/sql/01_esquemas_y_tablas.sql</code>, <code>02_procedimientos.sql</code> y <code>03_catalogos.sql</code>.</li>
+    <li>Abrir <code>etapa3/ssis/R3.slnx</code> en Visual Studio con la extensión SQL Server Integration Services Projects.</li>
+    <li>Ajustar los parámetros <code>pRutaCsv*</code> de <code>Project.params</code> a la carpeta <code>app/data</code> del equipo (la conexión usa autenticación de Windows: no hay contraseñas).</li>
+    <li>Ejecutar <code>EVA.dtsx</code> y <code>FAOSTAT.dtsx</code> con <code>pLoteClave</code> = <code>EVA-I1</code> / <code>FAOSTAT-I1</code> y así para cada iteración.</li>
+    <li>Revisar las evidencias con <code>etapa3/sql/04_consultas_verificacion.sql</code> y comparar con <code>python scripts/etapa3_iteraciones.py</code>.</li>
+  </ol>
+  <a class="btn btn-outline-secondary btn-sm" href="{{ github_repo_url }}/tree/feature/etapa3/etapa3" target="_blank" rel="noopener"><i class="bi bi-github me-1"></i>Ver la carpeta etapa3 en GitHub</a>
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>Producto R3:</strong> los datos de EVA y FAOSTAT pasan por un proceso ETL en SSIS con staging,
+  reglas documentadas, rama de revisión con motivo, tres iteraciones conciliadas y re-ejecución
+  idempotente. El informe, los paquetes <code>.dtsx</code>, los scripts SQL y los catálogos quedan
+  versionados en el repositorio.
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{ {"iteraciones": iteraciones_chart} | tojson }}</script>
+{% endblock %}

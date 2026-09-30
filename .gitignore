@@ -23,3 +23,9 @@ instance/
 
 # Logs
 *.log
+
+# SSIS / Visual Studio / .NET
+.vs/
+**/bin/
+**/obj/
+*.dtproj.user
