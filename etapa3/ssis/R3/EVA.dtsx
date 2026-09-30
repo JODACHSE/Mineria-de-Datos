@@ -11,8 +11,8 @@
   DTS:LocaleID="9226"
   DTS:ObjectName="EVA"
   DTS:PackageType="5"
-  DTS:VersionBuild="97"
-  DTS:VersionGUID="{BF4B6FA2-BE4B-49B3-A995-6D9560185C53}">
+  DTS:VersionBuild="106"
+  DTS:VersionGUID="{38CEE4D6-D8F9-4480-B5C9-5BCF185B6FA0}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -3263,13 +3263,13 @@
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Expression"
-                          name="Expression">[REPLACE]([REPLACE]([TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[AreaSembrada]}),".",""),",",".")</property>
+                          name="Expression">[TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[AreaSembrada]})</property>
                         <property
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Friendly Expression"
                           expressionType="Notify"
-                          name="FriendlyExpression">REPLACE(REPLACE(TRIM(AreaSembrada),".",""),",",".")</property>
+                          name="FriendlyExpression">TRIM(AreaSembrada)</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
@@ -3286,13 +3286,13 @@
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Expression"
-                          name="Expression">[REPLACE]([REPLACE]([TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[AreaCosechada]}),".",""),",",".")</property>
+                          name="Expression">[TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[AreaCosechada]})</property>
                         <property
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Friendly Expression"
                           expressionType="Notify"
-                          name="FriendlyExpression">REPLACE(REPLACE(TRIM(AreaCosechada),".",""),",",".")</property>
+                          name="FriendlyExpression">TRIM(AreaCosechada)</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
@@ -3309,13 +3309,13 @@
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Expression"
-                          name="Expression">[REPLACE]([REPLACE]([TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[Produccion]}),".",""),",",".")</property>
+                          name="Expression">[TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[Produccion]})</property>
                         <property
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Friendly Expression"
                           expressionType="Notify"
-                          name="FriendlyExpression">REPLACE(REPLACE(TRIM(Produccion),".",""),",",".")</property>
+                          name="FriendlyExpression">TRIM(Produccion)</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
@@ -3332,13 +3332,13 @@
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Expression"
-                          name="Expression">[REPLACE]([REPLACE]([TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[Rendimiento]}),".",""),",",".")</property>
+                          name="Expression">[TRIM](#{Package\DFT_Limpieza_EVA\SRC_stg_EVA.Outputs[OLE DB Source Output].Columns[Rendimiento]})</property>
                         <property
                           containsID="true"
                           dataType="System.String"
                           description="Derived Column Friendly Expression"
                           expressionType="Notify"
-                          name="FriendlyExpression">REPLACE(REPLACE(TRIM(Rendimiento),".",""),",",".")</property>
+                          name="FriendlyExpression">TRIM(Rendimiento)</property>
                       </properties>
                     </outputColumn>
                     <outputColumn
@@ -16892,44 +16892,44 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
               startId="Package\DFT_Limpieza_EVA\CONV_Categoria_Revision.Outputs[Data Conversion Output]" />
             <path
               refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output6]"
-              endId="Package\DFT_Limpieza_EVA\CONV_Tipos_STR_CORTO.Inputs[Data Conversion Input]"
+              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 4]"
               name="Derived Column Output"
-              startId="Package\DFT_Limpieza_EVA\DER_Banderas.Outputs[Derived Column Output]" />
+              startId="Package\DFT_Limpieza_EVA\DER_Rev_DomNeg.Outputs[Derived Column Output]" />
             <path
               refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output5]"
               endId="Package\DFT_Limpieza_EVA\CONV_TiposNumericos.Inputs[Data Conversion Input]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_EVA\DER_LimpiezaTexto.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output7]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output4]"
               endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 7]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_EVA\DER_Rev_ConversionFinal.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output3]"
-              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 2]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output]"
+              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 1]"
               name="Derived Column Output"
-              startId="Package\DFT_Limpieza_EVA\DER_Rev_Conversion.Outputs[Derived Column Output]" />
+              startId="Package\DFT_Limpieza_EVA\DER_Rev_Duplicado.Outputs[Derived Column Output]" />
             <path
               refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output2]"
               endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 3]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_EVA\DER_Rev_SinCoincidencia.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output1]"
               endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 5]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_EVA\DER_Rev_Consistencia.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output4]"
-              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 1]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output7]"
+              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 2]"
               name="Derived Column Output"
-              startId="Package\DFT_Limpieza_EVA\DER_Rev_Duplicado.Outputs[Derived Column Output]" />
+              startId="Package\DFT_Limpieza_EVA\DER_Rev_Conversion.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output1]"
-              endId="Package\DFT_Limpieza_EVA\UN_Revision_EVA.Inputs[Union All Input 4]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Derived Column Output3]"
+              endId="Package\DFT_Limpieza_EVA\CONV_Tipos_STR_CORTO.Inputs[Data Conversion Input]"
               name="Derived Column Output"
-              startId="Package\DFT_Limpieza_EVA\DER_Rev_DomNeg.Outputs[Derived Column Output]" />
+              startId="Package\DFT_Limpieza_EVA\DER_Banderas.Outputs[Derived Column Output]" />
             <path
               refId="Package\DFT_Limpieza_EVA.Paths[Dominio_Negativo]"
               endId="Package\DFT_Limpieza_EVA\DER_Rev_DomNeg.Inputs[Derived Column Input]"
@@ -16941,57 +16941,57 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
               name="EsDuplicado"
               startId="Package\DFT_Limpieza_EVA\CSPL_Duplicados.Outputs[EsDuplicado]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output5]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output]"
               endId="Package\DFT_Limpieza_EVA\Union All 3.Inputs[Union All Input 1]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_Rendimiento.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output2]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output1]"
               endId="Package\DFT_Limpieza_EVA\Union All 2.Inputs[Union All Input 1]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_Produccion.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output3]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output2]"
               endId="Package\DFT_Limpieza_EVA\CONV_Categoria_Revision.Inputs[Data Conversion Input]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_Regla.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output1]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output3]"
               endId="Package\DFT_Limpieza_EVA\Union All.Inputs[Union All Input 1]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_AreaSembrada.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output4]"
               endId="Package\DFT_Limpieza_EVA\CSPL_ReglasDominio.Inputs[Conditional Split Input]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_Municipio.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output4]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output5]"
               endId="Package\DFT_Limpieza_EVA\Union All 1.Inputs[Union All Input 1]"
               name="Lookup Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_AreaCosechada.Outputs[Lookup Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output4]"
               endId="Package\DFT_Limpieza_EVA\DER_Rev_SinCoincidencia.Inputs[Derived Column Input]"
               name="Lookup No Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_Municipio.Outputs[Lookup No Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output2]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output3]"
               endId="Package\DFT_Limpieza_EVA\Union All 3.Inputs[Union All Input 2]"
               name="Lookup No Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_Rendimiento.Outputs[Lookup No Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output3]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output2]"
               endId="Package\DFT_Limpieza_EVA\Union All 2.Inputs[Union All Input 2]"
               name="Lookup No Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_Produccion.Outputs[Lookup No Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output4]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output1]"
               endId="Package\DFT_Limpieza_EVA\Union All.Inputs[Union All Input 2]"
               name="Lookup No Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_AreaSembrada.Outputs[Lookup No Match Output]" />
             <path
-              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output1]"
+              refId="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output]"
               endId="Package\DFT_Limpieza_EVA\Union All 1.Inputs[Union All Input 2]"
               name="Lookup No Match Output"
               startId="Package\DFT_Limpieza_EVA\LKP_IQR_AreaCosechada.Outputs[Lookup No Match Output]" />
@@ -17456,13 +17456,21 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           Id="Package\DFT_Limpieza_EVA"
           TopLeft="145.333333333333,346.888888888889" />
         <NodeLayout
+          Size="202,42"
+          Id="Package\SQL_CalcularLimitesIQR"
+          TopLeft="133.333333333333,268.222222222222" />
+        <NodeLayout
+          Size="122,42"
+          Id="Package\SQL_Fin"
+          TopLeft="176,429" />
+        <NodeLayout
           Size="133,42"
           Id="Package\SQL_Inicio"
           TopLeft="162,27" />
         <NodeLayout
-          Size="202,42"
-          Id="Package\SQL_CalcularLimitesIQR"
-          TopLeft="133.333333333333,268.222222222222" />
+          Size="187,42"
+          Id="Package\SQL_NumerarStaging"
+          TopLeft="137,188" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint]"
           TopLeft="228.638888888889,69">
@@ -17477,6 +17485,28 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
                   Capacity="5">
                   <mssgle:LineSegment
                     End="0,30.611111111111" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package.PrecedenceConstraints[Constraint 1]"
+          TopLeft="235.916666666667,388.888888888889">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,40.111111111111"
+              Start="0,0"
+              End="0,32.611111111111">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,32.611111111111" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -17507,10 +17537,6 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="187,42"
-          Id="Package\SQL_NumerarStaging"
-          TopLeft="137,188" />
         <EdgeLayout
           Id="Package.PrecedenceConstraints[Constraint 3]"
           TopLeft="229.638888888889,149.111111111111">
@@ -17555,35 +17581,49 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
             <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
+      </GraphLayout>
+    </LayoutInfo>
+  </Package>
+  <DtsEventHandler
+    design-time-name="Package.EventHandlers[OnError]">
+    <LayoutInfo>
+      <GraphLayout
+        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
-          Size="122,42"
-          Id="Package\SQL_Fin"
-          TopLeft="176,429" />
+          Size="186,42"
+          Id="Package.EventHandlers[OnError]\EH_CerrarLoteFallido"
+          TopLeft="276,166" />
+        <NodeLayout
+          Size="143,42"
+          Id="Package.EventHandlers[OnError]\EH_LogError"
+          TopLeft="290,53" />
         <EdgeLayout
-          Id="Package.PrecedenceConstraints[Constraint 1]"
-          TopLeft="235.916666666667,388.888888888889">
+          Id="Package.EventHandlers[OnError].PrecedenceConstraints[Constraint]"
+          TopLeft="365.25,95">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,40.111111111111"
+              EndConnector="0,71"
               Start="0,0"
-              End="0,32.611111111111">
+              End="0,63.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,32.611111111111" />
+                    End="0,63.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <EdgeLabelCollection />
+            <mssgm:EdgeLabel
+              BoundingBox="-8,23.75,16,16"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
-  </Package>
+  </DtsEventHandler>
   <TaskHost
     design-time-name="Package\DFT_Extraccion_EVA">
     <LayoutInfo>
@@ -17625,7 +17665,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
+              BoundingBox="-27.99357421875,27.94873046875,55.9871484375,9.6025390625"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
@@ -17649,7 +17689,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
+              BoundingBox="-27.99357421875,27.94873046875,55.9871484375,9.6025390625"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
@@ -17673,7 +17713,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
+              BoundingBox="-27.99357421875,20.94873046875,55.9871484375,9.6025390625"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
@@ -17699,30 +17739,6 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
       <GraphLayout
         Capacity="64" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
-          Size="187,42"
-          Id="Package\DFT_Limpieza_EVA\LKP_IQR_Produccion"
-          TopLeft="356.777777777778,679.333333333334" />
-        <NodeLayout
-          Size="177,42"
-          Id="Package\DFT_Limpieza_EVA\DER_Rev_DomNeg"
-          TopLeft="710.909090909091,423.434343434343" />
-        <NodeLayout
-          Size="132,42"
-          Id="Package\DFT_Limpieza_EVA\Union All 1"
-          TopLeft="94.5555555555555,639.333333333334" />
-        <NodeLayout
-          Size="135,42"
-          Id="Package\DFT_Limpieza_EVA\LKP_Regla"
-          TopLeft="1168.21428571429,345.833333333333" />
-        <NodeLayout
-          Size="180,42"
-          Id="Package\DFT_Limpieza_EVA\DER_LimpiezaTexto"
-          TopLeft="370.366522366522,179.111111111111" />
-        <NodeLayout
-          Size="132,42"
-          Id="Package\DFT_Limpieza_EVA\Union All 2"
-          TopLeft="93.4444444444445,721.555555555556" />
-        <NodeLayout
           Size="181,42"
           Id="Package\DFT_Limpieza_EVA\DEST_EVA_Limpios"
           TopLeft="978,845.666666666666" />
@@ -17730,6 +17746,10 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           Size="171,42"
           Id="Package\DFT_Limpieza_EVA\UN_Revision_EVA"
           TopLeft="955.142857142857,348" />
+        <NodeLayout
+          Size="214,42"
+          Id="Package\DFT_Limpieza_EVA\DER_Rev_ConversionFinal"
+          TopLeft="712.777777777778,752.333333333333" />
         <NodeLayout
           Size="132,42"
           Id="Package\DFT_Limpieza_EVA\Union All 3"
@@ -17739,29 +17759,25 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           Id="Package\DFT_Limpieza_EVA\LKP_IQR_AreaSembrada"
           TopLeft="361.555555555556,509" />
         <NodeLayout
-          Size="190,42"
-          Id="Package\DFT_Limpieza_EVA\DER_Rev_Conversion"
-          TopLeft="711.886363636364,260.866161616162" />
-        <NodeLayout
           Size="153,42"
           Id="Package\DFT_Limpieza_EVA\LKP_Municipio"
           TopLeft="385.103896103896,342.565656565656" />
+        <NodeLayout
+          Size="185,42"
+          Id="Package\DFT_Limpieza_EVA\DEST_EVA_Revision"
+          TopLeft="1141.44444444444,611.888888888889" />
+        <NodeLayout
+          Size="180,42"
+          Id="Package\DFT_Limpieza_EVA\DER_LimpiezaTexto"
+          TopLeft="370.366522366522,179.111111111111" />
         <NodeLayout
           Size="213,42"
           Id="Package\DFT_Limpieza_EVA\DER_Rev_SinCoincidencia"
           TopLeft="712.19696969697,345.151515151515" />
         <NodeLayout
-          Size="218,42"
-          Id="Package\DFT_Limpieza_EVA\CONV_Tipos_STR_CORTO"
-          TopLeft="704,845" />
-        <NodeLayout
-          Size="155,42"
-          Id="Package\DFT_Limpieza_EVA\DER_Banderas"
-          TopLeft="359,846" />
-        <NodeLayout
-          Size="197,42"
-          Id="Package\DFT_Limpieza_EVA\DER_Rev_Consistencia"
-          TopLeft="712.727272727273,505.454545454545" />
+          Size="190,42"
+          Id="Package\DFT_Limpieza_EVA\DER_Rev_Conversion"
+          TopLeft="711.886363636364,260.866161616162" />
         <NodeLayout
           Size="210,42"
           Id="Package\DFT_Limpieza_EVA\LKP_IQR_AreaCosechada"
@@ -17779,17 +17795,45 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           Id="Package\DFT_Limpieza_EVA\Union All"
           TopLeft="103.555555555556,551.333333333333" />
         <NodeLayout
+          Size="218,42"
+          Id="Package\DFT_Limpieza_EVA\CONV_Tipos_STR_CORTO"
+          TopLeft="704,845" />
+        <NodeLayout
+          Size="155,42"
+          Id="Package\DFT_Limpieza_EVA\DER_Banderas"
+          TopLeft="359,846" />
+        <NodeLayout
+          Size="197,42"
+          Id="Package\DFT_Limpieza_EVA\DER_Rev_Consistencia"
+          TopLeft="712.727272727273,505.454545454545" />
+        <NodeLayout
+          Size="187,42"
+          Id="Package\DFT_Limpieza_EVA\LKP_IQR_Produccion"
+          TopLeft="356.777777777778,679.333333333334" />
+        <NodeLayout
+          Size="177,42"
+          Id="Package\DFT_Limpieza_EVA\DER_Rev_DomNeg"
+          TopLeft="710.909090909091,423.434343434343" />
+        <NodeLayout
           Size="189,42"
           Id="Package\DFT_Limpieza_EVA\CSPL_ReglasDominio"
           TopLeft="369.64935064935,424.565656565657" />
         <NodeLayout
-          Size="151,42"
-          Id="Package\DFT_Limpieza_EVA\SRC_stg_EVA"
-          TopLeft="379.699855699856,15.1313131313129" />
+          Size="132,42"
+          Id="Package\DFT_Limpieza_EVA\Union All 1"
+          TopLeft="94.5555555555555,639.333333333334" />
+        <NodeLayout
+          Size="135,42"
+          Id="Package\DFT_Limpieza_EVA\LKP_Regla"
+          TopLeft="1168.21428571429,345.833333333333" />
         <NodeLayout
           Size="196,42"
           Id="Package\DFT_Limpieza_EVA\CONV_TiposNumericos"
           TopLeft="361.002886002886,261.020202020202" />
+        <NodeLayout
+          Size="151,42"
+          Id="Package\DFT_Limpieza_EVA\SRC_stg_EVA"
+          TopLeft="379.699855699856,15.1313131313129" />
         <NodeLayout
           Size="168,42"
           Id="Package\DFT_Limpieza_EVA\CSPL_Duplicados"
@@ -17798,6 +17842,44 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           Size="213,42"
           Id="Package\DFT_Limpieza_EVA\CONV_Categoria_Revision"
           TopLeft="1123.33333333333,503.333333333333" />
+        <NodeLayout
+          Size="132,42"
+          Id="Package\DFT_Limpieza_EVA\Union All 2"
+          TopLeft="93.4444444444445,721.555555555556" />
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Union All Output 14]"
+          TopLeft="226.555555555556,578">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="132.444444444444,36.7777777777784"
+              Start="0,0"
+              End="124.944444444444,36.7777777777784">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="51.8939857288481,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="51.8939857288481,0"
+                    Point2="55.8939857288481,0"
+                    Point3="55.8939857288481,4" />
+                  <mssgle:LineSegment
+                    End="55.8939857288481,32.7777777777784" />
+                  <mssgle:CubicBezierSegment
+                    Point1="55.8939857288481,32.7777777777784"
+                    Point2="55.8939857288481,36.7777777777784"
+                    Point3="59.8939857288481,36.7777777777784" />
+                  <mssgle:LineSegment
+                    End="124.944444444444,36.7777777777784" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Union All Output 13]"
           TopLeft="226.555555555555,666.000000000001">
@@ -17924,7 +18006,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[OLE DB Source Output]"
-          TopLeft="455.177128427128,57.1313131313129">
+          TopLeft="455.177128427129,57.1313131313129">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
@@ -17946,78 +18028,30 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output4]"
-          TopLeft="361.555555555556,530">
+          TopLeft="538.103896103896,364.858585858586">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="-135,42.3333333333333"
+              EndConnector="174.093073593073,0"
               Start="0,0"
-              End="-127.5,42.3333333333333">
+              End="166.593073593073,0">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="-63.5,0" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-63.5,0"
-                    Point2="-67.5,0"
-                    Point3="-67.5,4" />
-                  <mssgle:LineSegment
-                    End="-67.5,38.3333333333333" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-67.5,38.3333333333333"
-                    Point2="-67.5,42.3333333333333"
-                    Point3="-71.5,42.3333333333333" />
-                  <mssgle:LineSegment
-                    End="-127.5,42.3333333333333" />
+                    End="166.593073593073,0" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="-167.750831163194,-17.609375,111.6127734375,11.609375"
+              BoundingBox="27.4901500777867,5,111.6127734375,11.609375"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output3]"
-          TopLeft="356.777777777778,706.000000000001">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-131.333333333333,36.5555555555553"
-              Start="0,0"
-              End="-123.833333333333,36.5555555555553">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="-51.4250764525995,0" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-51.4250764525995,0"
-                    Point2="-55.4250764525995,0"
-                    Point3="-55.4250764525995,4" />
-                  <mssgle:LineSegment
-                    End="-55.4250764525995,32.5555555555553" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-55.4250764525995,32.5555555555553"
-                    Point2="-55.4250764525995,36.5555555555553"
-                    Point3="-59.4250764525995,36.5555555555553" />
-                  <mssgle:LineSegment
-                    End="-123.833333333333,36.5555555555553" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-111.23146317135,-17.609375,111.6127734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output2]"
           TopLeft="355.666666666667,788.222222222223">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18053,7 +18087,79 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output2]"
+          TopLeft="356.777777777778,706.000000000001">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-131.333333333333,36.5555555555553"
+              Start="0,0"
+              End="-123.833333333333,36.5555555555553">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="-51.4250764525995,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-51.4250764525995,0"
+                    Point2="-55.4250764525995,0"
+                    Point3="-55.4250764525995,4" />
+                  <mssgle:LineSegment
+                    End="-55.4250764525995,32.5555555555553" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-55.4250764525995,32.5555555555553"
+                    Point2="-55.4250764525995,36.5555555555553"
+                    Point3="-59.4250764525995,36.5555555555553" />
+                  <mssgle:LineSegment
+                    End="-123.833333333333,36.5555555555553" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-111.23146317135,-17.609375,111.6127734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output1]"
+          TopLeft="361.555555555556,530">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-135,36.6666666666664"
+              Start="0,0"
+              End="-127.5,36.6666666666664">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="-74.0275229357797,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-74.0275229357797,0"
+                    Point2="-78.0275229357797,0"
+                    Point3="-78.0275229357797,4" />
+                  <mssgle:LineSegment
+                    End="-78.0275229357797,32.6666666666664" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-78.0275229357797,32.6666666666664"
+                    Point2="-78.0275229357797,36.6666666666664"
+                    Point3="-82.0275229357797,36.6666666666664" />
+                  <mssgle:LineSegment
+                    End="-127.5,36.6666666666664" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-153.71926121703,-17.609375,111.6127734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output]"
           TopLeft="359,620.444444444445">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18089,67 +18195,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Lookup No Match Output]"
-          TopLeft="538.103896103896,364.858585858586">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="174.093073593073,0"
-              Start="0,0"
-              End="166.593073593073,0">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="166.593073593073,0" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="27.4901500777867,5,111.6127734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output5]"
-          TopLeft="355.666666666667,788.222222222223">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-132.444444444445,36.5555555555554"
-              Start="0,0"
-              End="-124.944444444445,36.5555555555554">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="-51.8939857288484,0" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-51.8939857288484,0"
-                    Point2="-55.8939857288484,0"
-                    Point3="-55.8939857288484,4" />
-                  <mssgle:LineSegment
-                    End="-55.8939857288484,32.5555555555554" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-55.8939857288484,32.5555555555554"
-                    Point2="-55.8939857288484,36.5555555555554"
-                    Point3="-59.8939857288484,36.5555555555554" />
-                  <mssgle:LineSegment
-                    End="-124.944444444445,36.5555555555554" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-104.085372447598,-17.609375,96.3827734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output4]"
           TopLeft="359,620.444444444445">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18185,7 +18231,67 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output4]"
+          TopLeft="462.876623376623,384.565656565656">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,40.0000000000001"
+              Start="0,0"
+              End="0,32.5000000000001">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,32.5000000000001" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-48.19138671875,10.4453125,96.3827734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output3]"
+          TopLeft="361.555555555556,530">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="-135,36.6666666666664"
+              Start="0,0"
+              End="-127.5,36.6666666666664">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="-74.0275229357797,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-74.0275229357797,0"
+                    Point2="-78.0275229357797,0"
+                    Point3="-78.0275229357797,4" />
+                  <mssgle:LineSegment
+                    End="-78.0275229357797,32.6666666666664" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-78.0275229357797,32.6666666666664"
+                    Point2="-78.0275229357797,36.6666666666664"
+                    Point3="-82.0275229357797,36.6666666666664" />
+                  <mssgle:LineSegment
+                    End="-127.5,36.6666666666664" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-158.53926121703,-17.609375,96.3827734375,11.609375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output2]"
           TopLeft="1232.77380952381,387.833333333333">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18209,7 +18315,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output2]"
+          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output1]"
           TopLeft="356.777777777778,706.000000000001">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18245,62 +18351,38 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output1]"
-          TopLeft="361.555555555556,530">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="-135,42.3333333333333"
-              Start="0,0"
-              End="-127.5,42.3333333333333">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="-63.5,0" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-63.5,0"
-                    Point2="-67.5,0"
-                    Point3="-67.5,4" />
-                  <mssgle:LineSegment
-                    End="-67.5,38.3333333333333" />
-                  <mssgle:CubicBezierSegment
-                    Point1="-67.5,38.3333333333333"
-                    Point2="-67.5,42.3333333333333"
-                    Point3="-71.5,42.3333333333333" />
-                  <mssgle:LineSegment
-                    End="-127.5,42.3333333333333" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-115.69138671875,-17.609375,96.3827734375,11.609375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Lookup Match Output]"
-          TopLeft="462.876623376623,384.565656565656">
+          TopLeft="355.666666666667,788.222222222223">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,40.0000000000001"
+              EndConnector="-132.444444444445,36.5555555555554"
               Start="0,0"
-              End="0,32.5000000000001">
+              End="-124.944444444445,36.5555555555554">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,32.5000000000001" />
+                    End="-51.8939857288484,0" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-51.8939857288484,0"
+                    Point2="-55.8939857288484,0"
+                    Point3="-55.8939857288484,4" />
+                  <mssgle:LineSegment
+                    End="-55.8939857288484,32.5555555555554" />
+                  <mssgle:CubicBezierSegment
+                    Point1="-55.8939857288484,32.5555555555554"
+                    Point2="-55.8939857288484,36.5555555555554"
+                    Point3="-59.8939857288484,36.5555555555554" />
+                  <mssgle:LineSegment
+                    End="-124.944444444445,36.5555555555554" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="-48.19138671875,10.4453125,96.3827734375,11.609375"
+              BoundingBox="-104.085372447598,-17.609375,96.3827734375,11.609375"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
@@ -18353,85 +18435,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output6]"
-          TopLeft="514,866.5">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="190,0"
-              Start="0,0"
-              End="182.5,0">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="182.5,0" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output5]"
-          TopLeft="459.684704184704,221.111111111111">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,39.9090909090908"
-              Start="0,0"
-              End="0,32.4090909090908">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,32.4090909090908" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output4]"
-          TopLeft="810.613636363636,139.659090909091">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="257.195887445887,208.340909090909"
-              Start="0,0"
-              End="257.195887445887,200.840909090909">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,96.512421433337" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,96.512421433337"
-                    Point2="0,100.512421433337"
-                    Point3="4,100.512421433337" />
-                  <mssgle:LineSegment
-                    End="253.195887445887,100.512421433337" />
-                  <mssgle:CubicBezierSegment
-                    Point1="253.195887445887,100.512421433337"
-                    Point2="257.195887445887,100.512421433337"
-                    Point3="257.195887445887,104.512421433337" />
-                  <mssgle:LineSegment
-                    End="257.195887445887,200.840909090909" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output3]"
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output7]"
           TopLeft="806.886363636364,302.866161616162">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18465,29 +18469,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output2]"
-          TopLeft="925.19696969697,367.575757575758">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="29.9458874458874,0"
-              Start="0,0"
-              End="22.4458874458874,0">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="22.4458874458874,0" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output1]"
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output6]"
           TopLeft="799.409090909091,423.434343434343">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18521,7 +18503,107 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output]"
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output5]"
+          TopLeft="459.684704184704,221.111111111111">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,39.909090909091"
+              Start="0,0"
+              End="0,32.409090909091">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,32.409090909091" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output4]"
+          TopLeft="819.777777777778,752.333333333333">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="261.615079365079,-362.333333333333"
+              Start="0,0"
+              End="261.615079365079,-354.833333333333">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,-184.957560247388" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,-184.957560247388"
+                    Point2="0,-188.957560247388"
+                    Point3="4,-188.957560247388" />
+                  <mssgle:LineSegment
+                    End="257.615079365079,-188.957560247388" />
+                  <mssgle:CubicBezierSegment
+                    Point1="257.615079365079,-188.957560247388"
+                    Point2="261.615079365079,-188.957560247388"
+                    Point3="261.615079365079,-192.957560247388" />
+                  <mssgle:LineSegment
+                    End="261.615079365079,-354.833333333333" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output3]"
+          TopLeft="514,866.5">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="190,0"
+              Start="0,0"
+              End="182.5,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="182.5,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output2]"
+          TopLeft="925.19696969697,367.575757575758">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="29.9458874458874,0"
+              Start="0,0"
+              End="22.4458874458874,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="22.4458874458874,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output1]"
           TopLeft="842.727272727273,505.454545454545">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -18555,19 +18637,75 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output]"
+          TopLeft="810.613636363636,139.659090909091">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="257.195887445887,208.340909090909"
+              Start="0,0"
+              End="257.195887445887,200.840909090909">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,96.512421433337" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,96.512421433337"
+                    Point2="0,100.512421433337"
+                    Point3="4,100.512421433337" />
+                  <mssgle:LineSegment
+                    End="253.195887445887,100.512421433337" />
+                  <mssgle:CubicBezierSegment
+                    Point1="253.195887445887,100.512421433337"
+                    Point2="257.195887445887,100.512421433337"
+                    Point3="257.195887445887,104.512421433337" />
+                  <mssgle:LineSegment
+                    End="257.195887445887,200.840909090909" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Output2]"
+          TopLeft="1231.88888888889,545.333333333333">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,66.5555555555558"
+              Start="0,0"
+              End="0,59.0555555555558">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,59.0555555555558" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Output1]"
           TopLeft="460.303391053391,303.020202020202">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,39.5454545454546"
+              EndConnector="0,39.545454545454"
               Start="0,0"
-              End="0,32.0454545454546">
+              End="0,32.045454545454">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,32.0454545454546" />
+                    End="0,32.045454545454" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -18599,6 +18737,30 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
+          Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Error Output1]"
+          TopLeft="816.388888888889,845">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,-50.6666666666666"
+              Start="0,0"
+              End="0,-43.1666666666666">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,-43.1666666666666" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-66.08638671875,-27.3001302083333,132.1727734375,11.43359375"
+              RelativePosition="Any" />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Error Output]"
           TopLeft="557.002886002886,281.943181818182">
           <EdgeLayout.Curve>
@@ -18624,31 +18786,43 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[ContinuaValidacion]"
-          TopLeft="464.102453102453,466.565656565657">
+          TopLeft="433.982683982683,466.565656565657">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,42.4343434343435"
+              EndConnector="30.0728715728727,42.434343434343"
               Start="0,0"
-              End="0,34.9343434343435">
+              End="30.0728715728727,34.934343434343">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,34.9343434343435" />
+                    End="0,13.1874675400382" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,13.1874675400382"
+                    Point2="0,17.1874675400382"
+                    Point3="4,17.1874675400382" />
+                  <mssgle:LineSegment
+                    End="26.0728715728727,17.1874675400382" />
+                  <mssgle:CubicBezierSegment
+                    Point1="26.0728715728727,17.1874675400382"
+                    Point2="30.0728715728727,17.1874675400382"
+                    Point3="30.0728715728727,21.1874675400382" />
+                  <mssgle:LineSegment
+                    End="30.0728715728727,34.934343434343" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="-42.299453125,12.5926599984218,84.59890625,9.7490234375"
+              BoundingBox="-59.8928220260637,22.1874675400382,84.59890625,9.7490234375"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_EVA.Paths[Continua]"
-          TopLeft="457.760461760461,139.222222222222">
+          TopLeft="457.760461760462,139.222222222222">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
@@ -18666,7 +18840,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <mssgm:EdgeLabel
-              BoundingBox="-20.05587890625,11.4175889756945,40.1117578125,9.5537109375"
+              BoundingBox="-52.6842578125,10.3897569444445,40.1117578125,9.5537109375"
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
@@ -18706,128 +18880,6 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Union All Output 14]"
-          TopLeft="226.555555555556,578">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="132.444444444444,36.7777777777784"
-              Start="0,0"
-              End="124.944444444444,36.7777777777784">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="51.8939857288481,0" />
-                  <mssgle:CubicBezierSegment
-                    Point1="51.8939857288481,0"
-                    Point2="55.8939857288481,0"
-                    Point3="55.8939857288481,4" />
-                  <mssgle:LineSegment
-                    End="55.8939857288481,32.7777777777784" />
-                  <mssgle:CubicBezierSegment
-                    Point1="55.8939857288481,32.7777777777784"
-                    Point2="55.8939857288481,36.7777777777784"
-                    Point3="59.8939857288481,36.7777777777784" />
-                  <mssgle:LineSegment
-                    End="124.944444444444,36.7777777777784" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="185,42"
-          Id="Package\DFT_Limpieza_EVA\DEST_EVA_Revision"
-          TopLeft="1141.44444444444,611.888888888889" />
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Output2]"
-          TopLeft="1231.88888888889,545.333333333333">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,66.5555555555558"
-              Start="0,0"
-              End="0,59.0555555555558">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,59.0555555555558" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="214,42"
-          Id="Package\DFT_Limpieza_EVA\DER_Rev_ConversionFinal"
-          TopLeft="712.777777777778,752.333333333333" />
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Data Conversion Error Output1]"
-          TopLeft="816.388888888889,845">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,-50.6666666666666"
-              Start="0,0"
-              End="0,-43.1666666666666">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,-43.1666666666666" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-66.08638671875,-27.3001302083333,132.1727734375,11.43359375"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_EVA.Paths[Derived Column Output7]"
-          TopLeft="819.777777777778,752.333333333333">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="261.615079365079,-362.333333333333"
-              Start="0,0"
-              End="261.615079365079,-354.833333333333">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,-184.957560247388" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,-184.957560247388"
-                    Point2="0,-188.957560247388"
-                    Point3="4,-188.957560247388" />
-                  <mssgle:LineSegment
-                    End="257.615079365079,-188.957560247388" />
-                  <mssgle:CubicBezierSegment
-                    Point1="257.615079365079,-188.957560247388"
-                    Point2="261.615079365079,-188.957560247388"
-                    Point3="261.615079365079,-192.957560247388" />
-                  <mssgle:LineSegment
-                    End="261.615079365079,-354.833333333333" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
       </GraphLayout>
     </LayoutInfo>
   </TaskHost>
@@ -18841,29 +18893,6 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
         <Name>TableInfoObjectType</Name>
         <Value
           type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_EVA\LKP_IQR_AreaCosechada">
-    <Properties>
-      <Property>
-        <Name>OverwriteParamsSQLProp</Name>
-        <Value
-          type="q2:string">false</Value>
-      </Property>
-      <Property>
-        <Name>UsedTableName</Name>
-        <Value
-          type="q3:string"></Value>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q4:string">0</Value>
-      </Property>
-      <Property>
-        <Name>DataSourceViewID</Name>
       </Property>
     </Properties>
   </PipelineComponentMetadata>
@@ -18891,7 +18920,43 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
     </Properties>
   </PipelineComponentMetadata>
   <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_EVA\LKP_Regla">
+    design-time-name="Package\DFT_Limpieza_EVA\LKP_Municipio">
+    <Properties>
+      <Property>
+        <Name>OverwriteParamsSQLProp</Name>
+        <Value
+          type="q2:string">false</Value>
+      </Property>
+      <Property>
+        <Name>UsedTableName</Name>
+        <Value
+          type="q3:string"></Value>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q4:string">0</Value>
+      </Property>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\DFT_Limpieza_EVA\DEST_EVA_Revision">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
+    design-time-name="Package\DFT_Limpieza_EVA\LKP_IQR_AreaCosechada">
     <Properties>
       <Property>
         <Name>OverwriteParamsSQLProp</Name>
@@ -18960,20 +19025,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
     </Properties>
   </PipelineComponentMetadata>
   <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_EVA\SRC_stg_EVA">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_EVA\LKP_Municipio">
+    design-time-name="Package\DFT_Limpieza_EVA\LKP_Regla">
     <Properties>
       <Property>
         <Name>OverwriteParamsSQLProp</Name>
@@ -18996,7 +19048,7 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
     </Properties>
   </PipelineComponentMetadata>
   <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_EVA\DEST_EVA_Revision">
+    design-time-name="Package\DFT_Limpieza_EVA\SRC_stg_EVA">
     <Properties>
       <Property>
         <Name>DataSourceViewID</Name>
@@ -19008,45 +19060,5 @@ FROM dbo.stg_EVA WHERE IdLote = ?</property>
       </Property>
     </Properties>
   </PipelineComponentMetadata>
-  <DtsEventHandler
-    design-time-name="Package.EventHandlers[OnError]">
-    <LayoutInfo>
-      <GraphLayout
-        Capacity="4" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
-        <NodeLayout
-          Size="143,42"
-          Id="Package.EventHandlers[OnError]\EH_LogError"
-          TopLeft="290,53" />
-        <NodeLayout
-          Size="186,42"
-          Id="Package.EventHandlers[OnError]\EH_CerrarLoteFallido"
-          TopLeft="276,166" />
-        <EdgeLayout
-          Id="Package.EventHandlers[OnError].PrecedenceConstraints[Constraint]"
-          TopLeft="365.25,95">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,71"
-              Start="0,0"
-              End="0,63.5">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,63.5" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-8,23.75,16,16"
-              RelativePosition="Any" />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-      </GraphLayout>
-    </LayoutInfo>
-  </DtsEventHandler>
 </Objects>]]></DTS:DesignTimeProperties>
 </DTS:Executable>

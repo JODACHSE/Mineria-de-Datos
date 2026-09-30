@@ -24,8 +24,8 @@ instance/
 # Logs
 *.log
 
-# SSIS / Visual Studio
+# SSIS / Visual Studio / .NET
 .vs/
-etapa3/ssis/**/bin/
-etapa3/ssis/**/obj/
+**/bin/
+**/obj/
 *.dtproj.user
