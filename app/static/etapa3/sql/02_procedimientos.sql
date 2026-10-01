@@ -99,11 +99,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
     ;WITH e AS (SELECT NumeroFila, ROW_NUMBER() OVER (ORDER BY IdStg) AS rn FROM dbo.stg_EVA WHERE IdLote = @IdLote)
-    UPDATE e SET NumeroFila = rn;
+    UPDATE e SET NumeroFila = rn; -- NOSONAR: WHERE clause is inside the CTE definition above
 
     ;WITH f AS (SELECT NumeroFila, ROW_NUMBER() OVER (PARTITION BY Dataset ORDER BY IdStg) AS rn
                 FROM dbo.stg_FAOSTAT WHERE IdLote = @IdLote)
-    UPDATE f SET NumeroFila = rn;
+    UPDATE f SET NumeroFila = rn; -- NOSONAR: WHERE clause is inside the CTE definition above
 END
 GO
 

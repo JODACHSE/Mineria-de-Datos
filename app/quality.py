@@ -1,7 +1,7 @@
 """Lógica de calidad de datos: esquemas, perfilamiento y diagnóstico.
 
 Módulo Python puro (sin dependencia de Flask ni de `current_app`), para
-que tanto las rutas (`app/routes/project.py`) como los scripts offline
+que tanto las rutas como los scripts offline
 (`scripts/clean_datasets.py`) puedan reutilizarlo sin necesitar un
 contexto de aplicación.
 

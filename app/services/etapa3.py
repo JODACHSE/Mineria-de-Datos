@@ -9,8 +9,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-INFORME_PDF = "etapa3/Informe_Etapa3_Tratamiento_ETL_SSIS.pdf"
+INFORME_PDF  = "etapa3/Informe_Etapa3_Tratamiento_ETL_SSIS.pdf"
 INFORME_DOCX = "etapa3/Informe_Etapa3_Tratamiento_ETL_SSIS.docx"
+PROYECTO_ZIP = "etapa3/R3.zip"
 
 REGLAS = [
     # (paquete, código, problema, campo, acción, justificación)
@@ -141,6 +142,7 @@ def build_r3_context(r3_dir: Path, video_url: str = "") -> dict:
         iteraciones_chart=chart,
         informe_pdf=INFORME_PDF,
         informe_docx=INFORME_DOCX,
+        proyecto_zip=PROYECTO_ZIP,
         video_url=video_url,
         video_embed=_embed(video_url),
     )

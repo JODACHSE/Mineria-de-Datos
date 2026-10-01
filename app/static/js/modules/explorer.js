@@ -76,15 +76,15 @@ export function initExplorer() {
   }
 
   const reset = () => { state.page = 1; };
-  selDataset?.addEventListener("change", (e) => { state.dataset = e.target.value; Object.assign(state, { q: "", producto: "", elemento: "" }); if (inpSearch) inpSearch.value = ""; reset(); load(); });
-  selPageSize?.addEventListener("change", (e) => { state.page_size = Number(e.target.value); reset(); load(); });
-  selVersion?.addEventListener("change", (e) => { state.version = e.target.value; reset(); load(); });
-  inpSearch?.addEventListener("input", (e) => { clearTimeout(debounce); debounce = setTimeout(() => { state.q = e.target.value.trim(); reset(); load(); }, 300); });
-  selProducto?.addEventListener("change", (e) => { state.producto = e.target.value; reset(); load(); });
-  selElemento?.addEventListener("change", (e) => { state.elemento = e.target.value; reset(); load(); });
-  prev?.addEventListener("click", () => { if (state.page > 1) { state.page--; load(); } });
-  next?.addEventListener("click", () => { state.page++; load(); });
+  selDataset?.addEventListener("change", (e) => { state.dataset = e.target.value; Object.assign(state, { q: "", producto: "", elemento: "" }); if (inpSearch) inpSearch.value = ""; reset(); void load(); });
+  selPageSize?.addEventListener("change", (e) => { state.page_size = Number(e.target.value); reset(); void load(); });
+  selVersion?.addEventListener("change", (e) => { state.version = e.target.value; reset(); void load(); });
+  inpSearch?.addEventListener("input", (e) => { clearTimeout(debounce); debounce = setTimeout(() => { state.q = e.target.value.trim(); reset(); void load(); }, 300); });
+  selProducto?.addEventListener("change", (e) => { state.producto = e.target.value; reset(); void load(); });
+  selElemento?.addEventListener("change", (e) => { state.elemento = e.target.value; reset(); void load(); });
+  prev?.addEventListener("click", () => { if (state.page > 1) { state.page--; void load(); } });
+  next?.addEventListener("click", () => { state.page++; void load(); });
 
   if (selDataset) selDataset.value = state.dataset;
-  load();
+  void load();
 }

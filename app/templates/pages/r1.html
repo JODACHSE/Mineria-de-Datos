@@ -235,24 +235,24 @@
   <h3 class="h5 fw-bold">Dataset principal — EVA, producción agrícola municipal</h3>
   {{ table_open(wrap=True) }}
     <tbody>
-      <tr><th class="w-25">Nombre</th><td>Evaluaciones Agropecuarias Municipales – EVA. 2019–2024. Base Agrícola (extracto: 6 cultivos básicos)</td></tr>
-      <tr><th>Productor</th><td>Min. de Agricultura y Desarrollo Rural / UPRA</td></tr>
-      <tr><th>Volumen</th><td><strong>{{ n_registros_eva | miles }}</strong> registros</td></tr>
-      <tr><th>Variables</th><td>18 (4 numéricas: área sembrada, área cosechada, producción, rendimiento)</td></tr>
-      <tr><th>Cobertura geográfica</th><td>{{ eva_departamentos }} departamentos · {{ eva_municipios_codigo }} municipios (código DANE) · {{ eva_municipios_nombre }} nombres únicos de municipio</td></tr>
-      <tr><th>Cobertura temporal</th><td>2019–2024, semestral</td></tr>
-      <tr><th>Trazabilidad</th><td>CSV original conservado sin modificar en <code>app/data/eva_basicos_colombia.csv</code></td></tr>
+      <tr><th scope="row" class="w-25">Nombre</th><td>Evaluaciones Agropecuarias Municipales – EVA. 2019–2024. Base Agrícola (extracto: 6 cultivos básicos)</td></tr>
+      <tr><th scope="row">Productor</th><td>Min. de Agricultura y Desarrollo Rural / UPRA</td></tr>
+      <tr><th scope="row">Volumen</th><td><strong>{{ n_registros_eva | miles }}</strong> registros</td></tr>
+      <tr><th scope="row">Variables</th><td>18 (4 numéricas: área sembrada, área cosechada, producción, rendimiento)</td></tr>
+      <tr><th scope="row">Cobertura geográfica</th><td>{{ eva_departamentos }} departamentos · {{ eva_municipios_codigo }} municipios (código DANE) · {{ eva_municipios_nombre }} nombres únicos de municipio</td></tr>
+      <tr><th scope="row">Cobertura temporal</th><td>2019–2024, semestral</td></tr>
+      <tr><th scope="row">Trazabilidad</th><td>CSV original conservado sin modificar en <code>app/data/eva_basicos_colombia.csv</code></td></tr>
     </tbody>
   {{ table_close() }}
 
   <h3 class="h5 fw-bold mt-4">Dataset complementario — FAOSTAT (nacional/global)</h3>
   {{ table_open(wrap=True) }}
     <tbody>
-      <tr><th class="w-25">Nombre</th><td>FAOSTAT · Suite of Food Security Indicators (FS) + Crops and livestock products (QCL)</td></tr>
-      <tr><th>Productor</th><td>FAO — Statistics Division (ESS)</td></tr>
-      <tr><th>Volumen</th><td>FS: {{ quality.fs.total }} · QCL: {{ quality.qcl.total }} registros</td></tr>
-      <tr><th>Unidad de análisis</th><td>País (o territorio) · Indicador/Producto · Año</td></tr>
-      <tr><th>Licencia</th><td>CC BY-4.0 (atribución a FAO)</td></tr>
+      <tr><th scope="row" class="w-25">Nombre</th><td>FAOSTAT · Suite of Food Security Indicators (FS) + Crops and livestock products (QCL)</td></tr>
+      <tr><th scope="row">Productor</th><td>FAO — Statistics Division (ESS)</td></tr>
+      <tr><th scope="row">Volumen</th><td>FS: {{ quality.fs.total }} · QCL: {{ quality.qcl.total }} registros</td></tr>
+      <tr><th scope="row">Unidad de análisis</th><td>País (o territorio) · Indicador/Producto · Año</td></tr>
+      <tr><th scope="row">Licencia</th><td>CC BY-4.0 (atribución a FAO)</td></tr>
     </tbody>
   {{ table_close() }}
 
@@ -269,7 +269,7 @@
   {{ report_h2("6", "Diccionario de datos") }}
   <h3 class="h5 fw-bold">EVA — producción municipal (18 variables)</h3>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Campo</th><th>Descripción</th><th>Tipo</th><th>Dominio / unidad</th><th>Fuente</th><th>Ejemplo</th><th>Observaciones</th></tr></thead>
+    <thead><tr><th scope="col">Campo</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col">Dominio / unidad</th><th scope="col">Fuente</th><th scope="col">Ejemplo</th><th scope="col">Observaciones</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">CodigoDeptoDane</td><td>Código DANE del departamento</td><td>Categórico</td><td>2 dígitos</td><td>EVA</td><td>05</td><td>Llave geográfica estable</td></tr>
       <tr><td class="font-monospace">Departamento</td><td>Nombre del departamento</td><td>Categórico</td><td>32 valores</td><td>EVA</td><td>Antioquia</td><td>—</td></tr>
@@ -292,7 +292,7 @@
 
   <h3 class="h5 fw-bold mt-4">FAOSTAT — formato largo (aplica a fs.json, qcl.json, qcl_basicos.json)</h3>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Campo</th><th>Descripción</th><th>Tipo</th><th>Dominio / unidad</th><th>Fuente</th><th>Ejemplo</th><th>Observaciones</th></tr></thead>
+    <thead><tr><th scope="col">Campo</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col">Dominio / unidad</th><th scope="col">Fuente</th><th scope="col">Ejemplo</th><th scope="col">Observaciones</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">Área</td><td>País / territorio</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Colombia</td><td>Filtrado solo a Colombia</td></tr>
       <tr><td class="font-monospace">Elemento</td><td>Medida o indicador</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Producción</td><td>En FS suele ser "Valor"</td></tr>
@@ -390,7 +390,7 @@
     real de calidad (ver sección 7).
   </p>
   {{ table_open(extra="small") }}
-    <thead><tr><th>Año</th><th>Cultivo</th><th class="text-end">Producción EVA (t)</th><th class="text-end">Producción FAOSTAT (t)</th><th class="text-end">Diferencia</th></tr></thead>
+    <thead><tr><th scope="col">Año</th><th scope="col">Cultivo</th><th scope="col" class="text-end">Producción EVA (t)</th><th scope="col" class="text-end">Producción FAOSTAT (t)</th><th scope="col" class="text-end">Diferencia</th></tr></thead>
     <tbody>
       {% for row in integracion.rows %}
       <tr>
