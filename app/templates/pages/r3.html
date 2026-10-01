@@ -68,8 +68,8 @@
 <section id="informe" class="mb-5 reveal">
   {{ report_h2("2", "Informe técnico y video de demostración") }}
   <div class="row g-3">
-    <div class="col-lg-5">
-      <div class="card h-100 shadow-sm">
+    <div class="col-lg-5 d-flex flex-column gap-3">
+      <div class="card shadow-sm">
         <div class="card-body d-flex flex-column">
           <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
           <h3 class="h5 fw-bold mt-2">Informe técnico paso a paso</h3>
@@ -84,6 +84,21 @@
             <a class="btn btn-outline-success" href="{{ url_for('static', filename=informe_docx) }}" download>
               <i class="bi bi-file-earmark-word me-1"></i>Descargar Word</a>
             <a class="btn btn-link link-success" href="{{ url_for('static', filename=informe_pdf) }}" target="_blank" rel="noopener">Ver en el navegador</a>
+          </div>
+        </div>
+      </div>
+      <div class="card shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <i class="bi bi-file-earmark-zip fs-1 text-warning"></i>
+          <h3 class="h5 fw-bold mt-2">Proyecto SSIS (Visual Studio)</h3>
+          <p class="small text-body-secondary flex-grow-1">
+            Solución completa con <code>EVA.dtsx</code>, <code>FAOSTAT.dtsx</code> y
+            <code>Project.params</code>. Requiere Visual Studio con la extensión
+            <em>SQL Server Integration Services Projects</em>.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-warning" href="{{ url_for('static', filename=proyecto_zip) }}" download>
+              <i class="bi bi-download me-1"></i>Descargar R3.zip</a>
           </div>
         </div>
       </div>
@@ -120,7 +135,7 @@
     humano va a revisión; lo extremo pero posible se marca.
   </p>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Paquete</th><th>Código</th><th>Problema</th><th>Campo</th><th>Acción</th><th>Justificación</th></tr></thead>
+    <thead><tr><th scope="col">Paquete</th><th scope="col">Código</th><th scope="col">Problema</th><th scope="col">Campo</th><th scope="col">Acción</th><th scope="col">Justificación</th></tr></thead>
     <tbody>
       {% for paq, cod, prob, campo, accion, just in reglas %}
       <tr>
@@ -167,7 +182,7 @@
   {% for titulo, filas, color in [("EVA — producción municipal", eva_filas, "success"), ("FAOSTAT — QCL + QCL básicos + FS", fao_filas, "info")] %}
   <h3 class="h5 fw-bold mt-4">{{ titulo }}</h3>
   {{ table_open(extra="small") }}
-    <thead><tr><th>Lote</th><th class="text-end">Recibidos</th><th class="text-end">Aceptados</th><th class="text-end">Duplicados</th><th class="text-end">Revisión</th><th class="text-end">Sin explicar</th><th class="text-end">% aceptación</th></tr></thead>
+    <thead><tr><th scope="col">Lote</th><th scope="col" class="text-end">Recibidos</th><th scope="col" class="text-end">Aceptados</th><th scope="col" class="text-end">Duplicados</th><th scope="col" class="text-end">Revisión</th><th scope="col" class="text-end">Sin explicar</th><th scope="col" class="text-end">% aceptación</th></tr></thead>
     <tbody>
       {% for f in filas %}
       <tr>
@@ -220,7 +235,7 @@
   {% for paquete, filas in indicadores.items() %}
   <h3 class="h6 fw-bold mt-3">{{ paquete }}</h3>
   {{ table_open(extra="small") }}
-    <thead><tr><th>Indicador</th><th class="text-end">Original</th><th class="text-end">I1</th><th class="text-end">I2</th><th class="text-end">I3</th></tr></thead>
+    <thead><tr><th scope="col">Indicador</th><th scope="col" class="text-end">Original</th><th scope="col" class="text-end">I1</th><th scope="col" class="text-end">I2</th><th scope="col" class="text-end">I3</th></tr></thead>
     <tbody>
       {% for nombre, orig, its in filas %}
       <tr>
@@ -313,7 +328,7 @@
     para el mismo lote en dos ejecuciones:
   </p>
   {{ table_open(extra="small") }}
-    <thead><tr><th>Lote</th><th class="text-end">Staging</th><th class="text-end">Limpios</th><th class="text-end">Revisión</th><th class="text-end">Claves repetidas</th></tr></thead>
+    <thead><tr><th scope="col">Lote</th><th scope="col" class="text-end">Staging</th><th scope="col" class="text-end">Limpios</th><th scope="col" class="text-end">Revisión</th><th scope="col" class="text-end">Claves repetidas</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">EVA-I3</td><td class="text-end font-monospace">{{ eva_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ eva_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ eva_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>
       <tr><td class="font-monospace">FAOSTAT-I3</td><td class="text-end font-monospace">{{ fao_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ fao_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ fao_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>

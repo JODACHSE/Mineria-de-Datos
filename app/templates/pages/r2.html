@@ -75,7 +75,7 @@
     <div class="tab-pane fade {{ 'show active' if loop.first }}" id="perfil-{{ name }}" role="tabpanel">
       <p class="small text-body-secondary">{{ label }} — <strong>{{ r.total | miles }}</strong> registros</p>
       {{ table_open(wrap=True, extra="small") }}
-        <thead><tr><th>Campo</th><th>Tipo</th><th>Nulos</th><th>Únicos</th><th>Detalle</th></tr></thead>
+        <thead><tr><th scope="col">Campo</th><th scope="col">Tipo</th><th scope="col">Nulos</th><th scope="col">Únicos</th><th scope="col">Detalle</th></tr></thead>
         <tbody>
           {% for col, p in r.perfil_antes.items() %}
           <tr>
@@ -208,7 +208,7 @@
   <div class="row">
     <div class="col-md-6">
       {{ table_open(extra="small") }}
-        <thead><tr><th>Cultivo (EVA)</th><th>Producto (FAOSTAT)</th></tr></thead>
+        <thead><tr><th scope="col">Cultivo (EVA)</th><th scope="col">Producto (FAOSTAT)</th></tr></thead>
         <tbody>
           {% for cultivo, producto in treatment_log.crop_mapping.items() %}
           <tr><td>{{ cultivo }}</td><td>{{ producto }}</td></tr>
@@ -245,7 +245,7 @@
   {% for name, label in dataset_labels.items() %}
   <h3 class="h6 fw-bold mt-4">{{ label }}</h3>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Acción</th><th>Registros afectados</th><th>Decisión</th><th>Justificación</th></tr></thead>
+    <thead><tr><th scope="col">Acción</th><th scope="col">Registros afectados</th><th scope="col">Decisión</th><th scope="col">Justificación</th></tr></thead>
     <tbody>
       {% for a in treatment_log.acciones if a.dataset == name %}
       <tr>
@@ -292,7 +292,7 @@
     <div class="col">
       <h3 class="h6 fw-bold">{{ label }}</h3>
       {{ table_open(extra="small") }}
-        <thead><tr><th>Dimensión</th><th class="text-end">Antes</th><th class="text-end">Después</th><th class="text-end">Δ</th></tr></thead>
+        <thead><tr><th scope="col">Dimensión</th><th scope="col" class="text-end">Antes</th><th scope="col" class="text-end">Después</th><th scope="col" class="text-end">Δ</th></tr></thead>
         <tbody>
           {% for dim in dimension_labels %}
           {% set antes = r.dimensiones_antes[dim] %}

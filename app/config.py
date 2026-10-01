@@ -60,6 +60,6 @@ class Config:
     R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
     R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
-    VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "")
+    VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
     FAOSTAT_TOKEN = os.environ.get("FAOSTAT_TOKEN", "")
     FAOSTAT_AREA_COLOMBIA = "44"

@@ -17,4 +17,4 @@ services:
       - key: GITHUB_REPO_URL
         value: https://github.com/JODACHSE/Mineria-de-Datos
       - key: VIDEO_ETAPA3_URL
-        sync: false
+        value: https://youtu.be/z8omdqE1M5I

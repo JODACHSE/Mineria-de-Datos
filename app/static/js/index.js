@@ -311,6 +311,7 @@
       elemento: "",
     };
     let debounceTimer = null;
+    const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
     function renderSkeleton(nCols) {
       tbody.innerHTML = "";
@@ -343,19 +344,19 @@
         // bandera (_flag_*, _outlier_*) como evidencia visible del tratamiento.
         const flagCols = state.version === "tratado" ? json.columns.filter((c) => c.startsWith("_")) : [];
         const cols = json.display_columns.concat(flagCols);
-        thead.innerHTML = cols.map((c) => `<th>${c}</th>`).join("");
+        thead.innerHTML = cols.map((c) => `<th>${esc(c)}</th>`).join("");
 
         const numericCols = new Set(["Valor", "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"]);
 
         if (productoSelect) {
           productoSelect.innerHTML =
             '<option value="">Todos</option>' +
-            json.productos_disponibles.map((p) => `<option value="${p}">${p}</option>`).join("");
+            json.productos_disponibles.map((p) => `<option value="${esc(p)}">${esc(p)}</option>`).join("");
         }
         if (elementoSelect) {
           elementoSelect.innerHTML =
             '<option value="">Todos</option>' +
-            json.elementos_disponibles.map((el) => `<option value="${el}">${el}</option>`).join("");
+            json.elementos_disponibles.map((el) => `<option value="${esc(el)}">${esc(el)}</option>`).join("");
         }
 
         tbody.innerHTML = json.rows
@@ -367,7 +368,7 @@
                 if (typeof raw === "boolean") display = raw ? "Sí" : "No";
                 else if (numericCols.has(c) && typeof raw === "number") display = raw.toLocaleString("es-CO");
                 const cls = numericCols.has(c) ? "num" : raw === true ? "flag-on" : "";
-                return `<td class="${cls}">${display}</td>`;
+                return `<td class="${cls}">${esc(display)}</td>`;
               })
               .join("");
             return `<tr>${cells}</tr>`;
@@ -379,7 +380,7 @@
         prevBtn.disabled = json.page <= 1;
         nextBtn.disabled = json.page >= json.total_pages;
       } catch (err) {
-        tbody.innerHTML = `<tr><td>No fue posible cargar los datos (${err.message}). Verifica que el servidor Flask esté activo.</td></tr>`;
+        tbody.innerHTML = `<tr><td>No fue posible cargar los datos (${esc(err.message)}). Verifica que el servidor Flask esté activo.</td></tr>`;
       }
     }
 
@@ -390,43 +391,43 @@
       state.producto = "";
       state.elemento = "";
       if (searchInput) searchInput.value = "";
-      loadData();
+      void loadData();
     });
     searchInput?.addEventListener("input", (e) => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         state.q = e.target.value.trim();
         state.page = 1;
-        loadData();
+        void loadData();
       }, 300);
     });
     productoSelect?.addEventListener("change", (e) => {
       state.producto = e.target.value;
       state.page = 1;
-      loadData();
+      void loadData();
     });
     elementoSelect?.addEventListener("change", (e) => {
       state.elemento = e.target.value;
       state.page = 1;
-      loadData();
+      void loadData();
     });
     versionSelect?.addEventListener("change", (e) => {
       state.version = e.target.value;
       state.page = 1;
-      loadData();
+      void loadData();
     });
     prevBtn?.addEventListener("click", () => {
       if (state.page > 1) {
         state.page -= 1;
-        loadData();
+        void loadData();
       }
     });
     nextBtn?.addEventListener("click", () => {
       state.page += 1;
-      loadData();
+      void loadData();
     });
 
-    loadData();
+    void loadData();
   }
 
   /* ----------------------------------------------------------------- *

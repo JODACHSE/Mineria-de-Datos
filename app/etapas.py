@@ -3,9 +3,9 @@
 Cada 'Etapa N' del enunciado del docente corresponde a un entregable
 'RN' del proyecto. Hoy solo Etapa 1 / R1 está definida; las demás se
 muestran como 'Próximamente' tanto en el dropdown del navbar como en
-la página /entregables. Vive en su propio módulo (no en routes/lessons.py)
-para que app/__init__.py pueda inyectarla como global de plantilla y esté
-disponible en TODAS las páginas, no solo en la de entregables.
+la página /entregables. Vive en su propio módulo para que app/__init__.py
+pueda inyectarla como global de plantilla y esté disponible en TODAS las
+páginas, no solo en la de entregables.
 """
 
 ETAPAS = [
