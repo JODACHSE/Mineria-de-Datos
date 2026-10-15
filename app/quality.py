@@ -329,13 +329,6 @@ def profile_columns(rows: list[dict], columns: list[str], column_meta: dict) -> 
     return profile
 
 
-def profile_dataset(dataset: dict, schema_name: str) -> dict[str, dict]:
-    """Atajo: perfila un dataset ya cargado (formato {columns, rows})."""
-    schema = DATASET_SCHEMA[schema_name]
-    rows = _rows_as_dicts(dataset)
-    return profile_columns(rows, dataset["columns"], schema["column_meta"])
-
-
 # --------------------------------------------------------------------
 # R2 · Las 6 dimensiones de calidad
 # --------------------------------------------------------------------
