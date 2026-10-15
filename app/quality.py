@@ -144,7 +144,6 @@ QUALITY_REQUIREMENTS = {
     "fs": {"completitud": 90, "unicidad": 99, "validez": 90, "consistencia": 80, "exactitud": 90, "actualidad": 40},
 }
 
-_cache: dict[str, dict] = {}
 
 
 def _rows_as_dicts(dataset: dict) -> list[dict]:
