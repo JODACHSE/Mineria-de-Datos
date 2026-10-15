@@ -7,6 +7,8 @@ trazabilidad y buenas prácticas usado también en scripts/fetch_faostat.py.
 import os
 from pathlib import Path
 
+from app.etapas import ETAPAS
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -21,7 +23,10 @@ class Config:
     PROYECTO_TEMA = "Seguridad alimentaria y producción agrícola"
     PROYECTO_COBERTURA = "Colombia (nacional)"
     PROYECTO_PERIODO = "2000 – 2024"
-    PROYECTO_ENTREGABLE = "R3 · Tratamiento ETL con SSIS"
+    PROYECTO_ENTREGABLE = next(
+        (f"{e['codigo']} · {e['titulo']}" for e in reversed(ETAPAS) if e.get("estado") == "completado"),
+        ETAPAS[0]["titulo"],
+    )
 
     # --- Identidad del equipo (Wololo) --------------------------------
     BRAND_NAME = "Wololo"
