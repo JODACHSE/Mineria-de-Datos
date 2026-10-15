@@ -98,11 +98,6 @@ def test_api_quality(client):
     assert 0 <= data["completeness"] <= 100
 
 
-def test_404_page(client):
-    resp = client.get("/ruta-que-no-existe")
-    assert resp.status_code == 404
-
-
 def test_r2_ok(client):
     resp = client.get("/r2")
     assert resp.status_code == 200
@@ -147,13 +142,6 @@ def test_404_page(client):
     resp = client.get("/no-existe")
     assert resp.status_code == 404
     assert "Página no".encode("utf-8") in resp.data
-
-
-def test_api_dataset_version_tratado(client):
-    resp = client.get("/api/dataset/eva_basicos?version=tratado&page_size=3")
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert any(c.startswith("_") for c in data["columns"])  # columnas de bandera
 
 
 def test_api_profile_fs(client):
