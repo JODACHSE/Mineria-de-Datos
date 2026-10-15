@@ -33,9 +33,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import sys
+
 import pandas as pd
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BASE_DIR))
+
+from app.quality import CROP_MAPPING  # noqa: E402
+
 RAW_CSV = BASE_DIR / "app" / "data" / "eva_basicos_colombia.csv"
 R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
 
@@ -61,16 +67,6 @@ COLUMN_MAP = {
 }
 
 NUMERIC_COLUMNS_RAW = ["Área sembrada", "Área cosechada", "Producción", "Rendimiento"]
-
-# Cultivo EVA -> nombre exacto del Producto en FAOSTAT (para poder cruzar)
-CROP_MAPPING = {
-    "Maíz": "Maíz",
-    "Arroz": "Arroz",
-    "Papa": "Papas, patatas",
-    "Plátano": "Plátanos (Verde) y bananos para cocinar",
-    "Yuca": "Yuca, fresca",
-    "Frijol": "Frijoles, secos",
-}
 
 
 def log(msg: str) -> None:

@@ -24,6 +24,16 @@ from __future__ import annotations
 import re
 from collections import Counter, defaultdict
 
+# Nombre de cultivo EVA -> nombre exacto del Producto en FAOSTAT (crosswalk)
+CROP_MAPPING = {
+    "Maíz": "Maíz",
+    "Arroz": "Arroz",
+    "Papa": "Papas, patatas",
+    "Plátano": "Plátanos (Verde) y bananos para cocinar",
+    "Yuca": "Yuca, fresca",
+    "Frijol": "Frijoles, secos",
+}
+
 # Nombre lógico -> archivo físico dentro de app/static/data/R1
 DATASETS = {
     "qcl": "qcl.json",
