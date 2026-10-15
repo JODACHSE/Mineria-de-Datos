@@ -4,15 +4,11 @@ from __future__ import annotations
 from flask import Blueprint, current_app, jsonify, request
 
 from app.quality import DATASETS, compute_quality
+from app.routes import _dirs
 from app.services import datasets as ds
 from app.services.reports import profile_dataset, query_dataset
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
-
-
-def _dirs():
-    cfg = current_app.config
-    return cfg["R1_JSON_DIR"], cfg["R2_JSON_DIR"]
 
 
 def _not_found(name: str):
