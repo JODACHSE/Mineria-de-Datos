@@ -11,6 +11,8 @@ from pathlib import Path
 
 from app.quality import DATASETS
 
+# Process-local: seguro con --preload + 1 worker. Con múltiples workers
+# sin --preload, cada proceso cargaría su propia copia de los datasets.
 _cache: dict[str, dict] = {}
 
 

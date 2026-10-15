@@ -182,6 +182,9 @@ def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
     NOTA: esta función es la que usa el entregable R1 (ya completado).
     Se mantiene sin cambios de comportamiento; las 6 dimensiones de R2
     viven en `compute_dimensions()`.
+
+    Retorna `missing_valor` (español) junto a claves en inglés —
+    inconsistencia heredada, congelada para no romper el contrato de R1.
     """
     schema = DATASET_SCHEMA[schema_name]
     key_fields = schema["key_fields"]
