@@ -101,6 +101,42 @@ def _filas_paquete(data: dict, clave: str) -> list[dict]:
     return filas
 
 
+def _indicadores(eva: dict, fao: dict) -> dict:
+    e = eva["original"]
+    f = fao["original"]
+    e_its = [eva["iteraciones"][i] for i in ("I1", "I2", "I3")]
+    f_its = [fao["iteraciones"][i] for i in ("I1", "I2", "I3")]
+    consistencia_base = _pct(e["recibidos"] - e["area_incoherente"], e["recibidos"])
+    return {
+        "EVA": [
+            ("Consistencia de áreas (AC ≤ AS)", consistencia_base,
+             [consistencia_base, 100.0, 100.0]),
+            ("Conformidad del formato numérico", 0.0,  # formato_coma == recibidos en original
+             [100.0, 100.0, 100.0]),
+            ("Unicidad", _pct(e["recibidos"] - e["duplicados"], e["recibidos"]),
+             [100.0, 100.0, 100.0]),
+            ("Integridad referencial (DIVIPOLA)", 100.0,  # sin códigos inválidos en el CSV
+             [100.0, 100.0, 100.0]),
+            ("Tasa de aceptación", None,
+             [_pct(it["aceptados"], it["recibidos"]) for it in e_its]),
+        ],
+        "FAOSTAT": [
+            ("Validez de formato del valor",
+             _pct(f["recibidos"] - f["no_convertibles"], f["recibidos"]),
+             [100.0, 100.0, 100.0]),
+            ("Completitud del valor",
+             _pct(f["recibidos"] - f["nulos"], f["recibidos"]),
+             [_pct(f["recibidos"] - f["nulos"], f["recibidos"])] * 3),
+            ("Unicidad", _pct(f["recibidos"] - f["duplicados"], f["recibidos"]),
+             [100.0, 100.0, 100.0]),
+            ("Consistencia de unidades", None,
+             [None, None, 100.0]),  # shortcut: I1/I2 no verificables solo con conteos
+            ("Tasa de aceptación", None,
+             [_pct(it["aceptados"], it["recibidos"]) for it in f_its]),
+        ],
+    }
+
+
 def build_r3_context(r3_dir: Path, video_url: str = "") -> dict:
     data = load_iteraciones(r3_dir)
     eva, fao = data["eva"], data["faostat"]
@@ -108,22 +144,7 @@ def build_r3_context(r3_dir: Path, video_url: str = "") -> dict:
     fao_filas = _filas_paquete(fao, "FAOSTAT")
     eva_i3, fao_i3 = eva["iteraciones"]["I3"], fao["iteraciones"]["I3"]
 
-    indicadores = {
-        "EVA": [
-            ("Consistencia de áreas (AC ≤ AS)", 86.31, [86.31, 100.0, 100.0]),
-            ("Conformidad del formato numérico", 0.0, [100.0, 100.0, 100.0]),
-            ("Unicidad", 100.0, [100.0, 100.0, 100.0]),
-            ("Integridad referencial (DIVIPOLA)", 100.0, [100.0, 100.0, 100.0]),
-            ("Tasa de aceptación", None, [100.0, 86.31, 86.31]),
-        ],
-        "FAOSTAT": [
-            ("Validez de formato del valor", 99.98, [100.0, 100.0, 100.0]),
-            ("Completitud del valor", 97.40, [97.40, 97.40, 97.40]),
-            ("Unicidad", 100.0, [100.0, 100.0, 100.0]),
-            ("Consistencia de unidades", None, [None, None, 100.0]),
-            ("Tasa de aceptación", None, [99.98, 99.98, 99.98]),
-        ],
-    }
+    indicadores = _indicadores(eva, fao)
 
     chart = {
         "labels": ["I1", "I2", "I3"],
