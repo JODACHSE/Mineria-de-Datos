@@ -4,16 +4,12 @@ from __future__ import annotations
 from flask import Blueprint, current_app, render_template
 
 from app.etapas import ETAPAS, FASES_CRISP
+from app.routes import _dirs
 from app.services import datasets as ds
 from app.services.etapa3 import build_r3_context
 from app.services.reports import build_r1_context, build_r2_context
 
 pages_bp = Blueprint("pages", __name__)
-
-
-def _dirs():
-    cfg = current_app.config
-    return cfg["R1_JSON_DIR"], cfg["R2_JSON_DIR"]
 
 
 @pages_bp.route("/")

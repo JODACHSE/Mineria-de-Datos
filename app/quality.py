@@ -24,6 +24,16 @@ from __future__ import annotations
 import re
 from collections import Counter, defaultdict
 
+# Nombre de cultivo EVA -> nombre exacto del Producto en FAOSTAT (crosswalk)
+CROP_MAPPING = {
+    "Maíz": "Maíz",
+    "Arroz": "Arroz",
+    "Papa": "Papas, patatas",
+    "Plátano": "Plátanos (Verde) y bananos para cocinar",
+    "Yuca": "Yuca, fresca",
+    "Frijol": "Frijoles, secos",
+}
+
 # Nombre lógico -> archivo físico dentro de app/static/data/R1
 DATASETS = {
     "qcl": "qcl.json",
@@ -144,7 +154,6 @@ QUALITY_REQUIREMENTS = {
     "fs": {"completitud": 90, "unicidad": 99, "validez": 90, "consistencia": 80, "exactitud": 90, "actualidad": 40},
 }
 
-_cache: dict[str, dict] = {}
 
 
 def _rows_as_dicts(dataset: dict) -> list[dict]:
@@ -173,6 +182,9 @@ def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
     NOTA: esta función es la que usa el entregable R1 (ya completado).
     Se mantiene sin cambios de comportamiento; las 6 dimensiones de R2
     viven en `compute_dimensions()`.
+
+    Retorna `missing_valor` (español) junto a claves en inglés —
+    inconsistencia heredada, congelada para no romper el contrato de R1.
     """
     schema = DATASET_SCHEMA[schema_name]
     key_fields = schema["key_fields"]
@@ -328,13 +340,6 @@ def profile_columns(rows: list[dict], columns: list[str], column_meta: dict) -> 
             entry["no_conforme_patron"] = sum(cnt for v, cnt in a["counter"].items() if not rx.match(str(v)))
         profile[c] = entry
     return profile
-
-
-def profile_dataset(dataset: dict, schema_name: str) -> dict[str, dict]:
-    """Atajo: perfila un dataset ya cargado (formato {columns, rows})."""
-    schema = DATASET_SCHEMA[schema_name]
-    rows = _rows_as_dicts(dataset)
-    return profile_columns(rows, dataset["columns"], schema["column_meta"])
 
 
 # --------------------------------------------------------------------

@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(BASE_DIR))
 
 from app.quality import (  # noqa: E402
+    CROP_MAPPING,
     DATASET_SCHEMA,
     DATASETS,
     _count_duplicates,
@@ -22,7 +23,6 @@ from app.quality import (  # noqa: E402
     _to_float,
     compute_dimensions,
 )
-from process_eva import CROP_MAPPING  # noqa: E402  (reutiliza el crosswalk ya definido en R1)
 
 R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
 R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
