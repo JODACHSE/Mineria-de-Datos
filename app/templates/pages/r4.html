@@ -1,0 +1,666 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+
+{% set report_code = "R4 · Análisis Multidimensional" %}
+{% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Poblacional</span>' %}
+{% set report_lead = "¿Cómo está compuesta y distribuida la población analizada según sus principales características? Se examinan los " ~ (total_registros | miles) ~ " registros del dataset EVA (cultivos básicos, 2019-2024) para identificar grupos predominantes, distribución por ciclo de cultivo, estado físico y completitud de las variables de producción." %}
+
+{# ── Navegación entre dimensiones (sección superior del sidebar) ── #}
+{% set toc_nav = [
+  (url_for("pages.r4"),             "Poblacional",  True,  True),
+  (url_for("pages.r4_territorial"), "Territorial",  False, True),
+  ("#",                              "Temporal",     False, False),
+  ("#",                              "Relacional",   False, False),
+] %}
+
+{# ── Secciones de contenido dentro de esta página (scrollspy) ── #}
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("descripcion",    "Descripción y pregunta"),
+  ("variables",      "Variables utilizadas"),
+  ("indicadores",    "Indicadores"),
+  ("visualizaciones","Visualizaciones"),
+  ("filtros",        "Filtros interactivos"),
+  ("interpretaciones","Interpretaciones"),
+  ("conocimientos",  "Conocimientos evidentes"),
+  ("limite-decision","Limitación y decisión"),
+] %}
+
+{% block title %}R4 · Dimensión Poblacional — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(total_registros, "Registros analizados (EVA)") }}</div>
+<div class="col">{{ stat(6, "Cultivos básicos") }}</div>
+<div class="col">{{ stat(top_cultivo_pct | string ~ " %", "Participación de " ~ top_cultivo ~ " (cultivo líder)", countup=False) }}</div>
+<div class="col">{{ stat(completitud_pct | string ~ " %", "Completitud numérica", countup=False) }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+{# ──────────────────────────────────── DESCRIPCIÓN ─── #}
+<section id="descripcion" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">1</span>
+    <h2 class="h3 fw-bold mb-0">Descripción y pregunta de análisis</h2>
+  </div>
+
+  <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
+    <p class="fw-semibold mb-1">Pregunta analítica</p>
+    <p class="mb-0 fst-italic text-body-secondary">
+      ¿Cómo está compuesta y distribuida la población analizada según sus principales características
+      demográficas y descriptivas?
+    </p>
+  </blockquote>
+
+  <p>
+    La <strong>Dimensión Poblacional</strong> estudia las características descriptivas generales del
+    conjunto de registros del dataset EVA (Evaluaciones Agropecuarias Municipales), versión tratada
+    (R2). Cubre los seis cultivos básicos colombianos a nivel municipal durante el periodo 2019–2024,
+    con un universo de <strong>{{ total_registros | miles }}</strong> registros.
+  </p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
+    {% for icon, color, titulo, texto in [
+      ("bi-people-fill", "success", "Unidad de análisis", "Cada registro es un cultivo cosechado en un municipio colombiano en un semestre dado."),
+      ("bi-tag-fill",    "info",    "Variable principal", "Cultivo — categoría que define los seis grupos de la población (Maíz, Arroz, Papa, Plátano, Yuca, Frijol)."),
+      ("bi-bar-chart-fill","warning","Enfoque", "Distribución de frecuencias, participación porcentual y completitud de datos por grupo."),
+    ] %}
+    <div class="col">
+      <div class="card h-100 border-0 bg-body-tertiary card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi {{ icon }} text-{{ color }}"></i>
+            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
+          </div>
+          <p class="small text-body-secondary mb-0">{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ──────────────────────────────────── VARIABLES ─── #}
+<section id="variables" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">2</span>
+    <h2 class="h3 fw-bold mb-0">Variables utilizadas</h2>
+  </div>
+
+  {{ table_open(extra="small") }}
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Descripción</th>
+        <th scope="col">Rol en el análisis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for var, tipo, color, desc, rol in [
+        ("Cultivo",          "Categórica",      "success",  "Nombre del cultivo básico (6 valores: Maíz, Arroz, Papa, Plátano, Yuca, Frijol).", "Agrupación principal — define los grupos de la población."),
+        ("CicloCultivo",     "Categórica",      "info",     "Tipo de ciclo productivo: Permanente (cosecha continua) o Transitorio (estacional).", "Caracterización — clasifica según comportamiento productivo."),
+        ("EstadoFisico",     "Categórica",      "warning",  "Estado del cultivo al momento de cosecha (Grano seco, En fresco, etc.).", "Caracterización — describe la forma de recolección."),
+        ("AreaSembrada",     "Numérica (ha)",   "secondary","Superficie sembrada por cultivo, municipio y periodo.", "Completitud — usada en IND-3."),
+        ("AreaCosechada",    "Numérica (ha)",   "secondary","Superficie efectivamente cosechada.", "Completitud — usada en IND-3."),
+        ("Produccion",       "Numérica (t)",    "secondary","Volumen de producción obtenido.", "Completitud — usada en IND-3."),
+        ("Rendimiento",      "Numérica (t/ha)", "secondary","Relación Producción / AreaCosechada.", "Completitud — usada en IND-3."),
+      ] %}
+      <tr>
+        <td class="font-monospace fw-semibold">{{ var }}</td>
+        <td>{{ tag(tipo, color) }}</td>
+        <td>{{ desc }}</td>
+        <td class="text-body-secondary">{{ rol }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+{# ──────────────────────────────────── INDICADORES ─── #}
+<section id="indicadores" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">3</span>
+    <h2 class="h3 fw-bold mb-0">Indicadores</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres métricas clave que caracterizan la composición del dataset a nivel poblacional.</p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-trophy-fill text-success fs-4"></i>
+            </div>
+            {{ tag("IND-1", "success") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Cultivo predominante</p>
+          <div class="fs-2 fw-bold text-success lh-1">{{ top_cultivo }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ top_cultivo_n | miles }}</strong> registros —
+            <strong>{{ top_cultivo_pct }} %</strong> del total
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ top_cultivo_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-success" style="width:{{ top_cultivo_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-info bg-opacity-10">
+              <i class="bi bi-chevron-bar-down text-info fs-4"></i>
+            </div>
+            {{ tag("IND-2", "info") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Cultivo minoritario</p>
+          <div class="fs-2 fw-bold text-info lh-1">{{ minoritario_cultivo }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ minoritario_n | miles }}</strong> registros —
+            <strong>{{ minoritario_pct }} %</strong> del total
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ minoritario_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-info" style="width:{{ minoritario_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-check-circle-fill text-warning fs-4"></i>
+            </div>
+            {{ tag("IND-3", "warning") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Completitud numérica</p>
+          <div class="fs-2 fw-bold text-warning-emphasis lh-1">{{ completitud_pct }} %</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ completos_n | miles }}</strong> de {{ total_registros | miles }} registros
+            con las 4 variables numéricas presentes
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ completitud_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-warning" style="width:{{ completitud_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ──────────────────────────────────── VISUALIZACIONES ─── #}
+<section id="visualizaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
+    <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Haz clic en una barra del gráfico de cultivos para aplicar ese filtro directamente en la sección de filtros.</p>
+
+  <div class="row g-4">
+
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <div class="d-flex align-items-center gap-2">
+              {{ tag("VIZ-1", "success") }}
+              <h3 class="h6 fw-bold mb-0">Distribución de registros por cultivo</h3>
+            </div>
+            <small class="text-body-secondary">Click en una barra para filtrar</small>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Frecuencia absoluta de cada cultivo en el dataset. Refleja qué cultivos reportan más
+            municipios y periodos, no necesariamente cuáles producen más toneladas.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-cultivos" aria-label="Registros por cultivo en el dataset EVA"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-2", "info") }}
+            <h3 class="h6 fw-bold mb-0">Ciclo de cultivo</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Proporción entre cultivos transitorios (cosecha estacional) y permanentes (producción continua).
+          </p>
+          <div class="chart-frame" style="max-height:280px;">
+            <canvas id="chart-ciclo" aria-label="Distribución por ciclo de cultivo (permanente vs transitorio)"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-3", "warning") }}
+            <h3 class="h6 fw-bold mb-0">Estado físico al momento de cosecha</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Categoría de estado físico del cultivo: diferencia si se recolecta en verde, en seco u
+            otra presentación, lo que afecta la medición del peso y el rendimiento.
+          </p>
+          <div class="chart-frame" style="max-height:280px;">
+            <canvas id="chart-estado" aria-label="Distribución por estado físico del cultivo"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ──────────────────────────────────── FILTROS ─── #}
+<section id="filtros" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">5</span>
+    <h2 class="h3 fw-bold mb-0">Filtros interactivos</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">
+    Filtra la tabla por cultivo o ciclo de cultivo. También puedes hacer clic directamente en una barra
+    del gráfico VIZ-1 para activar el filtro de cultivo.
+  </p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-cultivo" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-success"></i>Filtro 1 · Cultivo
+      </label>
+      <select id="filter-cultivo" class="form-select form-select-sm">
+        <option value="">Todos los cultivos</option>
+        {% for c in filter_cultivos %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-ciclo" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-info"></i>Filtro 2 · Ciclo de cultivo
+      </label>
+      <select id="filter-ciclo" class="form-select form-select-sm">
+        <option value="">Todos los ciclos</option>
+        {% for c in filter_ciclos %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-2 col-lg-4 d-flex align-items-end">
+      <button id="filter-reset" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+    </div>
+  </div>
+
+  {# Resumen dinámico del filtro #}
+  <div id="filter-summary" class="alert alert-success border-0 border-start border-4 d-flex gap-3 mb-3 py-2" role="status">
+    <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+    <span class="small">
+      Mostrando <strong id="filter-total">{{ total_registros | miles }}</strong> registros
+      (<strong id="filter-pct">100.0</strong> % del total).
+      <span id="filter-label" class="text-body-secondary"></span>
+    </span>
+  </div>
+
+  <div id="filter-result" class="card border-0 bg-body-tertiary">
+    <div class="card-body py-2">
+      {{ table_open(extra="small") }}
+        <thead>
+          <tr>
+            <th scope="col">Cultivo</th>
+            <th scope="col" class="text-end">Registros</th>
+            <th scope="col" class="text-end">Participación</th>
+            <th scope="col" class="text-end">Completitud numérica</th>
+          </tr>
+        </thead>
+        <tbody id="filter-tbody">
+          {% for row in cultivos_tabla %}
+          <tr data-cultivo="{{ row.cultivo }}" data-n-orig="{{ row.n }}">
+            <td>
+              <span class="d-inline-block rounded me-2" style="width:.75rem;height:.75rem;background:{{ ['#198754','#0dcaf0','#ffc107','#fd7e14','#6f42c1','#dc3545'][loop.index0 % 6] }}"></span>
+              {{ row.cultivo }}
+            </td>
+            <td class="text-end font-monospace" id="n-{{ row.cultivo | replace(' ','_') }}">{{ row.n | miles }}</td>
+            <td class="text-end font-monospace" id="pct-{{ row.cultivo | replace(' ','_') }}">{{ row.pct }} %</td>
+            <td class="text-end font-monospace">{{ row.completos_pct }} %</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+  </div>
+</section>
+
+{# ──────────────────────────────────── INTERPRETACIONES ─── #}
+<section id="interpretaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">6</span>
+    <h2 class="h3 fw-bold mb-0">Interpretación de cada visualización</h2>
+  </div>
+
+  <div class="accordion accordion-flush" id="acc-interp">
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Distribución de registros por cultivo
+        </button>
+      </h3>
+      <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico de barras horizontales revela una distribución <strong>claramente asimétrica</strong>:
+            el <strong>{{ top_cultivo }}</strong> domina con el <strong>{{ top_cultivo_pct }} %</strong>
+            del total de registros, reflejando su amplia presencia geográfica en prácticamente todos los
+            departamentos y municipios productores de Colombia.
+          </p>
+          <p class="mb-0">
+            En el otro extremo, el <strong>{{ minoritario_cultivo }}</strong> ({{ minoritario_pct }} %)
+            muestra una distribución geográfica más restringida, asociada a condiciones climáticas o
+            de suelo específicas. La distribución no implica mayor volumen de producción; cultivos como
+            la Papa tienen altos rendimientos por hectárea pese a tener menos registros.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Ciclo de cultivo (Transitorio vs Permanente)
+        </button>
+      </h3>
+      <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico de anillos muestra la proporción entre cultivos <strong>transitorios</strong>
+            (Maíz, Arroz, Papa, Yuca, Frijol — cosecha 1-2 veces por año) y <strong>permanentes</strong>
+            (Plátano — producción continua). La predominancia de los transitorios indica que la
+            mayoría de los registros corresponden a ciclos productivos con alta variabilidad estacional.
+          </p>
+          <p class="mb-0">
+            Esto implica una mayor sensibilidad del dataset a factores climáticos y a los dos semestres
+            de reporte (primer y segundo semestre), lo que debe considerarse en los análisis temporales.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Estado físico al momento de cosecha
+        </button>
+      </h3>
+      <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El estado físico diferencia si el producto se recolecta en su presentación natural
+            (<em>En fresco</em>), tras secado natural (<em>Grano seco</em>) u otra forma
+            (<em>Paddy o cáscara verde</em>). Esta distinción es crítica para comparar rendimientos:
+            el peso en verde puede ser hasta 3 veces mayor que en seco para el mismo cultivo.
+          </p>
+          <p class="mb-0">
+            La concentración en "Grano seco" refleja que la mayoría de los cultivos básicos (Arroz,
+            Maíz, Frijol) se miden tras el proceso de deshidratación, mientras que el Plátano y la
+            Papa se miden en fresco.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ──────────────────────────────────── CONOCIMIENTOS ─── #}
+<section id="conocimientos" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">7</span>
+    <h2 class="h3 fw-bold mb-0">Conocimientos evidentes</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">
+    Tres hallazgos documentados bajo la estructura completa: pregunta, variables, procedimiento,
+    evidencia, hallazgo, interpretación, utilidad y limitación.
+  </p>
+
+  {% set conocimientos = [
+    {
+      "n": "C-1", "color": "success", "icon": "bi-bar-chart-line-fill",
+      "titulo": "Predominancia del Maíz en el dataset",
+      "pregunta": "¿Cuál es el cultivo con mayor presencia en el dataset y qué implica para la representatividad del análisis?",
+      "variables": "Cultivo (categórica), total de registros (numérica derivada).",
+      "procedimiento": "Conteo de frecuencias absolutas por valor de la columna Cultivo; cálculo de participación porcentual sobre el total.",
+      "evidencia": top_cultivo ~ " concentra el " ~ top_cultivo_pct | string ~ " % de los registros (" ~ (top_cultivo_n | miles) ~ " de " ~ (total_registros | miles) ~ ").",
+      "hallazgo": "El dataset está dominado por el " ~ top_cultivo ~ ", que casi duplica en registros al segundo cultivo más frecuente.",
+      "interpretacion": "La predominancia del " ~ top_cultivo ~ " es consistente con su condición de cultivo de subsistencia más extendido del país, presente en todas las regiones con diversidad de altitudes y climas.",
+      "utilidad": "Prioriza el " ~ top_cultivo ~ " en análisis de seguridad alimentaria como cultivo de mayor impacto estadístico y orienta la ponderación de modelos predictivos.",
+      "limitacion": "La sobre-representación puede sesgar análisis multivariados si no se estratifica la muestra por cultivo.",
+    },
+    {
+      "n": "C-2", "color": "info", "icon": "bi-arrow-repeat",
+      "titulo": "Dominio de los cultivos transitorios",
+      "pregunta": "¿Qué proporción del dataset corresponde a cultivos transitorios frente a permanentes y qué diferencia analítica implica?",
+      "variables": "CicloCultivo (categórica), Cultivo (categórica).",
+      "procedimiento": "Agrupación por CicloCultivo y conteo de frecuencias; cruce con Cultivo para confirmar la clasificación.",
+      "evidencia": "5 de los 6 cultivos del dataset son transitorios (Maíz, Arroz, Papa, Yuca, Frijol); solo el Plátano es permanente.",
+      "hallazgo": "El dataset refleja una población productiva mayoritariamente transitoria, con ciclos de cosecha de 4 a 12 meses.",
+      "interpretacion": "La predominancia de transitorios implica alta sensibilidad a variaciones estacionales y climáticas. Los análisis temporales deben considerar la estacionalidad semestral como factor estructural.",
+      "utilidad": "Fundamenta la necesidad de análisis estacionales diferenciados entre cultivos transitorios y permanentes en la Dimensión Temporal.",
+      "limitacion": "La clasificación Permanente/Transitorio no captura cultivos con ciclos intermedios o que varían por región.",
+    },
+    {
+      "n": "C-3", "color": "warning", "icon": "bi-check2-all",
+      "titulo": "Alta completitud de las variables numéricas post-ETL",
+      "pregunta": "¿Qué porcentaje de registros tiene las cuatro variables numéricas completas y qué implica para el análisis productivo?",
+      "variables": "AreaSembrada, AreaCosechada, Produccion, Rendimiento (numéricas); Cultivo (categórica).",
+      "procedimiento": "Para cada registro se verifica si los cuatro campos son distintos de nulo; se calcula la tasa de completitud total.",
+      "evidencia": completitud_pct | string ~ " % de los registros (" ~ (completos_n | miles) ~ " de " ~ (total_registros | miles) ~ ") tienen las 4 variables numéricas presentes.",
+      "hallazgo": "El proceso ETL de SSIS (R3) logró una completitud del " ~ completitud_pct | string ~ " %, garantizando que prácticamente todos los registros están disponibles para análisis cuantitativo.",
+      "interpretacion": "Una completitud tan alta es resultado directo de las reglas de tratamiento aplicadas en la Etapa 3: los registros con campos numéricos no convertibles fueron separados a la tabla de revisión, de modo que el dataset tratado solo contiene valores numéricos válidos.",
+      "utilidad": "Permite aplicar modelos de regresión, clusterización y análisis de rendimiento sobre el conjunto completo sin necesidad de imputación o exclusión.",
+      "limitacion": "La completitud mide presencia de valor, no exactitud. Un campo puede estar presente pero ser incorrecto; la validez exacta se aborda en la Dimensión Relacional.",
+    },
+  ] %}
+
+  <div class="row g-4">
+    {% for c in conocimientos %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm card-hover">
+        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
+          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
+            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
+          </div>
+          <div>
+            {{ tag(c.n, c.color) }}
+            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for campo, valor in [
+              ("Pregunta", c.pregunta),
+              ("Variables", c.variables),
+              ("Procedimiento", c.procedimiento),
+              ("Evidencia", c.evidencia),
+              ("Hallazgo", c.hallazgo),
+              ("Interpretación", c.interpretacion),
+              ("Utilidad", c.utilidad),
+              ("Limitación", c.limitacion),
+            ] %}
+            <div class="col">
+              <p class="small mb-0">
+                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
+                {{ valor }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ──────────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
+<section id="limite-decision" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">8</span>
+    <h2 class="h3 fw-bold mb-0">Limitación y decisión</h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
+          </div>
+          <p class="small mb-0">
+            La Dimensión Poblacional analiza la <em>distribución de registros</em>, no la
+            distribución de producción real ni la cobertura geográfica efectiva. Un cultivo con
+            muchos registros no necesariamente produce más toneladas; simplemente es reportado por
+            más municipios. Esta distinción es crítica: el análisis describe la
+            <strong>estructura del dataset</strong>, no directamente la estructura productiva del país.
+            Para inferencias sobre producción real se requiere ponderar por las variables numéricas
+            (AreaSembrada, Produccion), lo cual corresponde a la Dimensión Relacional.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
+          </div>
+          <p class="small mb-0">
+            Dado que el <strong>{{ top_cultivo }}</strong> representa el
+            <strong>{{ top_cultivo_pct }} %</strong> de los registros y que el dataset alcanzó
+            un <strong>{{ completitud_pct }} %</strong> de completitud numérica post-ETL, se
+            recomienda <strong>priorizar el {{ top_cultivo }}</strong> como cultivo ancla en los
+            modelos de predicción de inseguridad alimentaria: tiene la mayor masa estadística
+            (reduce el error estándar de las estimaciones) y sus datos son lo suficientemente
+            completos para análisis robustos. Los cultivos minoritarios deben tratarse con mayor
+            cautela en modelos predictivos hasta validar la representatividad geográfica de sus
+            registros.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>R4 · Dim. Poblacional:</strong> El dataset EVA tiene {{ total_registros | miles }} registros
+  en 6 cultivos. El {{ top_cultivo }} lidera con {{ top_cultivo_pct }} % de participación; los cultivos
+  transitorios dominan la estructura poblacional; y el {{ completitud_pct }} % de los registros tiene
+  las cuatro variables numéricas completas tras el proceso ETL de R3.
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{
+  {
+    "cultivos": cultivos_chart,
+    "ciclo": ciclo_chart,
+    "estado": estado_chart,
+    "cross": cross_data,
+    "total": total_registros
+  } | tojson
+}}</script>
+
+<script>
+(function () {
+  const pageData = JSON.parse(document.getElementById("page-data").textContent);
+  const TOTAL = pageData.total;
+  const CROSS = pageData.cross;
+  const CULTIVOS_DATA = {};
+  pageData.cultivos.labels.forEach((c, i) => {
+    CULTIVOS_DATA[c] = { n: pageData.cultivos.values[i], pct: pageData.cultivos.pcts[i] };
+  });
+
+  const selCultivo = document.getElementById("filter-cultivo");
+  const selCiclo   = document.getElementById("filter-ciclo");
+  const btnReset   = document.getElementById("filter-reset");
+  const tbody      = document.getElementById("filter-tbody");
+  const elTotal    = document.getElementById("filter-total");
+  const elPct      = document.getElementById("filter-pct");
+  const elLabel    = document.getElementById("filter-label");
+
+  function fmt(n) { return n.toLocaleString("es-CO"); }
+
+  function applyFilters() {
+    const cultFil  = selCultivo.value;
+    const cicloFil = selCiclo.value;
+    let filtered = 0;
+
+    for (const tr of tbody.querySelectorAll("tr[data-cultivo]")) {
+      const cult = tr.dataset.cultivo;
+      const nOrig = Number.parseInt(tr.dataset.nOrig, 10);
+
+      if (cultFil && cult !== cultFil) { tr.classList.add("d-none"); continue; }
+      tr.classList.remove("d-none");
+
+      let n = cicloFil ? ((CROSS[cult] || {})[cicloFil] || 0) : nOrig;
+      const pct = TOTAL > 0 ? (n / TOTAL * 100).toFixed(1) : "0.0";
+
+      const slug = cult.replace(/ /g, "_");
+      const elN = document.getElementById("n-" + slug);
+      const elP = document.getElementById("pct-" + slug);
+      if (elN) elN.textContent = fmt(n);
+      if (elP) elP.textContent = pct + " %";
+      tr.style.opacity = (cultFil && cult === cultFil) ? "1" : cultFil ? "0.5" : "1";
+      filtered += n;
+    }
+
+    elTotal.textContent = fmt(filtered);
+    elPct.textContent = TOTAL > 0 ? (filtered / TOTAL * 100).toFixed(1) : "0.0";
+
+    const parts = [];
+    if (cultFil)  parts.push("Cultivo: " + cultFil);
+    if (cicloFil) parts.push("Ciclo: " + cicloFil);
+    elLabel.textContent = parts.length ? "Filtro activo: " + parts.join(" · ") : "";
+  }
+
+  selCultivo.addEventListener("change", applyFilters);
+  selCiclo.addEventListener("change", applyFilters);
+  btnReset.addEventListener("click", () => {
+    selCultivo.value = "";
+    selCiclo.value = "";
+    applyFilters();
+  });
+})();
+</script>
+{% endblock %}

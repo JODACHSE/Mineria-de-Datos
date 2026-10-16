@@ -32,6 +32,14 @@ ETAPAS = [
         "estado": "completado",
         "url_endpoint": "pages.r3",
     },
+    {
+        "codigo": "R4",
+        "titulo": "Análisis Multidimensional",
+        "resumen": "Cuatro tableros de control: dimensión poblacional, territorial, temporal y "
+                   "relacional-multivariada sobre los datos de producción agrícola EVA y FAOSTAT.",
+        "estado": "completado",
+        "url_endpoint": "pages.r4",
+    },
 ] + [
     {
         "codigo": f"R{n}",
@@ -40,7 +48,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(4, 9)
+    for n in range(5, 9)
 ]
 
 FASES_CRISP = [

@@ -42,6 +42,10 @@
 .back-to-top { opacity: 0; pointer-events: none; transition: opacity .3s ease; }
 .back-to-top.show { opacity: 1; pointer-events: auto; }
 
+/* --- Tarjetas interactivas ---------------------------------------------- */
+.card-hover { transition: transform .2s ease, box-shadow .2s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.12) !important; }
+
 /* --- Accesibilidad ------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   .reveal { opacity: 1; transform: none; transition: none; }
