@@ -558,6 +558,128 @@ function r4CultivoYearChart(data) {
   }));
 }
 
+// ---- R4 · Dimensión Relacional -----------------------------------------
+
+const R4_REGION_LINE_COLORS = {
+  "Andina":     "#198754",
+  "Caribe":     "#0dcaf0",
+  "Orinoquía":  "#ffc107",
+  "Pacífica":   "#6f42c1",
+  "Amazonía":   "#fd7e14",
+};
+
+function r4RelRegionChart(data) {
+  const canvas = document.getElementById("chart-rel-region");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: data.datasets.map((ds, i) => ({
+          label: ds.label,
+          data: ds.values,
+          backgroundColor: R4_CROP_COLORS[i % R4_CROP_COLORS.length],
+          borderRadius: 4,
+        })),
+      },
+      options: {
+        ...base,
+        scales: {
+          x: base.scales.x,
+          y: { ...base.scales.y, ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+          },
+        },
+        onClick(_e, elements) {
+          if (!elements.length) return;
+          const label = data.datasets[elements[0].datasetIndex].label;
+          const sel = document.getElementById("filter-cultivo");
+          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
+        },
+        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+      },
+    };
+  });
+}
+
+function r4RelSemestreChart(data) {
+  const canvas = document.getElementById("chart-rel-semestre");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const semColors = ["#198754", "#0dcaf0", "#ffc107"];
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: data.datasets.map((ds, i) => ({
+          label: ds.label,
+          data: ds.values,
+          backgroundColor: semColors[i % semColors.length],
+          borderRadius: i === data.datasets.length - 1 ? 4 : 0,
+          stack: "s",
+        })),
+      },
+      options: {
+        ...base,
+        scales: {
+          x: { ...base.scales.x, stacked: true },
+          y: { ...base.scales.y, stacked: true, ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+          },
+        },
+      },
+    };
+  });
+}
+
+function r4RelRegionYearChart(data) {
+  const canvas = document.getElementById("chart-rel-region-year");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => ({
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: data.datasets.map((ds) => ({
+        label: ds.label,
+        data: ds.values,
+        borderColor: R4_REGION_LINE_COLORS[ds.label] || "#6c757d",
+        backgroundColor: (R4_REGION_LINE_COLORS[ds.label] || "#6c757d") + "22",
+        tension: 0.35,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        borderWidth: 2.5,
+      })),
+    },
+    options: {
+      ...baseOptions(p),
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        ...baseOptions(p).plugins,
+        tooltip: {
+          ...baseOptions(p).plugins.tooltip,
+          callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+        },
+      },
+    },
+  }));
+}
+
 export function initCharts() {
   if (!window.Chart) return;
   const node = document.getElementById("page-data");
@@ -575,5 +697,8 @@ export function initCharts() {
   r4TrendChart(data.trend);
   r4StackedChart(data.stacked);
   r4CultivoYearChart(data.cultivo_year);
+  r4RelRegionChart(data.region_cultivo);
+  r4RelSemestreChart(data.cultivo_semestre);
+  r4RelRegionYearChart(data.region_year);
   document.addEventListener("themechange", () => charts.forEach((redraw) => redraw()));
 }

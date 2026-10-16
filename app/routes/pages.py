@@ -11,6 +11,7 @@ from app.services.etapa4 import (
     build_r4_dim_poblacional_context,
     build_r4_dim_territorial_context,
     build_r4_dim_temporal_context,
+    build_r4_dim_relacional_context,
 )
 from app.services.reports import build_r1_context, build_r2_context
 
@@ -80,6 +81,16 @@ def r4_territorial():
         ctx = build_r4_dim_territorial_context(r2_dir)
         ds.cache_set("ctx:r4:dim_territorial", ctx)
     return render_template("pages/r4_territorial.html", **ctx)
+
+
+@pages_bp.route("/r4/relacional")
+def r4_relacional():
+    _, r2_dir = _dirs()
+    ctx = ds.cache_get("ctx:r4:dim_relacional")
+    if ctx is None:
+        ctx = build_r4_dim_relacional_context(r2_dir)
+        ds.cache_set("ctx:r4:dim_relacional", ctx)
+    return render_template("pages/r4_relacional.html", **ctx)
 
 
 @pages_bp.route("/entregables")

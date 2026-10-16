@@ -1,0 +1,667 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+
+{% set report_code = "R4 · Análisis Multidimensional" %}
+{% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Relacional</span>' %}
+{% set report_lead = "¿Qué patrones de co-ocurrencia existen entre las variables poblacionales, territoriales y temporales del dataset EVA? Se analizan las relaciones entre los 6 cultivos básicos, las 5 regiones geográficas y los 3 tipos de semestre, identificando combinaciones dominantes, cultivos transversales y dinámicas cruzadas sobre los " ~ (total_registros | miles) ~ " registros del dataset tratado." %}
+
+{% set toc_nav = [
+  (url_for("pages.r4"),             "Poblacional",  False, True),
+  (url_for("pages.r4_territorial"), "Territorial",  False, True),
+  (url_for("pages.r4_temporal"),    "Temporal",     False, True),
+  (url_for("pages.r4_relacional"),  "Relacional",   True,  True),
+] %}
+
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("descripcion",    "Descripción y pregunta"),
+  ("variables",      "Variables utilizadas"),
+  ("indicadores",    "Indicadores"),
+  ("visualizaciones","Visualizaciones"),
+  ("filtros",        "Filtros interactivos"),
+  ("interpretaciones","Interpretaciones"),
+  ("conocimientos",  "Conocimientos evidentes"),
+  ("limite-decision","Limitación y decisión"),
+] %}
+
+{% block title %}R4 · Dimensión Relacional — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(active_combos ~ "/" ~ max_combos, "Combinaciones cultivo×región activas", countup=False) }}</div>
+<div class="col">{{ stat(top_combo_pct | string ~ " %", "Participación de " ~ top_combo_cultivo ~ " en " ~ top_combo_region, countup=False) }}</div>
+<div class="col">{{ stat(transversal_cultivo, "Cultivo más transversal (" ~ transversal_regions ~ " regiones)", countup=False) }}</div>
+<div class="col">{{ stat(total_registros | miles, "Registros analizados (EVA R2 tratado)", countup=False) }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+{# ────────────────────────────── DESCRIPCIÓN ─── #}
+<section id="descripcion" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">1</span>
+    <h2 class="h3 fw-bold mb-0">Descripción y pregunta de análisis</h2>
+  </div>
+
+  <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
+    <p class="fw-semibold mb-1">Pregunta analítica</p>
+    <p class="mb-0 fst-italic text-body-secondary">
+      ¿Qué patrones de co-ocurrencia existen entre las variables poblacionales (Cultivo), territoriales (Región) y temporales (Semestre) del dataset EVA, y cuáles combinaciones dominan el reporte agropecuario colombiano?
+    </p>
+  </blockquote>
+
+  <p>
+    La <strong>Dimensión Relacional y Multivariada</strong> sintetiza los hallazgos de las tres
+    dimensiones anteriores examinando cómo las variables interactúan entre sí. En lugar de analizar
+    cada variable de forma independiente, se construyen cruces bidimensionales:
+    <strong>Cultivo × Región</strong> (poblacional-territorial),
+    <strong>Cultivo × Semestre</strong> (poblacional-temporal) y
+    <strong>Región × Año</strong> (territorial-temporal). El objetivo es identificar
+    <em>combinaciones dominantes</em>, <em>cultivos transversales</em> (presentes en múltiples
+    regiones) y patrones de crecimiento diferenciados por región.
+  </p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
+    {% for icon, color, titulo, texto in [
+      ("bi-grid-3x3-gap-fill",  "success", "Enfoque relacional",     "Cruces entre variables de diferentes dimensiones: territorial, poblacional y temporal."),
+      ("bi-diagram-2-fill",     "info",    "Combinaciones activas",  active_combos | string ~ " de " ~ max_combos | string ~ " pares cultivo×región posibles tienen registros en el dataset."),
+      ("bi-arrows-fullscreen",  "warning", "Síntesis multidimensional", "Esta dimensión integra los hallazgos de Poblacional, Territorial y Temporal en un análisis cruzado único."),
+    ] %}
+    <div class="col">
+      <div class="card h-100 border-0 bg-body-tertiary card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi {{ icon }} text-{{ color }}"></i>
+            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
+          </div>
+          <p class="small text-body-secondary mb-0">{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── VARIABLES ─── #}
+<section id="variables" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">2</span>
+    <h2 class="h3 fw-bold mb-0">Variables utilizadas</h2>
+  </div>
+
+  {{ table_open(extra="small") }}
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Dimensión origen</th>
+        <th scope="col">Rol en el análisis relacional</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for var, tipo, color, dim, rol in [
+        ("Cultivo",      "Categórica",  "success",   "Poblacional",  "Eje de segmentación principal en los cruces bidimensionales."),
+        ("Departamento", "Categórica",  "info",      "Territorial",  "Fuente de la región geográfica derivada (mapeo manual)."),
+        ("Región",       "Derivada",    "info",      "Territorial",  "Agrupación de 32 departamentos en 5 regiones; permite comparar territorios con menor ruido."),
+        ("Periodo",      "Categórica",  "warning",   "Temporal",     "Sufijo A/B determina el semestre; sin sufijo = Anual."),
+        ("Semestre",     "Derivada",    "warning",   "Temporal",     "Clasificación en Primer/Segundo/Anual; eje temporal en cruces."),
+        ("Anio",         "Numérica",    "warning",   "Temporal",     "Eje temporal para la evolución de cada región a lo largo del período."),
+      ] %}
+      <tr>
+        <td class="font-monospace fw-semibold">{{ var }}</td>
+        <td>{{ tag(tipo, color) }}</td>
+        <td><span class="badge text-bg-secondary rounded-pill fw-normal">{{ dim }}</span></td>
+        <td class="text-body-secondary">{{ rol }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+{# ────────────────────────────── INDICADORES ─── #}
+<section id="indicadores" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">3</span>
+    <h2 class="h3 fw-bold mb-0">Indicadores</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres métricas que caracterizan las relaciones entre variables del dataset.</p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-trophy-fill text-success fs-4"></i>
+            </div>
+            {{ tag("IND-1", "success") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Combinación cultivo×región dominante</p>
+          <div class="fw-bold text-success lh-sm" style="font-size:1.15rem;">{{ top_combo_cultivo }} × {{ top_combo_region }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ top_combo_n | miles }}</strong> registros —
+            <strong>{{ top_combo_pct }} %</strong> del total del dataset.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ top_combo_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-success" style="width:{{ top_combo_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-info bg-opacity-10">
+              <i class="bi bi-grid-3x3-gap-fill text-info fs-4"></i>
+            </div>
+            {{ tag("IND-2", "info") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Combinaciones cultivo×región activas</p>
+          <div class="fs-2 fw-bold text-info lh-1">{{ active_combos }}<span class="fs-5 text-body-secondary"> / {{ max_combos }}</span></div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ active_combos }}</strong> de los <strong>{{ max_combos }}</strong> pares posibles
+            ({{ (active_combos / max_combos * 100) | round(1) }} %) tienen al menos un registro en el dataset.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ (active_combos / max_combos * 100) | round(0) | int }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-info" style="width:{{ (active_combos / max_combos * 100) | round(0) | int }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-arrows-fullscreen text-warning fs-4"></i>
+            </div>
+            {{ tag("IND-3", "warning") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Cultivo más transversal</p>
+          <div class="fs-4 fw-bold text-warning-emphasis lh-sm">{{ transversal_cultivo }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            Presente en <strong>{{ transversal_regions }}</strong> de las {{ filter_regiones | length }} regiones geográficas —
+            el mayor alcance territorial de todos los cultivos básicos.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ (transversal_regions / filter_regiones | length * 100) | round(0) | int }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-warning" style="width:{{ (transversal_regions / filter_regiones | length * 100) | round(0) | int }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── VISUALIZACIONES ─── #}
+<section id="visualizaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
+    <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Haz clic en una barra de VIZ-1 para filtrar la tabla por ese cultivo.</p>
+
+  <div class="row g-4">
+
+    {# VIZ-1: Región × Cultivo agrupado #}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <div class="d-flex align-items-center gap-2">
+              {{ tag("VIZ-1", "success") }}
+              <h3 class="h6 fw-bold mb-0">Cruce territorial-poblacional: registros por región y cultivo</h3>
+            </div>
+            <small class="text-body-secondary">Click en una barra para filtrar</small>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Barras agrupadas por región geográfica; cada color representa un cultivo básico.
+            Permite identificar qué cultivos dominan en cada región y cuáles son marginales.
+          </p>
+          <div class="chart-frame" style="max-height:320px;">
+            <canvas id="chart-rel-region" aria-label="Registros por región geográfica y cultivo"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# VIZ-2 + VIZ-3 #}
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-2", "info") }}
+            <h3 class="h6 fw-bold mb-0">Cruce poblacional-temporal: cultivo × semestre</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Barras apiladas por cultivo; cada segmento representa el semestre (Primer, Segundo, Anual).
+            Muestra qué cultivos tienen mayor estacionalidad semestral.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-rel-semestre" aria-label="Registros por cultivo y semestre"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-3", "warning") }}
+            <h3 class="h6 fw-bold mb-0">Cruce temporal-territorial: evolución por región</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Líneas por región geográfica a lo largo de los años. Permite comparar si el
+            crecimiento observado en la serie temporal es uniforme en todas las regiones o
+            está concentrado en algunas.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-rel-region-year" aria-label="Evolución de registros por región geográfica"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── FILTROS ─── #}
+<section id="filtros" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">5</span>
+    <h2 class="h3 fw-bold mb-0">Filtros interactivos</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">
+    Filtra la tabla de cruces por cultivo o región. El clic en VIZ-1 también activa el filtro de cultivo.
+  </p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-cultivo" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-success"></i>Filtro 1 · Cultivo
+      </label>
+      <select id="filter-cultivo" class="form-select form-select-sm">
+        <option value="">Todos los cultivos</option>
+        {% for c in filter_cultivos %}
+        <option value="{{ c }}">{{ c }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-region" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-info"></i>Filtro 2 · Región geográfica
+      </label>
+      <select id="filter-region" class="form-select form-select-sm">
+        <option value="">Todas las regiones</option>
+        {% for r in filter_regiones %}
+        <option value="{{ r }}">{{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-2 col-lg-4 d-flex align-items-end">
+      <button id="filter-reset" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div id="filter-summary" class="alert alert-success border-0 border-start border-4 d-flex gap-3 mb-3 py-2" role="status">
+    <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+    <span class="small">
+      Mostrando <strong id="filter-count">{{ tabla_rows | length }}</strong> combinaciones —
+      <strong id="filter-total">{{ total_registros | miles }}</strong> registros
+      (<strong id="filter-pct">100.0</strong> % del total).
+      <span id="filter-label" class="text-body-secondary"></span>
+    </span>
+  </div>
+
+  <div class="card border-0 bg-body-tertiary">
+    <div class="card-body py-2">
+      {{ table_open(extra="small") }}
+        <thead>
+          <tr>
+            <th scope="col">Cultivo</th>
+            <th scope="col">Región</th>
+            <th scope="col" class="text-end">Registros</th>
+            <th scope="col" class="text-end">Participación</th>
+          </tr>
+        </thead>
+        <tbody id="filter-tbody">
+          {% for row in tabla_rows %}
+          <tr data-cultivo="{{ row.cultivo }}" data-region="{{ row.region }}" data-n="{{ row.n }}">
+            <td class="fw-semibold">{{ row.cultivo }}</td>
+            <td>
+              <span class="badge rounded-pill text-bg-{{
+                'success' if row.region == 'Andina' else
+                'info'    if row.region == 'Caribe' else
+                'warning' if row.region == 'Orinoquía' else
+                'primary' if row.region == 'Pacífica' else
+                'secondary'
+              }}">{{ row.region }}</span>
+            </td>
+            <td class="text-end font-monospace">{{ row.n | miles }}</td>
+            <td class="text-end font-monospace">{{ row.pct }} %</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+  </div>
+</section>
+
+{# ────────────────────────────── INTERPRETACIONES ─── #}
+<section id="interpretaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">6</span>
+    <h2 class="h3 fw-bold mb-0">Interpretación de cada visualización</h2>
+  </div>
+
+  <div class="accordion accordion-flush" id="acc-interp">
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Cruce territorial-poblacional (Región × Cultivo)
+        </button>
+      </h3>
+      <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            La combinación <strong>{{ top_combo_cultivo }} × {{ top_combo_region }}</strong> es la dominante
+            con <strong>{{ top_combo_n | miles }}</strong> registros (<strong>{{ top_combo_pct }} %</strong>
+            del total). Este cruce revela que la Región Andina no solo concentra más registros en términos
+            absolutos, sino que su distribución interna está marcada por la prevalencia de un cultivo
+            específico, reforzando el patrón de especialización observado en la Dimensión Territorial.
+          </p>
+          <p class="mb-0">
+            Las regiones de menor representación (Orinoquía, Amazonía) muestran perfiles de cultivos
+            distintos: los cultivos que dominan en la Región Andina tienen poca presencia allí, lo que
+            confirma la heterogeneidad agroecológica del territorio colombiano.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Cruce poblacional-temporal (Cultivo × Semestre)
+        </button>
+      </h3>
+      <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico apilado por cultivo muestra que la distribución semestral varía entre cultivos.
+            Algunos están fuertemente ligados al ciclo estacional (más registros en un semestre),
+            mientras que otros como la <strong>Yuca</strong> o el <strong>Plátano</strong> tienden a
+            tener mayor proporción de registros anuales (sin diferenciación semestral), consistente
+            con que son cultivos de ciclo largo o permanente.
+          </p>
+          <p class="mb-0">
+            Esta diferenciación entre cultivos transitorios (con fuerte estacionalidad) y permanentes
+            (distribución anual) es importante para diseñar modelos de predicción: los cultivos
+            transitorios requieren modelos estacionales (SARIMA, regresión con variables dummy de
+            semestre), mientras que los permanentes admiten modelos de tendencia simple.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Cruce temporal-territorial (Región × Año)
+        </button>
+      </h3>
+      <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            Las líneas por región revelan si el crecimiento total del dataset (identificado en la
+            Dimensión Temporal) es <strong>uniforme</strong> entre regiones o <strong>asimétrico</strong>.
+            La Región Andina, al dominar el dataset, impulsa la mayor parte del crecimiento total.
+            Las demás regiones muestran tendencias más planas, lo que sugiere que el salto observado
+            en el total es principalmente un fenómeno andino.
+          </p>
+          <p class="mb-0">
+            El modo de interacción <em>index</em> del tooltip permite comparar todas las regiones
+            en un mismo año. Un año donde varias regiones crecen simultáneamente indica un cambio
+            sistémico en el EVA (expansión de cobertura nacional), mientras que si solo una región
+            crece, el cambio es local.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── CONOCIMIENTOS ─── #}
+<section id="conocimientos" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">7</span>
+    <h2 class="h3 fw-bold mb-0">Conocimientos evidentes</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres hallazgos relacionales con la estructura completa requerida.</p>
+
+  {% set conocimientos = [
+    {
+      "n": "C-1", "color": "success", "icon": "bi-diagram-3-fill",
+      "titulo": "Dominancia de " ~ top_combo_cultivo ~ " en la Región " ~ top_combo_region,
+      "pregunta": "¿Qué combinación cultivo×región concentra más registros y cuánto representa del total?",
+      "variables": "Cultivo (categórica-poblacional), Región (derivada-territorial), conteo de registros (numérica derivada).",
+      "procedimiento": "Cruce bidimensional cultivo×región; conteo de frecuencias para todas las combinaciones posibles; identificación del par con mayor frecuencia absoluta.",
+      "evidencia": top_combo_cultivo ~ " en " ~ top_combo_region ~ ": " ~ (top_combo_n | miles) ~ " registros (" ~ top_combo_pct | string ~ " % del total). La combinación dominante supera por un margen significativo a las demás.",
+      "hallazgo": "Una sola combinación cultivo×región (" ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ ") concentra más del " ~ top_combo_pct | string ~ " % de todos los registros del dataset.",
+      "interpretacion": "La co-dominancia de " ~ top_combo_cultivo ~ " en la Región Andina refleja la confluencia de dos factores: la Región Andina es la más representada territorialmente, y " ~ top_combo_cultivo ~ " es el cultivo más frecuente. Su combinación amplifica ambos efectos, creando una concentración que puede sesgar análisis nacionales si no se controla.",
+      "utilidad": "Justifica la necesidad de análisis estratificados: un modelo global entrenado con estos datos tendrá un sesgo implícito hacia " ~ top_combo_cultivo ~ " en la Región Andina. La segmentación por región o cultivo es indispensable para resultados representativos.",
+      "limitacion": "La dominancia en número de registros no implica dominancia en producción. Un análisis de " ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ " basado en toneladas o hectáreas podría mostrar un patrón distinto.",
+    },
+    {
+      "n": "C-2", "color": "info", "icon": "bi-grid-3x3-gap-fill",
+      "titulo": "Alta cobertura relacional: " ~ active_combos ~ " de " ~ max_combos ~ " combinaciones activas",
+      "pregunta": "¿Qué proporción de las combinaciones cultivo×región posibles tiene representación en el dataset?",
+      "variables": "Cultivo (categórica, 6 valores), Región (derivada, 5 valores), registro lógico de presencia/ausencia.",
+      "procedimiento": "Construcción de la matriz de presencia cultivo×región (6×5=30 pares posibles); conteo de celdas con al menos un registro.",
+      "evidencia": active_combos | string ~ " de " ~ max_combos | string ~ " pares posibles tienen registros (" ~ (active_combos / max_combos * 100) | round(1) | string ~ " %). Hay " ~ (max_combos - active_combos) | string ~ " combinaciones sin ningún registro.",
+      "hallazgo": "El dataset presenta alta cobertura relacional: la mayoría de los pares cultivo×región posibles están representados, aunque con intensidades muy desiguales.",
+      "interpretacion": "La alta cobertura indica que los seis cultivos básicos tienen cierta presencia en todas o casi todas las regiones. Sin embargo, la desigualdad de intensidades sugiere que muchas combinaciones tienen cobertura marginal (pocos registros) frente a las combinaciones dominantes. Las celdas vacías corresponden a condiciones agroecológicas incompatibles con el cultivo en esa región.",
+      "utilidad": "La cobertura casi completa de la matriz facilita el uso de técnicas multivariadas (análisis de correspondencias, modelos de panel) sin imputación excesiva. Las celdas con pocos registros deben tratarse con técnicas robustas a datos escasos.",
+      "limitacion": "La presencia de al menos un registro no garantiza que la combinación tenga suficiente masa estadística para análisis confiables. Combinaciones con menos de 50 registros deberían reportarse como datos escasos, no como datos representativos.",
+    },
+    {
+      "n": "C-3", "color": "warning", "icon": "bi-arrows-fullscreen",
+      "titulo": transversal_cultivo ~ " como el cultivo de mayor alcance territorial",
+      "pregunta": "¿Qué cultivo está presente en el mayor número de regiones geográficas?",
+      "variables": "Cultivo (categórica), Región (derivada), presencia binaria por combinación.",
+      "procedimiento": "Para cada cultivo, conteo del número de regiones con al menos un registro; ranking descendente por número de regiones cubiertas.",
+      "evidencia": transversal_cultivo ~ " tiene registros en " ~ transversal_regions | string ~ " de las " ~ filter_regiones | length | string ~ " regiones geográficas, el mayor alcance territorial de todos los cultivos básicos.",
+      "hallazgo": transversal_cultivo ~ " es el cultivo más transversal del dataset: su presencia se extiende a través de " ~ transversal_regions | string ~ " regiones, lo que lo convierte en el cultivo con mayor diversidad territorial.",
+      "interpretacion": "La transversalidad de " ~ transversal_cultivo ~ " puede reflejar su adaptabilidad agroecológica (crece en diferentes altitudes, climas y tipos de suelo), su importancia estratégica para la seguridad alimentaria (lo que motiva su cultivo incluso en regiones subóptimas), o ambas. Este cultivo es el mejor candidato para análisis de tendencias nacionales con representatividad territorial.",
+      "utilidad": "Los cultivos con alta transversalidad territorial son los más adecuados para construir índices agregados a nivel nacional. " ~ transversal_cultivo ~ " puede ser usado como referencia para normalizar o comparar el comportamiento de otros cultivos más especializados regionalmente.",
+      "limitacion": "La transversalidad se mide por número de regiones con registros, no por participación de mercado ni por extensión de área sembrada. Un cultivo puede aparecer en muchas regiones con registros muy pequeños, lo que inflaría artificialmente su índice de transversalidad.",
+    },
+  ] %}
+
+  <div class="row g-4">
+    {% for c in conocimientos %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm card-hover">
+        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
+          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
+            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
+          </div>
+          <div>
+            {{ tag(c.n, c.color) }}
+            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for campo, valor in [
+              ("Pregunta", c.pregunta),
+              ("Variables", c.variables),
+              ("Procedimiento", c.procedimiento),
+              ("Evidencia", c.evidencia),
+              ("Hallazgo", c.hallazgo),
+              ("Interpretación", c.interpretacion),
+              ("Utilidad", c.utilidad),
+              ("Limitación", c.limitacion),
+            ] %}
+            <div class="col">
+              <p class="small mb-0">
+                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
+                {{ valor }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
+<section id="limite-decision" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">8</span>
+    <h2 class="h3 fw-bold mb-0">Limitación y decisión</h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
+          </div>
+          <p class="small mb-0">
+            El análisis relacional se construye sobre cruces de frecuencias de registros, no sobre
+            variables de producción real (toneladas, hectáreas). Las relaciones identificadas pueden
+            ser artefactos del proceso de reporte del sistema EVA: una región con más registros puede
+            simplemente tener un sistema de reporte más exhaustivo, no necesariamente mayor actividad
+            agrícola real. Adicionalmente, la variable <em>Región</em> es derivada mediante un mapeo
+            manual y agrupa realidades agroecológicas heterogéneas dentro de cada región. Por último,
+            los análisis de co-ocurrencia no establecen causalidad: que {{ top_combo_cultivo }} sea
+            frecuente en {{ top_combo_region }} no explica por qué, ni implica que deba mantenerse
+            así en el futuro.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
+          </div>
+          <p class="small mb-0">
+            El análisis multidimensional confirma que el dataset EVA tiene una estructura relacional
+            compleja pero comprensible: <strong>{{ active_combos }} combinaciones activas</strong>,
+            una dominante clara ({{ top_combo_cultivo }} × {{ top_combo_region }}) y un cultivo
+            transversal identificado ({{ transversal_cultivo }}, {{ transversal_regions }} regiones).
+            Se recomienda <strong>usar el triple cruce Cultivo × Región × Semestre</strong> como
+            estratificación base para cualquier modelo predictivo, en lugar de tratar las variables
+            de forma independiente. El cultivo {{ transversal_cultivo }} debe recibir tratamiento
+            especial como variable de referencia en comparaciones inter-regionales, y los modelos
+            deben incluir términos de interacción explícitos entre Cultivo y Región para capturar
+            la heterogeneidad del territorio colombiano.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>R4 · Dim. Relacional:</strong> {{ active_combos }} de {{ max_combos }} combinaciones cultivo×región
+  tienen registros. La combinación dominante es {{ top_combo_cultivo }} × {{ top_combo_region }}
+  ({{ top_combo_pct }} % del total). El cultivo más transversal es {{ transversal_cultivo }},
+  presente en {{ transversal_regions }} de {{ filter_regiones | length }} regiones geográficas.
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{
+  {
+    "region_cultivo":    region_cultivo_chart,
+    "cultivo_semestre":  cultivo_semestre_chart,
+    "region_year":       region_year_chart,
+    "cross":             cross_data,
+    "total":             total_registros
+  } | tojson
+}}</script>
+
+<script>
+(function () {
+  const pageData = JSON.parse(document.getElementById("page-data").textContent);
+  const TOTAL = pageData.total;
+  const CROSS = pageData.cross;
+
+  const selCultivo = document.getElementById("filter-cultivo");
+  const selRegion  = document.getElementById("filter-region");
+  const btnReset   = document.getElementById("filter-reset");
+  const tbody      = document.getElementById("filter-tbody");
+  const elCount    = document.getElementById("filter-count");
+  const elTotal    = document.getElementById("filter-total");
+  const elPct      = document.getElementById("filter-pct");
+  const elLabel    = document.getElementById("filter-label");
+
+  function fmt(n) { return n.toLocaleString("es-CO"); }
+
+  function applyFilters() {
+    const cultivoFil = selCultivo.value;
+    const regionFil  = selRegion.value;
+
+    let filteredN = 0, visibleRows = 0;
+    for (const tr of tbody.querySelectorAll("tr[data-cultivo]")) {
+      const cultivo = tr.dataset.cultivo;
+      const region  = tr.dataset.region;
+      const n       = Number.parseInt(tr.dataset.n, 10);
+
+      const show = (!cultivoFil || cultivo === cultivoFil) && (!regionFil || region === regionFil);
+      tr.classList.toggle("d-none", !show);
+      if (show) { visibleRows++; filteredN += n; }
+    }
+
+    elCount.textContent = visibleRows;
+    elTotal.textContent = fmt(filteredN);
+    elPct.textContent   = TOTAL > 0 ? (filteredN / TOTAL * 100).toFixed(1) : "0.0";
+
+    const parts = [];
+    if (cultivoFil) parts.push("Cultivo: " + cultivoFil);
+    if (regionFil)  parts.push("Región: " + regionFil);
+    elLabel.textContent = parts.length ? "— Filtro activo: " + parts.join(" · ") : "";
+  }
+
+  selCultivo.addEventListener("change", applyFilters);
+  selRegion.addEventListener("change", applyFilters);
+  btnReset.addEventListener("click", () => {
+    selCultivo.value = ""; selRegion.value = "";
+    applyFilters();
+  });
+})();
+</script>
+{% endblock %}

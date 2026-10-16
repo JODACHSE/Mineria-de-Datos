@@ -424,3 +424,143 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
         # semestre summary for indicators
         "semestre_counts": {k: semestre_counts[k] for k in SEM_LABELS if k in semestre_counts},
     }
+
+
+def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
+    """Agrega el dataset EVA tratado para la Dimensión Relacional y Multivariada."""
+    raw = ds.load_treated("eva_basicos", r2_dir)
+    rows = _rows_as_dicts(raw)
+    total = len(rows)
+
+    SEM_LABELS = ["Primer semestre", "Segundo semestre", "Anual"]
+
+    cultivo_region: dict[str, Counter] = {}
+    cultivo_semestre: dict[str, Counter] = {}
+    region_year: dict[str, Counter] = {}
+    year_set: set[int] = set()
+
+    for r in rows:
+        cultivo = r.get("Cultivo") or "Desconocido"
+        dept = r.get("Departamento") or ""
+        region = _REGION_MAP.get(dept, "Otra")
+        year = int(r["Anio"])
+        periodo = r.get("Periodo") or ""
+        if periodo.endswith("A"):
+            sem = "Primer semestre"
+        elif periodo.endswith("B"):
+            sem = "Segundo semestre"
+        else:
+            sem = "Anual"
+
+        cultivo_region.setdefault(cultivo, Counter())[region] += 1
+        cultivo_semestre.setdefault(cultivo, Counter())[sem] += 1
+        region_year.setdefault(region, Counter())[year] += 1
+        year_set.add(year)
+
+    cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_region]
+    years_sorted = sorted(year_set)
+
+    # ---- indicadores ------------------------------------------------
+    # IND-1: combinación cultivo×región más frecuente
+    top_combo_cultivo, top_combo_region, top_combo_n = max(
+        ((c, r, cultivo_region[c][r])
+         for c in cultivo_region for r in cultivo_region[c]
+         if cultivo_region[c][r] > 0),
+        key=lambda x: x[2],
+    )
+    top_combo_pct = _pct(top_combo_n, total)
+
+    # IND-2: combinaciones activas sobre el máximo posible (6 cultivos × 5 regiones)
+    active_combos = sum(
+        1 for c in cultivos_ordered for r in _REGION_ORDER
+        if cultivo_region.get(c, Counter()).get(r, 0) > 0
+    )
+    max_combos = len(cultivos_ordered) * len(_REGION_ORDER)
+
+    # IND-3: cultivo más transversal (presente en más regiones)
+    transversal_cultivo = max(
+        cultivos_ordered,
+        key=lambda c: sum(1 for r in _REGION_ORDER if cultivo_region.get(c, Counter()).get(r, 0) > 0),
+    )
+    transversal_regions = sum(
+        1 for r in _REGION_ORDER if cultivo_region.get(transversal_cultivo, Counter()).get(r, 0) > 0
+    )
+
+    # ---- chart data -------------------------------------------------
+    # VIZ-1: barras agrupadas — región × cultivo (territorial × poblacional)
+    region_cultivo_chart = {
+        "labels": _REGION_ORDER,
+        "datasets": [
+            {
+                "label": c,
+                "values": [cultivo_region.get(c, Counter()).get(r, 0) for r in _REGION_ORDER],
+            }
+            for c in cultivos_ordered
+        ],
+    }
+
+    # VIZ-2: barras apiladas — cultivo × semestre (poblacional × temporal)
+    cultivo_semestre_chart = {
+        "labels": cultivos_ordered,
+        "datasets": [
+            {
+                "label": sem,
+                "values": [cultivo_semestre.get(c, Counter()).get(sem, 0) for c in cultivos_ordered],
+            }
+            for sem in SEM_LABELS
+        ],
+    }
+
+    # VIZ-3: líneas — año × región (temporal × territorial)
+    region_year_chart = {
+        "labels": [str(y) for y in years_sorted],
+        "datasets": [
+            {
+                "label": r,
+                "values": [region_year.get(r, Counter()).get(y, 0) for y in years_sorted],
+            }
+            for r in _REGION_ORDER
+        ],
+    }
+
+    # ---- tabla y cross data -----------------------------------------
+    tabla_rows = [
+        {
+            "cultivo": c,
+            "region": r,
+            "n": cultivo_region.get(c, Counter()).get(r, 0),
+            "pct": _pct(cultivo_region.get(c, Counter()).get(r, 0), total),
+        }
+        for c in cultivos_ordered
+        for r in _REGION_ORDER
+        if cultivo_region.get(c, Counter()).get(r, 0) > 0
+    ]
+
+    # cross_data[cultivo][region] = n  (for JS filter summaries)
+    cross_data = {
+        c: {r: cultivo_region.get(c, Counter()).get(r, 0) for r in _REGION_ORDER}
+        for c in cultivos_ordered
+    }
+
+    return {
+        # indicadores
+        "total_registros": total,
+        "top_combo_cultivo": top_combo_cultivo,
+        "top_combo_region": top_combo_region,
+        "top_combo_n": top_combo_n,
+        "top_combo_pct": top_combo_pct,
+        "active_combos": active_combos,
+        "max_combos": max_combos,
+        "transversal_cultivo": transversal_cultivo,
+        "transversal_regions": transversal_regions,
+        # chart data
+        "region_cultivo_chart": region_cultivo_chart,
+        "cultivo_semestre_chart": cultivo_semestre_chart,
+        "region_year_chart": region_year_chart,
+        # filter options
+        "filter_cultivos": cultivos_ordered,
+        "filter_regiones": _REGION_ORDER,
+        # table + cross
+        "tabla_rows": tabla_rows,
+        "cross_data": cross_data,
+    }
