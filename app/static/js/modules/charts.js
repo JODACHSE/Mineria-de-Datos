@@ -140,6 +140,128 @@ function iteracionesChart(data) {
   });
 }
 
+// ---- R4 · Dimensión Poblacional ----------------------------------------
+
+const R4_CROP_COLORS = ["#198754", "#0dcaf0", "#ffc107", "#fd7e14", "#6f42c1", "#dc3545"];
+
+function r4CultivosChart(data) {
+  const canvas = document.getElementById("chart-cultivos");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const colors = data.labels.map((_, i) => R4_CROP_COLORS[i % R4_CROP_COLORS.length]);
+  let getChart;
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: "Registros",
+          data: data.values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          hoverBorderWidth: 2,
+          hoverBorderColor: "#fff",
+        }],
+      },
+      options: {
+        ...base,
+        indexAxis: "y",
+        scales: {
+          x: { ...base.scales.x, ticks: { ...base.scales.x.ticks, callback: (v) => fmt(v) } },
+          y: { ...base.scales.y },
+        },
+        plugins: {
+          ...base.plugins,
+          legend: { display: false },
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: {
+              label: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
+            },
+          },
+        },
+        onClick(_e, elements) {
+          if (!elements.length) return;
+          const label = data.labels[elements[0].index];
+          const sel = document.getElementById("filter-cultivo");
+          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
+        },
+        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+      },
+    };
+  });
+}
+
+function r4CicloChart(data) {
+  const canvas = document.getElementById("chart-ciclo");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const colors = ["#198754", "#0dcaf0", "#ffc107", "#6c757d"];
+  register(canvas, (p) => ({
+    type: "doughnut",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        data: data.values,
+        backgroundColor: colors.slice(0, data.labels.length),
+        hoverOffset: 10,
+        borderWidth: 3,
+        borderColor: p.tooltipBg,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "65%",
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: p.text, font: { family: p.font, size: 12 }, usePointStyle: true, padding: 16 },
+        },
+        tooltip: {
+          backgroundColor: p.tooltipBg, titleColor: p.text, bodyColor: p.text,
+          borderColor: p.grid, borderWidth: 1,
+          callbacks: { label: (ctx) => ` ${ctx.label}: ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)` },
+        },
+      },
+    },
+  }));
+}
+
+function r4EstadoChart(data) {
+  const canvas = document.getElementById("chart-estado");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const colors = ["#fd7e14", "#6f42c1", "#dc3545", "#0dcaf0"];
+  register(canvas, (p) => ({
+    type: "bar",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: "Registros",
+        data: data.values,
+        backgroundColor: data.labels.map((_, i) => colors[i % colors.length]),
+        borderRadius: 6,
+        hoverBorderWidth: 2,
+        hoverBorderColor: "#fff",
+      }],
+    },
+    options: {
+      ...baseOptions(p),
+      plugins: {
+        ...baseOptions(p).plugins,
+        legend: { display: false },
+        tooltip: {
+          ...baseOptions(p).plugins.tooltip,
+          callbacks: { label: (ctx) => ` ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)` },
+        },
+      },
+    },
+  }));
+}
+
 export function initCharts() {
   if (!window.Chart) return;
   const node = document.getElementById("page-data");
@@ -148,5 +270,8 @@ export function initCharts() {
   integracionChart(data.integracion);
   compareChart(data.qualityCompare);
   iteracionesChart(data.iteraciones);
+  r4CultivosChart(data.cultivos);
+  r4CicloChart(data.ciclo);
+  r4EstadoChart(data.estado);
   document.addEventListener("themechange", () => charts.forEach((redraw) => redraw()));
 }
