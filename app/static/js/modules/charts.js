@@ -418,6 +418,146 @@ function r4DensityChart(data) {
   });
 }
 
+// ---- R4 · Dimensión Temporal -------------------------------------------
+
+function r4TrendChart(data) {
+  const canvas = document.getElementById("chart-trend");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            type: "bar",
+            label: "Registros",
+            data: data.values,
+            backgroundColor: data.labels.map((_, i) => i === data.values.indexOf(Math.max(...data.values)) ? "#198754" : "#198754aa"),
+            borderRadius: 6,
+            order: 2,
+          },
+          {
+            type: "line",
+            label: "Var. interanual (%)",
+            data: data.yoy,
+            borderColor: "#ffc107",
+            backgroundColor: "#ffc10722",
+            pointBackgroundColor: data.yoy.map((v) => v > 0 ? "#198754" : v < 0 ? "#dc3545" : "#6c757d"),
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.3,
+            fill: false,
+            yAxisID: "y2",
+            order: 1,
+          },
+        ],
+      },
+      options: {
+        ...base,
+        scales: {
+          x: base.scales.x,
+          y:  { ...base.scales.y, position: "left",
+                title: { display: true, text: "Registros", color: p.text, font: { size: 11 } } },
+          y2: { ...base.scales.y, position: "right", grid: { drawOnChartArea: false },
+                title: { display: true, text: "Var. interanual (%)", color: p.text, font: { size: 11 } } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: {
+              label: (ctx) => ctx.datasetIndex === 0
+                ? ` ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)`
+                : ` Var. interanual: ${ctx.raw > 0 ? "+" : ""}${ctx.raw} %`,
+            },
+          },
+        },
+        onClick(_e, elements) {
+          if (!elements.length) return;
+          const label = data.labels[elements[0].index];
+          const sel = document.getElementById("filter-year");
+          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
+        },
+        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+      },
+    };
+  });
+}
+
+function r4StackedChart(data) {
+  const canvas = document.getElementById("chart-stacked");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const semColors = ["#198754", "#0dcaf0", "#ffc107"];
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: data.datasets.map((ds, i) => ({
+          label: ds.label,
+          data: ds.values,
+          backgroundColor: semColors[i % semColors.length],
+          borderRadius: i === data.datasets.length - 1 ? 6 : 0,
+          stack: "s",
+        })),
+      },
+      options: {
+        ...base,
+        scales: {
+          x: { ...base.scales.x, stacked: true },
+          y: { ...base.scales.y, stacked: true,
+               ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+          },
+        },
+      },
+    };
+  });
+}
+
+function r4CultivoYearChart(data) {
+  const canvas = document.getElementById("chart-cultivo-year");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => ({
+    type: "line",
+    data: {
+      labels: data.labels,
+      datasets: data.datasets.map((ds, i) => ({
+        label: ds.label,
+        data: ds.values,
+        borderColor: R4_CROP_COLORS[i % R4_CROP_COLORS.length],
+        backgroundColor: R4_CROP_COLORS[i % R4_CROP_COLORS.length] + "22",
+        tension: 0.35,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        borderWidth: 2.5,
+      })),
+    },
+    options: {
+      ...baseOptions(p),
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        ...baseOptions(p).plugins,
+        tooltip: {
+          ...baseOptions(p).plugins.tooltip,
+          callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+        },
+      },
+    },
+  }));
+}
+
 export function initCharts() {
   if (!window.Chart) return;
   const node = document.getElementById("page-data");
@@ -432,5 +572,8 @@ export function initCharts() {
   r4DeptChart(data.dept);
   r4RegionChart(data.region);
   r4DensityChart(data.density);
+  r4TrendChart(data.trend);
+  r4StackedChart(data.stacked);
+  r4CultivoYearChart(data.cultivo_year);
   document.addEventListener("themechange", () => charts.forEach((redraw) => redraw()));
 }

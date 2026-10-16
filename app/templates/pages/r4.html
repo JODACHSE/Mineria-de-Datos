@@ -9,7 +9,7 @@
 {% set toc_nav = [
   (url_for("pages.r4"),             "Poblacional",  True,  True),
   (url_for("pages.r4_territorial"), "Territorial",  False, True),
-  ("#",                              "Temporal",     False, False),
+  (url_for("pages.r4_temporal"),    "Temporal",     False, True),
   ("#",                              "Relacional",   False, False),
 ] %}
 

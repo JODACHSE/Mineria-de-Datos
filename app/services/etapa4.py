@@ -290,3 +290,137 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         # cross for JS filter
         "cross_data": cross_data,
     }
+
+
+def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
+    """Agrega el dataset EVA tratado para la Dimensión Temporal."""
+    raw = ds.load_treated("eva_basicos", r2_dir)
+    rows = _rows_as_dicts(raw)
+    total = len(rows)
+
+    year_counts: Counter = Counter()
+    semestre_counts: Counter = Counter()
+    year_semestre: dict[int, Counter] = {}
+    cultivo_year: dict[str, Counter] = {}
+
+    for r in rows:
+        year = int(r["Anio"])
+        periodo = r.get("Periodo") or ""
+        if periodo.endswith("A"):
+            sem = "Primer semestre"
+        elif periodo.endswith("B"):
+            sem = "Segundo semestre"
+        else:
+            sem = "Anual"
+
+        year_counts[year] += 1
+        semestre_counts[sem] += 1
+        year_semestre.setdefault(year, Counter())[sem] += 1
+
+        cultivo = r.get("Cultivo") or "Desconocido"
+        cultivo_year.setdefault(cultivo, Counter())[year] += 1
+
+    years_sorted = sorted(year_counts.keys())
+    first_year, last_year = years_sorted[0], years_sorted[-1]
+
+    # ---- indicadores ------------------------------------------------
+    top_year = max(year_counts, key=year_counts.get)
+    top_year_n = year_counts[top_year]
+
+    yoy: dict[int, float] = {}
+    for i in range(1, len(years_sorted)):
+        prev = year_counts[years_sorted[i - 1]]
+        curr = year_counts[years_sorted[i]]
+        yoy[years_sorted[i]] = round((curr - prev) / prev * 100, 1) if prev else 0.0
+
+    growth_total = round((year_counts[last_year] - year_counts[first_year])
+                         / year_counts[first_year] * 100, 1)
+    max_jump_year = max(yoy, key=yoy.get)
+    max_jump_pct = yoy[max_jump_year]
+
+    # ---- chart data -------------------------------------------------
+    SEM_LABELS = ["Primer semestre", "Segundo semestre", "Anual"]
+
+    # VIZ-1: tendencia anual (bar + line overlay handled in JS)
+    trend_chart = {
+        "labels": [str(y) for y in years_sorted],
+        "values": [year_counts[y] for y in years_sorted],
+        "pcts":   [_pct(year_counts[y], total) for y in years_sorted],
+        "yoy":    [yoy.get(y, 0) for y in years_sorted],
+    }
+
+    # VIZ-2: apilado año × semestre
+    stacked_chart = {
+        "labels": [str(y) for y in years_sorted],
+        "datasets": [
+            {
+                "label": sem,
+                "values": [year_semestre.get(y, Counter()).get(sem, 0) for y in years_sorted],
+            }
+            for sem in SEM_LABELS
+        ],
+    }
+
+    # VIZ-3: líneas por cultivo a lo largo de los años
+    cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_year]
+    cultivo_year_chart = {
+        "labels": [str(y) for y in years_sorted],
+        "datasets": [
+            {
+                "label": c,
+                "values": [cultivo_year[c].get(y, 0) for y in years_sorted],
+            }
+            for c in cultivos_ordered
+        ],
+    }
+
+    # ---- tabla y cross data para filtros ----------------------------
+    years_tabla = [
+        {
+            "year": y,
+            "n": year_counts[y],
+            "pct": _pct(year_counts[y], total),
+            "sem_a": year_semestre.get(y, Counter()).get("Primer semestre", 0),
+            "sem_b": year_semestre.get(y, Counter()).get("Segundo semestre", 0),
+            "anual": year_semestre.get(y, Counter()).get("Anual", 0),
+            "yoy": yoy.get(y),
+        }
+        for y in years_sorted
+    ]
+    cross_data = {
+        str(y): {
+            "n":     year_counts[y],
+            "pct":   _pct(year_counts[y], total),
+            "A":     year_semestre.get(y, Counter()).get("Primer semestre", 0),
+            "B":     year_semestre.get(y, Counter()).get("Segundo semestre", 0),
+            "anual": year_semestre.get(y, Counter()).get("Anual", 0),
+            "yoy":   yoy.get(y),
+        }
+        for y in years_sorted
+    }
+
+    return {
+        # indicadores
+        "total_registros": total,
+        "total_years": len(years_sorted),
+        "first_year": first_year,
+        "last_year": last_year,
+        "top_year": top_year,
+        "top_year_n": top_year_n,
+        "top_year_pct": _pct(top_year_n, total),
+        "growth_total_pct": growth_total,
+        "max_jump_year": max_jump_year,
+        "max_jump_pct": max_jump_pct,
+        # chart data
+        "trend_chart": trend_chart,
+        "stacked_chart": stacked_chart,
+        "cultivo_year_chart": cultivo_year_chart,
+        # filter options
+        "filter_years": [str(y) for y in years_sorted],
+        "filter_semestres": SEM_LABELS,
+        # table + cross
+        "years_tabla": years_tabla,
+        "cross_data": cross_data,
+        # semestre summary for indicators
+        "semestre_counts": {k: semestre_counts[k] for k in SEM_LABELS if k in semestre_counts},
+    }
