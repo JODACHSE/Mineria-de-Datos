@@ -7,10 +7,10 @@
 
 {# ── Navegación entre dimensiones (sección superior del sidebar) ── #}
 {% set toc_nav = [
-  (url_for("pages.r4"), "Poblacional",  True,  True),
-  ("#",                  "Territorial",  False, False),
-  ("#",                  "Temporal",     False, False),
-  ("#",                  "Relacional",   False, False),
+  (url_for("pages.r4"),             "Poblacional",  True,  True),
+  (url_for("pages.r4_territorial"), "Territorial",  False, True),
+  ("#",                              "Temporal",     False, False),
+  ("#",                              "Relacional",   False, False),
 ] %}
 
 {# ── Secciones de contenido dentro de esta página (scrollspy) ── #}

@@ -262,6 +262,162 @@ function r4EstadoChart(data) {
   }));
 }
 
+// ---- R4 · Dimensión Territorial ----------------------------------------
+
+const R4_REGION_COLORS = {
+  "Andina":    "#198754",
+  "Caribe":    "#0dcaf0",
+  "Orinoquía": "#fd7e14",
+  "Pacífica":  "#0d6efd",
+  "Amazonía":  "#6f42c1",
+};
+const R4_REGION_FALLBACK = "#6c757d";
+
+function r4DeptChart(data) {
+  const canvas = document.getElementById("chart-dept");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  // Gradient of greens for the bar color (top = darkest)
+  const shade = (i, total) => {
+    const t = i / Math.max(total - 1, 1);
+    const r = Math.round(25 + t * 80), g = Math.round(135 - t * 60), b = Math.round(84 + t * 30);
+    return `rgb(${r},${g},${b})`;
+  };
+  const colors = data.labels.map((_, i) => shade(i, data.labels.length));
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: "Registros",
+          data: data.values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          hoverBorderWidth: 2,
+          hoverBorderColor: "#fff",
+        }],
+      },
+      options: {
+        ...base,
+        indexAxis: "y",
+        scales: {
+          x: { ...base.scales.x, ticks: { ...base.scales.x.ticks, callback: (v) => fmt(v) } },
+          y: { ...base.scales.y },
+        },
+        plugins: {
+          ...base.plugins,
+          legend: { display: false },
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: {
+              label: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
+              afterLabel: (ctx) => ` ${data.munis[ctx.dataIndex]} municipios con registros`,
+            },
+          },
+        },
+        onClick(_e, elements) {
+          if (!elements.length) return;
+          const label = data.labels[elements[0].index];
+          const sel = document.getElementById("filter-dept");
+          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
+        },
+        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+      },
+    };
+  });
+}
+
+function r4RegionChart(data) {
+  const canvas = document.getElementById("chart-region");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  const colors = data.labels.map((l) => R4_REGION_COLORS[l] || R4_REGION_FALLBACK);
+  register(canvas, (p) => ({
+    type: "doughnut",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        data: data.values,
+        backgroundColor: colors,
+        hoverOffset: 12,
+        borderWidth: 3,
+        borderColor: p.tooltipBg,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "60%",
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { color: p.text, font: { family: p.font, size: 12 }, usePointStyle: true, padding: 16 },
+        },
+        tooltip: {
+          backgroundColor: p.tooltipBg, titleColor: p.text, bodyColor: p.text,
+          borderColor: p.grid, borderWidth: 1,
+          callbacks: {
+            label: (ctx) => ` ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)`,
+            afterLabel: (ctx) => ` ${data.dept_counts[ctx.dataIndex]} departamentos`,
+          },
+        },
+      },
+    },
+  }));
+}
+
+function r4DensityChart(data) {
+  const canvas = document.getElementById("chart-density");
+  if (!canvas || !data) return;
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: "Registros / municipio",
+            data: data.values,
+            backgroundColor: "#198754",
+            borderRadius: 6,
+            yAxisID: "y",
+          },
+          {
+            label: "Municipios únicos",
+            data: data.munis,
+            backgroundColor: "#0dcaf0",
+            borderRadius: 6,
+            yAxisID: "y2",
+          },
+        ],
+      },
+      options: {
+        ...base,
+        scales: {
+          x: base.scales.x,
+          y: { ...base.scales.y, position: "left", title: { display: true, text: "Registros/muni", color: p.text, font: { size: 11 } } },
+          y2: { ...base.scales.y, position: "right", grid: { drawOnChartArea: false }, title: { display: true, text: "Municipios", color: p.text, font: { size: 11 } } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: {
+              label: (ctx) => ctx.datasetIndex === 0
+                ? ` ${ctx.raw} registros/municipio`
+                : ` ${fmt(ctx.raw)} municipios únicos`,
+            },
+          },
+        },
+      },
+    };
+  });
+}
+
 export function initCharts() {
   if (!window.Chart) return;
   const node = document.getElementById("page-data");
@@ -273,5 +429,8 @@ export function initCharts() {
   r4CultivosChart(data.cultivos);
   r4CicloChart(data.ciclo);
   r4EstadoChart(data.estado);
+  r4DeptChart(data.dept);
+  r4RegionChart(data.region);
+  r4DensityChart(data.density);
   document.addEventListener("themechange", () => charts.forEach((redraw) => redraw()));
 }

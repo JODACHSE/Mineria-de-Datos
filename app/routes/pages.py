@@ -7,7 +7,10 @@ from app.etapas import ETAPAS, FASES_CRISP
 from app.routes import _dirs
 from app.services import datasets as ds
 from app.services.etapa3 import build_r3_context
-from app.services.etapa4 import build_r4_dim_poblacional_context
+from app.services.etapa4 import (
+    build_r4_dim_poblacional_context,
+    build_r4_dim_territorial_context,
+)
 from app.services.reports import build_r1_context, build_r2_context
 
 pages_bp = Blueprint("pages", __name__)
@@ -56,6 +59,16 @@ def r4():
         ctx = build_r4_dim_poblacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_poblacional", ctx)
     return render_template("pages/r4.html", **ctx)
+
+
+@pages_bp.route("/r4/territorial")
+def r4_territorial():
+    _, r2_dir = _dirs()
+    ctx = ds.cache_get("ctx:r4:dim_territorial")
+    if ctx is None:
+        ctx = build_r4_dim_territorial_context(r2_dir)
+        ds.cache_set("ctx:r4:dim_territorial", ctx)
+    return render_template("pages/r4_territorial.html", **ctx)
 
 
 @pages_bp.route("/entregables")

@@ -1,0 +1,667 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+
+{% set report_code = "R4 · Análisis Multidimensional" %}
+{% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Territorial</span>' %}
+{% set report_lead = "¿Cómo se distribuye la población y sus principales características entre los territorios disponibles? Se analizan los " ~ (total_registros | miles) ~ " registros del dataset EVA a través de " ~ total_depts ~ " departamentos y " ~ (total_munis | miles) ~ " municipios únicos, identificando concentraciones, disparidades regionales y densidad de reporte territorial." %}
+
+{% set toc_nav = [
+  (url_for("pages.r4"),             "Poblacional",  False, True),
+  (url_for("pages.r4_territorial"), "Territorial",  True,  True),
+  ("#",                              "Temporal",     False, False),
+  ("#",                              "Relacional",   False, False),
+] %}
+
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("descripcion",    "Descripción y pregunta"),
+  ("variables",      "Variables utilizadas"),
+  ("indicadores",    "Indicadores"),
+  ("visualizaciones","Visualizaciones"),
+  ("filtros",        "Filtros interactivos"),
+  ("interpretaciones","Interpretaciones"),
+  ("conocimientos",  "Conocimientos evidentes"),
+  ("limite-decision","Limitación y decisión"),
+] %}
+
+{% block title %}R4 · Dimensión Territorial — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(total_depts, "Departamentos con registros") }}</div>
+<div class="col">{{ stat(total_munis, "Municipios únicos reportados") }}</div>
+<div class="col">{{ stat(top_dept_pct | string ~ " %", "Participación de " ~ top_dept ~ " (líder territorial)", countup=False) }}</div>
+<div class="col">{{ stat(top5_pct | string ~ " %", "Concentración en los 5 departamentos principales", countup=False) }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+{# ────────────────────────────── DESCRIPCIÓN ─── #}
+<section id="descripcion" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">1</span>
+    <h2 class="h3 fw-bold mb-0">Descripción y pregunta de análisis</h2>
+  </div>
+
+  <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
+    <p class="fw-semibold mb-1">Pregunta analítica</p>
+    <p class="mb-0 fst-italic text-body-secondary">
+      ¿Cómo se distribuye la población y sus principales características entre los territorios disponibles?
+    </p>
+  </blockquote>
+
+  <p>
+    La <strong>Dimensión Territorial</strong> examina la distribución geográfica de los
+    <strong>{{ total_registros | miles }}</strong> registros del dataset EVA tratado (R2) a lo largo
+    de los <strong>{{ total_depts }}</strong> departamentos de Colombia, cubriendo
+    <strong>{{ total_munis | miles }}</strong> municipios únicos. El objetivo es identificar
+    concentraciones, disparidades y patrones regionales en la cobertura del reporte agropecuario.
+  </p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
+    {% for icon, color, titulo, texto in [
+      ("bi-geo-alt-fill",   "success", "Unidad territorial",    "Departamento como unidad de agrupación principal; municipio como granularidad máxima disponible."),
+      ("bi-map-fill",       "info",    "Cobertura geográfica",  "32 departamentos de Colombia. Los más grandes en extensión no son necesariamente los más representados."),
+      ("bi-layers-fill",    "warning", "Enfoque del análisis",  "Concentración de registros, densidad de reporte (registros/municipio) y distribución por región geográfica."),
+    ] %}
+    <div class="col">
+      <div class="card h-100 border-0 bg-body-tertiary card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi {{ icon }} text-{{ color }}"></i>
+            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
+          </div>
+          <p class="small text-body-secondary mb-0">{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── VARIABLES ─── #}
+<section id="variables" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">2</span>
+    <h2 class="h3 fw-bold mb-0">Variables utilizadas</h2>
+  </div>
+
+  {{ table_open(extra="small") }}
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Descripción</th>
+        <th scope="col">Rol en el análisis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for var, tipo, color, desc, rol in [
+        ("Departamento",         "Categórica",   "success",  "Nombre del departamento colombiano (32 valores).", "Agrupación principal — define las unidades territoriales."),
+        ("CodigoDeptoDane",      "Código",        "secondary","Código DANE de 2 dígitos del departamento.", "Identificación única — enlace con fuentes externas."),
+        ("CodigoMunicipioDane",  "Código",        "secondary","Código DANE de 5 dígitos del municipio.", "Granularidad máxima — conteo de municipios únicos por departamento."),
+        ("Municipio",            "Texto",         "secondary","Nombre del municipio.", "Referencia descriptiva en filtros."),
+        ("Cultivo",              "Categórica",    "info",     "Cultivo básico reportado (6 valores).", "Caracterización interna del territorio — cultivo dominante por departamento."),
+        ("Anio",                 "Temporal",      "warning",  "Año del registro (2019–2024).", "Determina la amplitud temporal del reporte territorial."),
+      ] %}
+      <tr>
+        <td class="font-monospace fw-semibold">{{ var }}</td>
+        <td>{{ tag(tipo, color) }}</td>
+        <td>{{ desc }}</td>
+        <td class="text-body-secondary">{{ rol }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+{# ────────────────────────────── INDICADORES ─── #}
+<section id="indicadores" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">3</span>
+    <h2 class="h3 fw-bold mb-0">Indicadores</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres métricas que caracterizan la distribución territorial del dataset.</p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-trophy-fill text-success fs-4"></i>
+            </div>
+            {{ tag("IND-1", "success") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Departamento líder</p>
+          <div class="fs-3 fw-bold text-success lh-1">{{ top_dept }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ top_dept_n | miles }}</strong> registros —
+            <strong>{{ top_dept_pct }} %</strong> del total ·
+            {{ top_dept_munis }} municipios reportados
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ top_dept_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-success" style="width:{{ top_dept_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-info bg-opacity-10">
+              <i class="bi bi-chevron-bar-down text-info fs-4"></i>
+            </div>
+            {{ tag("IND-2", "info") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Departamento con menor cobertura</p>
+          <div class="fs-4 fw-bold text-info lh-sm">{{ bottom_dept }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ bottom_dept_n | miles }}</strong> registros —
+            <strong>{{ bottom_dept_pct }} %</strong> del total
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ bottom_dept_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-info" style="width:{{ bottom_dept_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-diagram-3-fill text-warning fs-4"></i>
+            </div>
+            {{ tag("IND-3", "warning") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Concentración territorial (top 5)</p>
+          <div class="fs-2 fw-bold text-warning-emphasis lh-1">{{ top5_pct }} %</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            5 de 32 departamentos concentran el <strong>{{ top5_pct }} %</strong> de los registros:
+            {{ top5_depts | join(", ") }}.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ top5_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-warning" style="width:{{ top5_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── VISUALIZACIONES ─── #}
+<section id="visualizaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
+    <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Haz clic en una barra de VIZ-1 para filtrar la tabla por ese departamento.</p>
+
+  <div class="row g-4">
+
+    {# VIZ-1: Top 15 departamentos #}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <div class="d-flex align-items-center gap-2">
+              {{ tag("VIZ-1", "success") }}
+              <h3 class="h6 fw-bold mb-0">Top 15 departamentos por número de registros</h3>
+            </div>
+            <small class="text-body-secondary">Click en una barra para filtrar</small>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Frecuencia absoluta de los 15 departamentos con mayor representación en el dataset.
+            El tooltip muestra también la cantidad de municipios únicos por departamento.
+          </p>
+          <div class="chart-frame" style="max-height:340px;">
+            <canvas id="chart-dept" aria-label="Top 15 departamentos por registros en EVA"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# VIZ-2 + VIZ-3 #}
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-2", "info") }}
+            <h3 class="h6 fw-bold mb-0">Distribución por región geográfica</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Participación de cada región (Andina, Caribe, Orinoquía, Pacífica, Amazonía) en el total
+            de registros. El tooltip incluye el número de departamentos de cada región.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-region" aria-label="Registros por región geográfica"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-3", "warning") }}
+            <h3 class="h6 fw-bold mb-0">Densidad de reporte: registros por municipio</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Relación entre el total de registros y los municipios únicos reportados para los 15
+            departamentos principales. Un valor alto indica que sus municipios reportan muchos
+            cultivos y/o periodos; un valor bajo indica cobertura amplia pero poco profunda.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-density" aria-label="Registros por municipio para top 15 departamentos"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── FILTROS ─── #}
+<section id="filtros" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">5</span>
+    <h2 class="h3 fw-bold mb-0">Filtros interactivos</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">
+    Filtra la tabla por departamento o por región geográfica. El clic en VIZ-1 también activa el filtro de departamento.
+  </p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-dept" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-success"></i>Filtro 1 · Departamento
+      </label>
+      <select id="filter-dept" class="form-select form-select-sm">
+        <option value="">Todos los departamentos</option>
+        {% for d in filter_depts %}
+        <option value="{{ d }}">{{ d }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-region" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-info"></i>Filtro 2 · Región geográfica
+      </label>
+      <select id="filter-region" class="form-select form-select-sm">
+        <option value="">Todas las regiones</option>
+        {% for r in filter_regiones %}
+        <option value="{{ r }}">{{ r }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-2 col-lg-4 d-flex align-items-end">
+      <button id="filter-reset" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div id="filter-summary" class="alert alert-success border-0 border-start border-4 d-flex gap-3 mb-3 py-2" role="status">
+    <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+    <span class="small">
+      Mostrando <strong id="filter-count">{{ total_depts }}</strong> departamentos —
+      <strong id="filter-total">{{ total_registros | miles }}</strong> registros
+      (<strong id="filter-pct">100.0</strong> % del total).
+      <span id="filter-label" class="text-body-secondary"></span>
+    </span>
+  </div>
+
+  <div class="card border-0 bg-body-tertiary">
+    <div class="card-body py-2">
+      {{ table_open(extra="small") }}
+        <thead>
+          <tr>
+            <th scope="col">Departamento</th>
+            <th scope="col">Región</th>
+            <th scope="col" class="text-end">Registros</th>
+            <th scope="col" class="text-end">Participación</th>
+            <th scope="col" class="text-end">Municipios</th>
+            <th scope="col" class="text-end">Reg./Muni.</th>
+            <th scope="col">Cultivo líder</th>
+          </tr>
+        </thead>
+        <tbody id="filter-tbody">
+          {% for row in depts_tabla %}
+          <tr data-dept="{{ row.dept }}" data-region="{{ row.region }}">
+            <td>{{ row.dept }}</td>
+            <td>
+              <span class="badge rounded-pill text-bg-{{
+                'success' if row.region == 'Andina' else
+                'info'    if row.region == 'Caribe' else
+                'warning' if row.region == 'Orinoquía' else
+                'primary' if row.region == 'Pacífica' else
+                'secondary'
+              }}">{{ row.region }}</span>
+            </td>
+            <td class="text-end font-monospace">{{ row.n | miles }}</td>
+            <td class="text-end font-monospace">{{ row.pct }} %</td>
+            <td class="text-end font-monospace">{{ row.munis }}</td>
+            <td class="text-end font-monospace">{{ row.density }}</td>
+            <td class="small">{{ row.top_cultivo }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+  </div>
+</section>
+
+{# ────────────────────────────── INTERPRETACIONES ─── #}
+<section id="interpretaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">6</span>
+    <h2 class="h3 fw-bold mb-0">Interpretación de cada visualización</h2>
+  </div>
+
+  <div class="accordion accordion-flush" id="acc-interp">
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Top 15 departamentos por registros
+        </button>
+      </h3>
+      <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            La distribución revela una <strong>fuerte asimetría</strong>: los 5 primeros departamentos
+            ({{ top5_depts | join(", ") }}) concentran el <strong>{{ top5_pct }} %</strong> de los
+            registros, con el resto distribuido en 27 departamentos. Esta concentración es característica
+            de regiones con mayor diversificación agrícola y mayor densidad municipal.
+          </p>
+          <p class="mb-0">
+            El tooltip de cada barra muestra además el número de municipios únicos que reportan datos,
+            lo que permite diferenciar entre departamentos con muchos registros por concentración
+            de cultivos vs. departamentos con cobertura municipal amplia.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Distribución por región geográfica
+        </button>
+      </h3>
+      <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            La región <strong>Andina</strong> domina ampliamente el dataset, con la mayor participación
+            de registros. Esto es consistente con que la Región Andina concentra la mayor densidad
+            de población, actividad agrícola diversificada y capacidades institucionales de reporte.
+          </p>
+          <p class="mb-0">
+            Las regiones <strong>Amazonía</strong> y <strong>Orinoquía</strong>, a pesar de su
+            extensión territorial, tienen baja representación en el dataset porque sus condiciones
+            agroecológicas limitan los cultivos básicos seleccionados (Maíz, Arroz, Papa, etc.).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Densidad de reporte (registros/municipio)
+        </button>
+      </h3>
+      <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico de barras agrupadas combina la densidad de reporte (registros por municipio,
+            eje izquierdo) con el número de municipios únicos (eje derecho). Departamentos con
+            alta densidad y pocos municipios son especializados: concentran cultivos diversos en
+            pocas localidades. Departamentos con baja densidad y muchos municipios tienen cobertura
+            amplia pero con menos cultivos reportados por localidad.
+          </p>
+          <p class="mb-0">
+            Esta métrica es útil para identificar departamentos donde la calidad y exhaustividad
+            del reporte municipal puede ser más limitada o donde existe mayor especialización
+            por zona geográfica interna.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── CONOCIMIENTOS ─── #}
+<section id="conocimientos" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">7</span>
+    <h2 class="h3 fw-bold mb-0">Conocimientos evidentes</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres hallazgos con la estructura completa requerida.</p>
+
+  {% set conocimientos = [
+    {
+      "n": "C-1", "color": "success", "icon": "bi-bar-chart-line-fill",
+      "titulo": "Concentración territorial en la Región Andina",
+      "pregunta": "¿Cuáles son los departamentos con mayor y menor representación en el dataset y qué implica para el análisis?",
+      "variables": "Departamento (categórica), total de registros (numérica derivada).",
+      "procedimiento": "Conteo de frecuencias por departamento; ranking descendente; cálculo de participación porcentual acumulada.",
+      "evidencia": top_dept ~ " lidera con " ~ top_dept_pct | string ~ " %; los 5 principales concentran el " ~ top5_pct | string ~ " % de los registros. " ~ bottom_dept ~ " tiene apenas " ~ bottom_dept_pct | string ~ " %.",
+      "hallazgo": "El dataset presenta una fuerte concentración en los departamentos andinos, con 5 departamentos acumulando casi la mitad de todos los registros.",
+      "interpretacion": "La concentración en la Región Andina refleja su mayor densidad agropecuaria, mayor red municipal de reporte y mayor diversificación de cultivos básicos. Los departamentos de frontera agrícola (Amazonía, Orinoquía) tienen baja representación porque los cultivos básicos seleccionados no son sus principales productos.",
+      "utilidad": "Permite ajustar el peso estadístico por departamento en modelos nacionales y alerta sobre el riesgo de generalización: inferencias nacionales basadas en este dataset tendrán mayor precisión para la Región Andina.",
+      "limitacion": "La concentración de registros no implica que los departamentos con pocos registros sean menos importantes en seguridad alimentaria; simplemente son menos representados en EVA para estos cultivos.",
+    },
+    {
+      "n": "C-2", "color": "info", "icon": "bi-map-fill",
+      "titulo": "Dominio de la Región Andina en la distribución regional",
+      "pregunta": "¿Cómo se distribuyen los registros entre las grandes regiones geográficas de Colombia?",
+      "variables": "Departamento (categórica), región geográfica (variable derivada del mapeo departamento→región).",
+      "procedimiento": "Clasificación de departamentos por región geográfica según el mapa administrativo colombiano; suma de registros por región; cálculo de participación porcentual.",
+      "evidencia": "La Región Andina concentra el mayor porcentaje de registros; Amazonía y Orinoquía tienen las participaciones más bajas pese a ser las regiones más extensas.",
+      "hallazgo": "Existe una marcada asimetría regional: las regiones con mayor extensión territorial tienen menor representación en el dataset de cultivos básicos.",
+      "interpretacion": "La extensión territorial no predice la representación en el dataset. La intensidad de la actividad agropecuaria municipal, la institucionalidad de reporte y la aptitud agronómica para los seis cultivos básicos determinan cuántos registros aporta cada región.",
+      "utilidad": "Justifica el uso de análisis regionales diferenciados en lugar de promedios nacionales; la Región Caribe puede requerir análisis independiente dado su perfil productivo diferenciado.",
+      "limitacion": "La clasificación regional por departamento puede ocultar heterogeneidad interna: Antioquia, por ejemplo, tiene zonas con perfil agrícola de múltiples regiones.",
+    },
+    {
+      "n": "C-3", "color": "warning", "icon": "bi-graph-up",
+      "titulo": "Diferencias en densidad de reporte entre departamentos",
+      "pregunta": "¿Existe variabilidad en la intensidad del reporte por municipio entre departamentos?",
+      "variables": "CodigoMunicipioDane (código), Departamento (categórica), total de registros (numérica derivada).",
+      "procedimiento": "Conteo de municipios únicos por departamento; cálculo de la relación registros/municipios; ranking por esta métrica.",
+      "evidencia": "Los departamentos del top 15 presentan densidades que varían entre ~20 y ~40 registros por municipio, lo que indica diferencias importantes en la exhaustividad del reporte.",
+      "hallazgo": "Los departamentos andinos tienen densidades de reporte más altas (más cultivos y periodos reportados por municipio) que los departamentos periféricos.",
+      "interpretacion": "Una densidad alta indica que los municipios de ese departamento reportan más combinaciones de cultivos y periodos, lo que puede reflejar mayor diversificación agrícola o mayor rigurosidad en el sistema de reporte municipal.",
+      "utilidad": "Identifica qué departamentos tienen datos más completos para análisis multivariados y cuáles podrían necesitar mayor atención en el proceso de gobernanza de datos.",
+      "limitacion": "La densidad de reporte mide cantidad, no calidad. Un departamento puede tener muchos registros pero con alta proporción de valores faltantes o inconsistencias.",
+    },
+  ] %}
+
+  <div class="row g-4">
+    {% for c in conocimientos %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm card-hover">
+        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
+          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
+            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
+          </div>
+          <div>
+            {{ tag(c.n, c.color) }}
+            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for campo, valor in [
+              ("Pregunta", c.pregunta),
+              ("Variables", c.variables),
+              ("Procedimiento", c.procedimiento),
+              ("Evidencia", c.evidencia),
+              ("Hallazgo", c.hallazgo),
+              ("Interpretación", c.interpretacion),
+              ("Utilidad", c.utilidad),
+              ("Limitación", c.limitacion),
+            ] %}
+            <div class="col">
+              <p class="small mb-0">
+                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
+                {{ valor }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
+<section id="limite-decision" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">8</span>
+    <h2 class="h3 fw-bold mb-0">Limitación y decisión</h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
+          </div>
+          <p class="small mb-0">
+            El análisis territorial se basa en el número de <em>registros</em> por departamento,
+            no en el volumen de producción ni en la extensión sembrada. Un departamento con
+            muchos registros puede tener una producción modesta si los valores numéricos
+            (AreaSembrada, Produccion) son bajos; y viceversa. Adicionalmente, el dataset no
+            incluye los 32 municipios colombianos de forma igualmente balanceada: zonas con
+            menor institucionalidad agropecuaria reportan menos, lo que introduce sesgo de
+            cobertura. La variable <em>región geográfica</em> fue derivada mediante un mapeo
+            manual departamento→región y no proviene directamente del dataset.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
+          </div>
+          <p class="small mb-0">
+            Dado que 5 departamentos ({{ top5_depts | join(", ") }}) concentran el
+            <strong>{{ top5_pct }} %</strong> de los registros y todos pertenecen a la Región
+            Andina, se recomienda <strong>estratificar los modelos predictivos por región</strong>
+            en lugar de aplicar un modelo nacional único. Los modelos entrenados con datos de la
+            Región Andina tendrán mayor precisión estadística, pero deberán complementarse con
+            modelos específicos para el Caribe y la Orinoquía para capturar sus particularidades
+            productivas. Los departamentos con menos de 200 registros deben tratarse como
+            subgrupos especiales en el análisis, no como representativos de su región.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>R4 · Dim. Territorial:</strong> El dataset EVA cubre {{ total_depts }} departamentos y
+  {{ total_munis | miles }} municipios. {{ top_dept }} lidera con {{ top_dept_pct }} %; los 5 principales
+  concentran el {{ top5_pct }} % de los registros. La Región Andina domina la distribución; las densidades
+  de reporte varían entre ~20 y ~40 registros por municipio en los departamentos principales.
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{
+  {
+    "dept":    dept_chart,
+    "region":  region_chart,
+    "density": density_chart,
+    "cross":   cross_data,
+    "total":   total_registros
+  } | tojson
+}}</script>
+
+<script>
+(function () {
+  const pageData = JSON.parse(document.getElementById("page-data").textContent);
+  const TOTAL = pageData.total;
+  const CROSS = pageData.cross;
+
+  const selDept   = document.getElementById("filter-dept");
+  const selRegion = document.getElementById("filter-region");
+  const btnReset  = document.getElementById("filter-reset");
+  const tbody     = document.getElementById("filter-tbody");
+  const elCount   = document.getElementById("filter-count");
+  const elTotal   = document.getElementById("filter-total");
+  const elPct     = document.getElementById("filter-pct");
+  const elLabel   = document.getElementById("filter-label");
+
+  function fmt(n) { return n.toLocaleString("es-CO"); }
+
+  function applyFilters() {
+    const deptFil   = selDept.value;
+    const regionFil = selRegion.value;
+
+    let filteredN = 0, visibleRows = 0;
+    for (const tr of tbody.querySelectorAll("tr[data-dept]")) {
+      const dept   = tr.dataset.dept;
+      const region = tr.dataset.region;
+
+      const show = (!deptFil || dept === deptFil) && (!regionFil || region === regionFil);
+      tr.classList.toggle("d-none", !show);
+      if (show) {
+        visibleRows++;
+        const n = (CROSS[dept] || {}).n || 0;
+        filteredN += n;
+        tr.style.opacity = (deptFil && dept !== deptFil) ? "0.4" : "1";
+      }
+    }
+
+    elCount.textContent = visibleRows;
+    elTotal.textContent = fmt(filteredN);
+    elPct.textContent   = TOTAL > 0 ? (filteredN / TOTAL * 100).toFixed(1) : "0.0";
+
+    const parts = [];
+    if (deptFil)   parts.push("Depto: " + deptFil);
+    if (regionFil) parts.push("Región: " + regionFil);
+    elLabel.textContent = parts.length ? "— Filtro activo: " + parts.join(" · ") : "";
+  }
+
+  selDept.addEventListener("change", applyFilters);
+  selRegion.addEventListener("change", applyFilters);
+  btnReset.addEventListener("click", () => {
+    selDept.value = ""; selRegion.value = "";
+    applyFilters();
+  });
+})();
+</script>
+{% endblock %}
