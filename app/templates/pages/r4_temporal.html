@@ -1,0 +1,672 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+
+{% set report_code = "R4 · Análisis Multidimensional" %}
+{% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Temporal</span>' %}
+{% set report_lead = "¿Cómo ha evolucionado la frecuencia y composición de los registros agropecuarios a lo largo del tiempo? Se analizan los " ~ (total_registros | miles) ~ " registros del dataset EVA entre " ~ first_year ~ " y " ~ last_year ~ ", identificando tendencias interanuales, estacionalidad semestral y el comportamiento temporal de los seis cultivos básicos." %}
+
+{% set toc_nav = [
+  (url_for("pages.r4"),             "Poblacional",  False, True),
+  (url_for("pages.r4_territorial"), "Territorial",  False, True),
+  (url_for("pages.r4_temporal"),    "Temporal",     True,  True),
+  ("#",                              "Relacional",   False, False),
+] %}
+
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("descripcion",    "Descripción y pregunta"),
+  ("variables",      "Variables utilizadas"),
+  ("indicadores",    "Indicadores"),
+  ("visualizaciones","Visualizaciones"),
+  ("filtros",        "Filtros interactivos"),
+  ("interpretaciones","Interpretaciones"),
+  ("conocimientos",  "Conocimientos evidentes"),
+  ("limite-decision","Limitación y decisión"),
+] %}
+
+{% block title %}R4 · Dimensión Temporal — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(total_years, "Años de cobertura (" ~ first_year ~ "–" ~ last_year ~ ")", countup=True) }}</div>
+<div class="col">{{ stat("+" ~ growth_total_pct | string ~ " %", "Crecimiento total " ~ first_year ~ "→" ~ last_year, countup=False) }}</div>
+<div class="col">{{ stat(max_jump_pct | string ~ " %", "Mayor salto interanual (año " ~ max_jump_year ~ ")", countup=False) }}</div>
+<div class="col">{{ stat(top_year_pct | string ~ " %", "Participación del año con más registros (" ~ top_year ~ ")", countup=False) }}</div>
+{% endblock %}
+
+{% block report_body %}
+
+{# ────────────────────────────── DESCRIPCIÓN ─── #}
+<section id="descripcion" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">1</span>
+    <h2 class="h3 fw-bold mb-0">Descripción y pregunta de análisis</h2>
+  </div>
+
+  <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
+    <p class="fw-semibold mb-1">Pregunta analítica</p>
+    <p class="mb-0 fst-italic text-body-secondary">
+      ¿Cómo ha evolucionado la frecuencia y composición de los registros agropecuarios a lo largo del tiempo?
+    </p>
+  </blockquote>
+
+  <p>
+    La <strong>Dimensión Temporal</strong> examina la evolución de los
+    <strong>{{ total_registros | miles }}</strong> registros del dataset EVA tratado (R2) a lo largo
+    de <strong>{{ total_years }}</strong> años ({{ first_year }}–{{ last_year }}). Se analizan las
+    variaciones interanuales en el número de reportes, la distribución por semestre y la trayectoria
+    individual de cada uno de los seis cultivos básicos en el período.
+  </p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
+    {% for icon, color, titulo, texto in [
+      ("bi-calendar3",       "success", "Cobertura temporal",   "6 años completos (2019–2024), con estructura semestral (A/B) y registros anuales sin estacionalidad."),
+      ("bi-graph-up-arrow",  "info",    "Enfoque de tendencia", "Variación interanual (YoY), crecimiento acumulado y detección del año con mayor salto en la serie."),
+      ("bi-layers-fill",     "warning", "Composición interna",  "Descomposición por semestre y por cultivo para identificar qué impulsa los cambios en el volumen de reporte."),
+    ] %}
+    <div class="col">
+      <div class="card h-100 border-0 bg-body-tertiary card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="bi {{ icon }} text-{{ color }}"></i>
+            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
+          </div>
+          <p class="small text-body-secondary mb-0">{{ texto }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── VARIABLES ─── #}
+<section id="variables" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">2</span>
+    <h2 class="h3 fw-bold mb-0">Variables utilizadas</h2>
+  </div>
+
+  {{ table_open(extra="small") }}
+    <thead>
+      <tr>
+        <th scope="col">Variable</th>
+        <th scope="col">Tipo</th>
+        <th scope="col">Descripción</th>
+        <th scope="col">Rol en el análisis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for var, tipo, color, desc, rol in [
+        ("Anio",           "Numérica entera",  "success",   "Año del registro agrícola (2019–2024).",                          "Eje temporal principal — define los grupos de agregación."),
+        ("Periodo",        "Categórica",        "info",      "Código de periodo (ej. 2021A, 2021B, 2021); sufijo indica semestre.", "Semestre derivado — A=Primer semestre, B=Segundo semestre, sin sufijo=Anual."),
+        ("Cultivo",        "Categórica",        "warning",   "Cultivo básico reportado (Maíz, Arroz, Papa, Fríjol, Yuca, Trigo).", "Variable de segmentación — evolución temporal por cultivo."),
+        ("Departamento",   "Categórica",        "secondary", "Departamento colombiano (32 valores).",                            "Contexto geográfico de la serie temporal."),
+        ("CicloCultivo",   "Categórica",        "secondary", "Ciclo de cultivo (Primer ciclo, Segundo ciclo, Ciclo único).",    "Relacionado con el semestre; complementa la lectura estacional."),
+      ] %}
+      <tr>
+        <td class="font-monospace fw-semibold">{{ var }}</td>
+        <td>{{ tag(tipo, color) }}</td>
+        <td>{{ desc }}</td>
+        <td class="text-body-secondary">{{ rol }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+{# ────────────────────────────── INDICADORES ─── #}
+<section id="indicadores" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">3</span>
+    <h2 class="h3 fw-bold mb-0">Indicadores</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres métricas que caracterizan la evolución temporal del dataset.</p>
+
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-graph-up-arrow text-success fs-4"></i>
+            </div>
+            {{ tag("IND-1", "success") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Crecimiento acumulado {{ first_year }}–{{ last_year }}</p>
+          <div class="fs-2 fw-bold text-success lh-1">+{{ growth_total_pct }} %</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            De <strong>{{ (years_tabla[0].n) | miles }}</strong> registros en {{ first_year }} a
+            <strong>{{ (years_tabla[-1].n) | miles }}</strong> en {{ last_year }}.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ [growth_total_pct, 100] | min }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-success" style="width:{{ [growth_total_pct, 100] | min }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-info bg-opacity-10">
+              <i class="bi bi-lightning-charge-fill text-info fs-4"></i>
+            </div>
+            {{ tag("IND-2", "info") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Mayor salto interanual</p>
+          <div class="fs-2 fw-bold text-info lh-1">+{{ max_jump_pct }} %</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            En el año <strong>{{ max_jump_year }}</strong>, el dataset registró el mayor incremento
+            porcentual respecto al año anterior.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ [max_jump_pct, 100] | min }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-info" style="width:{{ [max_jump_pct, 100] | min }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-calendar-week-fill text-warning fs-4"></i>
+            </div>
+            {{ tag("IND-3", "warning") }}
+          </div>
+          <p class="small text-body-secondary mb-1">Semestre más frecuente</p>
+          {% set sem_leader = semestre_counts | dictsort(by='value') | reverse | first %}
+          <div class="fs-5 fw-bold text-warning-emphasis lh-sm">{{ sem_leader[0] }}</div>
+          <p class="small text-body-secondary mt-2 mb-0">
+            <strong>{{ sem_leader[1] | miles }}</strong> registros
+            ({{ (sem_leader[1] / total_registros * 100) | round(1) }} % del total).
+            Primer semestre vs. Segundo: {{ semestre_counts.get("Primer semestre", 0) | miles }}
+            vs. {{ semestre_counts.get("Segundo semestre", 0) | miles }}.
+          </p>
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          {% set sem_pct = (sem_leader[1] / total_registros * 100) | round(1) %}
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ sem_pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-warning" style="width:{{ sem_pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── VISUALIZACIONES ─── #}
+<section id="visualizaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
+    <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Haz clic en una barra de VIZ-1 para filtrar la tabla por ese año.</p>
+
+  <div class="row g-4">
+
+    {# VIZ-1: tendencia anual #}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <div class="d-flex align-items-center gap-2">
+              {{ tag("VIZ-1", "success") }}
+              <h3 class="h6 fw-bold mb-0">Tendencia anual de registros con variación interanual</h3>
+            </div>
+            <small class="text-body-secondary">Click en una barra para filtrar</small>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Barras = registros totales por año (eje izquierdo).
+            Línea amarilla = variación porcentual respecto al año anterior (eje derecho).
+            Puntos en verde/rojo indican variación positiva/negativa.
+          </p>
+          <div class="chart-frame" style="max-height:320px;">
+            <canvas id="chart-trend" aria-label="Tendencia anual de registros EVA {{ first_year }}–{{ last_year }}"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# VIZ-2 + VIZ-3 #}
+    <div class="col-md-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-2", "info") }}
+            <h3 class="h6 fw-bold mb-0">Composición semestral por año</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Distribución de registros por semestre (Primer, Segundo, Anual) apilada por año.
+            Permite identificar si los incrementos son uniformes entre semestres o asimétricos.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-stacked" aria-label="Composición semestral por año"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-1">
+            {{ tag("VIZ-3", "warning") }}
+            <h3 class="h6 fw-bold mb-0">Evolución temporal por cultivo</h3>
+          </div>
+          <p class="small text-body-secondary mb-3">
+            Una línea por cada cultivo básico a lo largo de {{ first_year }}–{{ last_year }}.
+            Permite comparar cuál cultivo ha impulsado el crecimiento total y cuáles se mantienen estables.
+          </p>
+          <div class="chart-frame" style="max-height:300px;">
+            <canvas id="chart-cultivo-year" aria-label="Registros por cultivo {{ first_year }}–{{ last_year }}"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── FILTROS ─── #}
+<section id="filtros" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">5</span>
+    <h2 class="h3 fw-bold mb-0">Filtros interactivos</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">
+    Filtra la tabla por año o por semestre. El clic en VIZ-1 también activa el filtro de año.
+  </p>
+
+  <div class="row g-3 mb-4">
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-year" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-success"></i>Filtro 1 · Año
+      </label>
+      <select id="filter-year" class="form-select form-select-sm">
+        <option value="">Todos los años</option>
+        {% for y in filter_years %}
+        <option value="{{ y }}">{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-5 col-lg-4">
+      <label for="filter-semestre" class="form-label small fw-semibold">
+        <i class="bi bi-funnel-fill me-1 text-info"></i>Filtro 2 · Semestre
+      </label>
+      <select id="filter-semestre" class="form-select form-select-sm">
+        <option value="">Todos los semestres</option>
+        {% for s in filter_semestres %}
+        <option value="{{ s }}">{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-sm-2 col-lg-4 d-flex align-items-end">
+      <button id="filter-reset" class="btn btn-outline-secondary btn-sm w-100">
+        <i class="bi bi-x-circle me-1"></i>Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div id="filter-summary" class="alert alert-success border-0 border-start border-4 d-flex gap-3 mb-3 py-2" role="status">
+    <i class="bi bi-info-circle-fill mt-1 flex-shrink-0"></i>
+    <span class="small">
+      Mostrando <strong id="filter-count">{{ total_years }}</strong> años —
+      <strong id="filter-total">{{ total_registros | miles }}</strong> registros
+      (<strong id="filter-pct">100.0</strong> % del total).
+      <span id="filter-label" class="text-body-secondary"></span>
+    </span>
+  </div>
+
+  <div class="card border-0 bg-body-tertiary">
+    <div class="card-body py-2">
+      {{ table_open(extra="small") }}
+        <thead>
+          <tr>
+            <th scope="col">Año</th>
+            <th scope="col" class="text-end">Registros</th>
+            <th scope="col" class="text-end">Participación</th>
+            <th scope="col" class="text-end">Primer sem.</th>
+            <th scope="col" class="text-end">Segundo sem.</th>
+            <th scope="col" class="text-end">Anual</th>
+            <th scope="col" class="text-end">Var. YoY</th>
+          </tr>
+        </thead>
+        <tbody id="filter-tbody">
+          {% for row in years_tabla %}
+          <tr data-year="{{ row.year }}" data-n-orig="{{ row.n }}">
+            <td class="fw-semibold font-monospace">{{ row.year }}</td>
+            <td class="text-end font-monospace">{{ row.n | miles }}</td>
+            <td class="text-end font-monospace">{{ row.pct }} %</td>
+            <td class="text-end font-monospace">{{ row.sem_a | miles }}</td>
+            <td class="text-end font-monospace">{{ row.sem_b | miles }}</td>
+            <td class="text-end font-monospace">{{ row.anual | miles }}</td>
+            <td class="text-end font-monospace">
+              {% if row.yoy is not none %}
+                <span class="text-{{ 'success' if row.yoy > 0 else 'danger' if row.yoy < 0 else 'secondary' }}">
+                  {{ '+' if row.yoy > 0 }}{{ row.yoy }} %
+                </span>
+              {% else %}
+                <span class="text-body-secondary">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+    </div>
+  </div>
+</section>
+
+{# ────────────────────────────── INTERPRETACIONES ─── #}
+<section id="interpretaciones" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">6</span>
+    <h2 class="h3 fw-bold mb-0">Interpretación de cada visualización</h2>
+  </div>
+
+  <div class="accordion accordion-flush" id="acc-interp">
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Tendencia anual con variación interanual
+        </button>
+      </h3>
+      <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            La serie muestra una <strong>tendencia creciente sostenida</strong> desde {{ first_year }} hasta
+            {{ last_year }}, con un crecimiento acumulado de <strong>+{{ growth_total_pct }} %</strong>.
+            El año {{ max_jump_year }} registra el mayor salto interanual (+{{ max_jump_pct }} %),
+            lo que representa un punto de inflexión claro en el volumen de reporte.
+          </p>
+          <p class="mb-0">
+            La línea de variación interanual (YoY) permite identificar si el crecimiento es acelerado,
+            estable o desacelerado en cada periodo. Los años posteriores a {{ max_jump_year }} muestran
+            tasas de variación bajas, sugiriendo que el dataset ha alcanzado un nivel de reporte estable.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Composición semestral por año
+        </button>
+      </h3>
+      <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico apilado revela que la distribución entre el <strong>Primer semestre</strong>
+            y el <strong>Segundo semestre</strong> es relativamente uniforme en todos los años,
+            con una ligera predominancia del Primer semestre
+            ({{ semestre_counts.get("Primer semestre", 0) | miles }} vs.
+            {{ semestre_counts.get("Segundo semestre", 0) | miles }} registros en el total).
+          </p>
+          <p class="mb-0">
+            Los registros <em>Anuales</em> (sin clasificación semestral) representan una fracción
+            constante y pequeña cada año ({{ semestre_counts.get("Anual", 0) | miles }} en total),
+            correspondiente principalmente a cultivos de ciclo único no diferenciado por semestre.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Evolución temporal por cultivo
+        </button>
+      </h3>
+      <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          <p>
+            El gráfico de líneas muestra que <strong>Maíz</strong> es el cultivo con mayor número
+            de registros y el principal responsable del salto observado en {{ max_jump_year }}:
+            sus registros prácticamente se duplicaron de un año al otro. Los demás cultivos muestran
+            tendencias más estables o crecimientos moderados.
+          </p>
+          <p class="mb-0">
+            El modo de interacción <em>index</em> del tooltip permite comparar todos los cultivos
+            en un año dado con solo posicionar el cursor sobre la línea. Esto facilita identificar
+            si los cambios interanuales son un fenómeno aislado de un cultivo o un patrón transversal.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+{# ────────────────────────────── CONOCIMIENTOS ─── #}
+<section id="conocimientos" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">7</span>
+    <h2 class="h3 fw-bold mb-0">Conocimientos evidentes</h2>
+  </div>
+  <p class="text-body-secondary small mb-4">Tres hallazgos con la estructura completa requerida.</p>
+
+  {% set conocimientos = [
+    {
+      "n": "C-1", "color": "success", "icon": "bi-graph-up-arrow",
+      "titulo": "Crecimiento sostenido del volumen de reporte agropecuario",
+      "pregunta": "¿Ha crecido el número de registros agropecuarios reportados en el periodo 2019–2024?",
+      "variables": "Anio (temporal), conteo de registros por año (numérica derivada).",
+      "procedimiento": "Agrupación de registros por año; cálculo de variación interanual (YoY) y crecimiento acumulado primero a último año.",
+      "evidencia": "El dataset creció de " ~ (years_tabla[0].n | miles) ~ " registros en " ~ first_year ~ " a " ~ (years_tabla[-1].n | miles) ~ " en " ~ last_year ~ " (+{{ growth_total_pct }} % acumulado). El mayor salto fue en {{ max_jump_year }} (+{{ max_jump_pct }} % YoY).",
+      "hallazgo": "El volumen de reporte agropecuario en el dataset EVA presenta una tendencia de crecimiento sostenida a lo largo de los seis años analizados.",
+      "interpretacion": "El crecimiento puede reflejar una mejora en la cobertura del sistema EVA (más municipios reportando), mayor actividad agrícola real, o una combinación de ambos. El salto de " ~ max_jump_year ~ " es atípico y merece revisión específica para determinar si corresponde a expansión real o a incorporación de nuevas unidades de reporte.",
+      "utilidad": "Establece la línea de base para modelos predictivos: series con tendencia creciente requieren modelos de tendencia (regresión con pendiente positiva, suavizamiento exponencial con tendencia) en lugar de modelos estacionarios.",
+      "limitacion": "El número de registros no equivale al volumen de producción o área sembrada. Un incremento en registros puede deberse a desagregación del reporte (un cultivo antes reportado anualmente que pasa a reportarse por semestre) sin cambio real en la actividad.",
+    },
+    {
+      "n": "C-2", "color": "info", "icon": "bi-calendar2-week-fill",
+      "titulo": "Simetría semestral con leve predominancia del Primer semestre",
+      "pregunta": "¿Existe una distribución equitativa entre semestres en el número de registros a lo largo del periodo?",
+      "variables": "Periodo (categórica), semestre derivado (Primer/Segundo/Anual), Anio (temporal).",
+      "procedimiento": "Clasificación de registros por el sufijo del campo Periodo; conteo por semestre y año; cálculo de participación.",
+      "evidencia": "Primer semestre: " ~ semestre_counts.get("Primer semestre", 0) | miles ~ " registros; Segundo semestre: " ~ semestre_counts.get("Segundo semestre", 0) | miles ~ "; Anual: " ~ semestre_counts.get("Anual", 0) | miles ~ ".",
+      "hallazgo": "La distribución entre semestres es estable año a año, con una leve predominancia del Primer semestre en todos los años analizados.",
+      "interpretacion": "La consistencia de la distribución semestral a lo largo del periodo indica que la estructura de reporte no ha cambiado sustancialmente. La ligera predominancia del Primer semestre puede estar relacionada con los ciclos de siembra de los cultivos más frecuentes (especialmente Maíz en el primer ciclo).",
+      "utilidad": "La estacionalidad semestral debe tenerse en cuenta al comparar periodos sub-anuales: el Primer semestre tiene inherentemente más registros, por lo que las comparaciones mes a mes o semestre a semestre deben normalizarse.",
+      "limitacion": "La clasificación semestral se deriva del campo Periodo y puede tener errores si los datos fuente usaron convenciones distintas. Los registros Anuales no se pueden desagregar por semestre sin información adicional.",
+    },
+    {
+      "n": "C-3", "color": "warning", "icon": "bi-flower2",
+      "titulo": "Maíz como cultivo impulsor del crecimiento en " ~ max_jump_year,
+      "pregunta": "¿Qué cultivo específico explica el mayor incremento interanual observado en el dataset?",
+      "variables": "Cultivo (categórica), Anio (temporal), conteo de registros por cultivo-año.",
+      "procedimiento": "Cruce bidimensional cultivo × año; cálculo de variación interanual por cultivo; identificación del cultivo con mayor incremento absoluto y porcentual en el año de mayor salto.",
+      "evidencia": "En " ~ max_jump_year ~ " los registros de Maíz experimentaron el mayor incremento absoluto de todos los cultivos, siendo el principal responsable del salto de +" ~ max_jump_pct ~ " % total. Los demás cultivos mostraron variaciones moderadas en el mismo año.",
+      "hallazgo": "El Maíz es el cultivo dominante en el dataset y el principal responsable del salto interanual de " ~ max_jump_year ~ ", explicando la mayor parte del crecimiento registrado ese año.",
+      "interpretacion": "El incremento en registros de Maíz en " ~ max_jump_year ~ " puede deberse a la ampliación de la cobertura territorial para este cultivo, al inicio del reporte en departamentos que antes no lo incluían, o a un cambio metodológico en EVA. Esta hipótesis debe validarse cruzando con los datos de departamentos nuevos en ese año.",
+      "utilidad": "Identifica al Maíz como la variable de mayor impacto en análisis de tendencia temporal. Modelos que busquen predecir el volumen total de registros deben incluir el comportamiento del Maíz como variable explicativa de primer orden.",
+      "limitacion": "El análisis se basa en el número de registros, no en producción real ni área sembrada. El crecimiento de registros de Maíz podría ser un artefacto de la expansión del sistema EVA y no reflejar un cambio real en la actividad agrícola del cultivo.",
+    },
+  ] %}
+
+  <div class="row g-4">
+    {% for c in conocimientos %}
+    <div class="col-12">
+      <div class="card border-0 shadow-sm card-hover">
+        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
+          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
+            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
+          </div>
+          <div>
+            {{ tag(c.n, c.color) }}
+            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-md-2 g-3">
+            {% for campo, valor in [
+              ("Pregunta", c.pregunta),
+              ("Variables", c.variables),
+              ("Procedimiento", c.procedimiento),
+              ("Evidencia", c.evidencia),
+              ("Hallazgo", c.hallazgo),
+              ("Interpretación", c.interpretacion),
+              ("Utilidad", c.utilidad),
+              ("Limitación", c.limitacion),
+            ] %}
+            <div class="col">
+              <p class="small mb-0">
+                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
+                {{ valor }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+{# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
+<section id="limite-decision" class="mb-5 reveal">
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">8</span>
+    <h2 class="h3 fw-bold mb-0">Limitación y decisión</h2>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
+          </div>
+          <p class="small mb-0">
+            El análisis temporal se basa exclusivamente en el <em>número de registros</em> por año,
+            no en métricas de producción (toneladas), área sembrada (hectáreas) ni precios.
+            Un incremento en el conteo de registros puede originarse en la expansión del sistema EVA
+            (más departamentos o municipios incorporados), en cambios metodológicos de reporte, o en
+            un crecimiento real de la actividad agrícola: estas tres causas no son distinguibles con
+            los datos disponibles. Adicionalmente, el campo <em>Periodo</em> usa un sistema de
+            sufijos (A/B) que requiere interpretación, y los registros sin sufijo (Anual) no pueden
+            desagregarse por semestre.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
+          </div>
+          <p class="small mb-0">
+            Dado que la serie muestra un crecimiento sostenido de <strong>+{{ growth_total_pct }} %</strong>
+            y la tasa de variación interanual se estabilizó tras el salto de {{ max_jump_year }},
+            se recomienda <strong>incluir la variable Anio como covariable de tendencia</strong> en
+            cualquier modelo predictivo basado en este dataset. El año {{ max_jump_year }} debe
+            tratarse como un punto de cambio estructural (<em>breakpoint</em>) y considerar entrenar
+            modelos separados para el subperiodo {{ first_year }}–{{ max_jump_year - 1 }} y
+            {{ max_jump_year }}–{{ last_year }}, o usar modelos con detección automática de cambios
+            de régimen. El Maíz debe recibir tratamiento especial como variable de mayor peso en la
+            dimensión temporal.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% call callout("bi-flag-fill") %}
+  <strong>R4 · Dim. Temporal:</strong> El dataset EVA cubre {{ total_years }} años ({{ first_year }}–{{ last_year }})
+  con un crecimiento acumulado de +{{ growth_total_pct }} %. El mayor salto interanual ocurrió en {{ max_jump_year }}
+  (+{{ max_jump_pct }} %), impulsado principalmente por Maíz. La distribución semestral es estable, con ligera
+  predominancia del Primer semestre ({{ semestre_counts.get("Primer semestre", 0) | miles }} vs.
+  {{ semestre_counts.get("Segundo semestre", 0) | miles }} registros).
+{% endcall %}
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="page-data" type="application/json">{{
+  {
+    "trend":       trend_chart,
+    "stacked":     stacked_chart,
+    "cultivo_year": cultivo_year_chart,
+    "cross":       cross_data,
+    "total":       total_registros
+  } | tojson
+}}</script>
+
+<script>
+(function () {
+  const pageData = JSON.parse(document.getElementById("page-data").textContent);
+  const TOTAL = pageData.total;
+  const CROSS = pageData.cross;
+
+  const selYear     = document.getElementById("filter-year");
+  const selSemestre = document.getElementById("filter-semestre");
+  const btnReset    = document.getElementById("filter-reset");
+  const tbody       = document.getElementById("filter-tbody");
+  const elCount     = document.getElementById("filter-count");
+  const elTotal     = document.getElementById("filter-total");
+  const elPct       = document.getElementById("filter-pct");
+  const elLabel     = document.getElementById("filter-label");
+
+  function fmt(n) { return n.toLocaleString("es-CO"); }
+
+  const SEM_KEY = { "Primer semestre": "A", "Segundo semestre": "B", "Anual": "anual" };
+
+  function applyFilters() {
+    const yearFil = selYear.value;
+    const semFil  = selSemestre.value;
+
+    let filteredN = 0, visibleRows = 0;
+    for (const tr of tbody.querySelectorAll("tr[data-year]")) {
+      const year = tr.dataset.year;
+      const show = !yearFil || year === yearFil;
+      tr.classList.toggle("d-none", !show);
+      if (show) {
+        visibleRows++;
+        const row = CROSS[year] || {};
+        const n = semFil ? (row[SEM_KEY[semFil]] || 0) : (row.n || 0);
+        filteredN += n;
+      }
+    }
+
+    elCount.textContent = visibleRows;
+    elTotal.textContent = fmt(filteredN);
+    elPct.textContent   = TOTAL > 0 ? (filteredN / TOTAL * 100).toFixed(1) : "0.0";
+
+    const parts = [];
+    if (yearFil) parts.push("Año: " + yearFil);
+    if (semFil)  parts.push("Semestre: " + semFil);
+    elLabel.textContent = parts.length ? "— Filtro activo: " + parts.join(" · ") : "";
+  }
+
+  selYear.addEventListener("change", applyFilters);
+  selSemestre.addEventListener("change", applyFilters);
+  btnReset.addEventListener("click", () => {
+    selYear.value = ""; selSemestre.value = "";
+    applyFilters();
+  });
+})();
+</script>
+{% endblock %}

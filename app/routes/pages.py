@@ -10,6 +10,7 @@ from app.services.etapa3 import build_r3_context
 from app.services.etapa4 import (
     build_r4_dim_poblacional_context,
     build_r4_dim_territorial_context,
+    build_r4_dim_temporal_context,
 )
 from app.services.reports import build_r1_context, build_r2_context
 
@@ -59,6 +60,16 @@ def r4():
         ctx = build_r4_dim_poblacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_poblacional", ctx)
     return render_template("pages/r4.html", **ctx)
+
+
+@pages_bp.route("/r4/temporal")
+def r4_temporal():
+    _, r2_dir = _dirs()
+    ctx = ds.cache_get("ctx:r4:dim_temporal")
+    if ctx is None:
+        ctx = build_r4_dim_temporal_context(r2_dir)
+        ds.cache_set("ctx:r4:dim_temporal", ctx)
+    return render_template("pages/r4_temporal.html", **ctx)
 
 
 @pages_bp.route("/r4/territorial")
