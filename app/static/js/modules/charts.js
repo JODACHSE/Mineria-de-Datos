@@ -33,6 +33,114 @@ function register(canvas, build) {
   return () => chart;
 }
 
+/** onClick (filtra un <select> por el punto clicado) + onHover (cursor pointer), compartidos
+ *  por los gráficos R4 con filtro interactivo. `getLabel(element)` extrae el valor a filtrar. */
+function clickFilterHandlers(filterId, getLabel) {
+  return {
+    onClick(_e, elements) {
+      if (!elements.length) return;
+      const label = getLabel(elements[0]);
+      const sel = document.getElementById(filterId);
+      if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
+    },
+    onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+  };
+}
+
+/** Barra horizontal (un dataset, leyenda oculta) con filtro al hacer clic — patrón compartido
+ *  por los gráficos R4 "top N categorías". */
+function horizontalBarWithFilter(canvas, { labels, values, colors, filterId, tooltipLabel, tooltipAfterLabel }) {
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Registros",
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          hoverBorderWidth: 2,
+          hoverBorderColor: "#fff",
+        }],
+      },
+      options: {
+        ...base,
+        indexAxis: "y",
+        scales: {
+          x: { ...base.scales.x, ticks: { ...base.scales.x.ticks, callback: (v) => v.toLocaleString("es-CO") } },
+          y: { ...base.scales.y },
+        },
+        plugins: {
+          ...base.plugins,
+          legend: { display: false },
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: tooltipAfterLabel ? { label: tooltipLabel, afterLabel: tooltipAfterLabel } : { label: tooltipLabel },
+          },
+        },
+        ...clickFilterHandlers(filterId, (el) => labels[el.index]),
+      },
+    };
+  });
+}
+
+/** Opciones comunes de los gráficos de dona R4 (leyenda abajo, tooltip con callbacks propios). */
+function donutOptions(p, cutout, tooltipCallbacks) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout,
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: { color: p.text, font: { family: p.font, size: 12 }, usePointStyle: true, padding: 16 },
+      },
+      tooltip: {
+        backgroundColor: p.tooltipBg, titleColor: p.text, bodyColor: p.text,
+        borderColor: p.grid, borderWidth: 1,
+        callbacks: tooltipCallbacks,
+      },
+    },
+  };
+}
+
+/** Barra apilada (stack) multi-serie — patrón compartido por los gráficos R4 "por semestre". */
+function stackedBarChart(canvas, { labels, datasets, colors, borderRadius = 6 }) {
+  const fmt = (n) => n.toLocaleString("es-CO");
+  register(canvas, (p) => {
+    const base = baseOptions(p);
+    return {
+      type: "bar",
+      data: {
+        labels,
+        datasets: datasets.map((ds, i) => ({
+          label: ds.label,
+          data: ds.values,
+          backgroundColor: colors[i % colors.length],
+          borderRadius: i === datasets.length - 1 ? borderRadius : 0,
+          stack: "s",
+        })),
+      },
+      options: {
+        ...base,
+        scales: {
+          x: { ...base.scales.x, stacked: true },
+          y: { ...base.scales.y, stacked: true, ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
+        },
+        plugins: {
+          ...base.plugins,
+          tooltip: {
+            ...base.plugins.tooltip,
+            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
+          },
+        },
+      },
+    };
+  });
+}
+
 function fsChart(data) {
   const canvas = document.getElementById("fs-chart");
   if (!canvas || !data) return;
@@ -149,48 +257,12 @@ function r4CultivosChart(data) {
   if (!canvas || !data) return;
   const fmt = (n) => n.toLocaleString("es-CO");
   const colors = data.labels.map((_, i) => R4_CROP_COLORS[i % R4_CROP_COLORS.length]);
-  let getChart;
-  register(canvas, (p) => {
-    const base = baseOptions(p);
-    return {
-      type: "bar",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          label: "Registros",
-          data: data.values,
-          backgroundColor: colors,
-          borderRadius: 6,
-          hoverBorderWidth: 2,
-          hoverBorderColor: "#fff",
-        }],
-      },
-      options: {
-        ...base,
-        indexAxis: "y",
-        scales: {
-          x: { ...base.scales.x, ticks: { ...base.scales.x.ticks, callback: (v) => fmt(v) } },
-          y: { ...base.scales.y },
-        },
-        plugins: {
-          ...base.plugins,
-          legend: { display: false },
-          tooltip: {
-            ...base.plugins.tooltip,
-            callbacks: {
-              label: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
-            },
-          },
-        },
-        onClick(_e, elements) {
-          if (!elements.length) return;
-          const label = data.labels[elements[0].index];
-          const sel = document.getElementById("filter-cultivo");
-          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
-        },
-        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
-      },
-    };
+  horizontalBarWithFilter(canvas, {
+    labels: data.labels,
+    values: data.values,
+    colors,
+    filterId: "filter-cultivo",
+    tooltipLabel: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
   });
 }
 
@@ -211,22 +283,9 @@ function r4CicloChart(data) {
         borderColor: p.tooltipBg,
       }],
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "65%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { color: p.text, font: { family: p.font, size: 12 }, usePointStyle: true, padding: 16 },
-        },
-        tooltip: {
-          backgroundColor: p.tooltipBg, titleColor: p.text, bodyColor: p.text,
-          borderColor: p.grid, borderWidth: 1,
-          callbacks: { label: (ctx) => ` ${ctx.label}: ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)` },
-        },
-      },
-    },
+    options: donutOptions(p, "65%", {
+      label: (ctx) => ` ${ctx.label}: ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)`,
+    }),
   }));
 }
 
@@ -284,48 +343,13 @@ function r4DeptChart(data) {
     return `rgb(${r},${g},${b})`;
   };
   const colors = data.labels.map((_, i) => shade(i, data.labels.length));
-  register(canvas, (p) => {
-    const base = baseOptions(p);
-    return {
-      type: "bar",
-      data: {
-        labels: data.labels,
-        datasets: [{
-          label: "Registros",
-          data: data.values,
-          backgroundColor: colors,
-          borderRadius: 6,
-          hoverBorderWidth: 2,
-          hoverBorderColor: "#fff",
-        }],
-      },
-      options: {
-        ...base,
-        indexAxis: "y",
-        scales: {
-          x: { ...base.scales.x, ticks: { ...base.scales.x.ticks, callback: (v) => fmt(v) } },
-          y: { ...base.scales.y },
-        },
-        plugins: {
-          ...base.plugins,
-          legend: { display: false },
-          tooltip: {
-            ...base.plugins.tooltip,
-            callbacks: {
-              label: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
-              afterLabel: (ctx) => ` ${data.munis[ctx.dataIndex]} municipios con registros`,
-            },
-          },
-        },
-        onClick(_e, elements) {
-          if (!elements.length) return;
-          const label = data.labels[elements[0].index];
-          const sel = document.getElementById("filter-dept");
-          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
-        },
-        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
-      },
-    };
+  horizontalBarWithFilter(canvas, {
+    labels: data.labels,
+    values: data.values,
+    colors,
+    filterId: "filter-dept",
+    tooltipLabel: (ctx) => ` ${fmt(ctx.raw)} registros — ${data.pcts[ctx.dataIndex]} %`,
+    tooltipAfterLabel: (ctx) => ` ${data.munis[ctx.dataIndex]} municipios con registros`,
   });
 }
 
@@ -346,25 +370,10 @@ function r4RegionChart(data) {
         borderColor: p.tooltipBg,
       }],
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "60%",
-      plugins: {
-        legend: {
-          position: "bottom",
-          labels: { color: p.text, font: { family: p.font, size: 12 }, usePointStyle: true, padding: 16 },
-        },
-        tooltip: {
-          backgroundColor: p.tooltipBg, titleColor: p.text, bodyColor: p.text,
-          borderColor: p.grid, borderWidth: 1,
-          callbacks: {
-            label: (ctx) => ` ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)`,
-            afterLabel: (ctx) => ` ${data.dept_counts[ctx.dataIndex]} departamentos`,
-          },
-        },
-      },
-    },
+    options: donutOptions(p, "60%", {
+      label: (ctx) => ` ${fmt(ctx.raw)} registros (${data.pcts[ctx.dataIndex]} %)`,
+      afterLabel: (ctx) => ` ${data.dept_counts[ctx.dataIndex]} departamentos`,
+    }),
   }));
 }
 
@@ -475,13 +484,7 @@ function r4TrendChart(data) {
             },
           },
         },
-        onClick(_e, elements) {
-          if (!elements.length) return;
-          const label = data.labels[elements[0].index];
-          const sel = document.getElementById("filter-year");
-          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
-        },
-        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+        ...clickFilterHandlers("filter-year", (el) => data.labels[el.index]),
       },
     };
   });
@@ -490,39 +493,7 @@ function r4TrendChart(data) {
 function r4StackedChart(data) {
   const canvas = document.getElementById("chart-stacked");
   if (!canvas || !data) return;
-  const fmt = (n) => n.toLocaleString("es-CO");
-  const semColors = ["#198754", "#0dcaf0", "#ffc107"];
-  register(canvas, (p) => {
-    const base = baseOptions(p);
-    return {
-      type: "bar",
-      data: {
-        labels: data.labels,
-        datasets: data.datasets.map((ds, i) => ({
-          label: ds.label,
-          data: ds.values,
-          backgroundColor: semColors[i % semColors.length],
-          borderRadius: i === data.datasets.length - 1 ? 6 : 0,
-          stack: "s",
-        })),
-      },
-      options: {
-        ...base,
-        scales: {
-          x: { ...base.scales.x, stacked: true },
-          y: { ...base.scales.y, stacked: true,
-               ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
-        },
-        plugins: {
-          ...base.plugins,
-          tooltip: {
-            ...base.plugins.tooltip,
-            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
-          },
-        },
-      },
-    };
-  });
+  stackedBarChart(canvas, { labels: data.labels, datasets: data.datasets, colors: ["#198754", "#0dcaf0", "#ffc107"], borderRadius: 6 });
 }
 
 function r4CultivoYearChart(data) {
@@ -598,13 +569,7 @@ function r4RelRegionChart(data) {
             callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
           },
         },
-        onClick(_e, elements) {
-          if (!elements.length) return;
-          const label = data.datasets[elements[0].datasetIndex].label;
-          const sel = document.getElementById("filter-cultivo");
-          if (sel) { sel.value = sel.value === label ? "" : label; sel.dispatchEvent(new Event("change")); }
-        },
-        onHover(_e, elements, chart) { chart.canvas.style.cursor = elements.length ? "pointer" : "default"; },
+        ...clickFilterHandlers("filter-cultivo", (el) => data.datasets[el.datasetIndex].label),
       },
     };
   });
@@ -613,38 +578,7 @@ function r4RelRegionChart(data) {
 function r4RelSemestreChart(data) {
   const canvas = document.getElementById("chart-rel-semestre");
   if (!canvas || !data) return;
-  const fmt = (n) => n.toLocaleString("es-CO");
-  const semColors = ["#198754", "#0dcaf0", "#ffc107"];
-  register(canvas, (p) => {
-    const base = baseOptions(p);
-    return {
-      type: "bar",
-      data: {
-        labels: data.labels,
-        datasets: data.datasets.map((ds, i) => ({
-          label: ds.label,
-          data: ds.values,
-          backgroundColor: semColors[i % semColors.length],
-          borderRadius: i === data.datasets.length - 1 ? 4 : 0,
-          stack: "s",
-        })),
-      },
-      options: {
-        ...base,
-        scales: {
-          x: { ...base.scales.x, stacked: true },
-          y: { ...base.scales.y, stacked: true, ticks: { ...base.scales.y.ticks, callback: (v) => fmt(v) } },
-        },
-        plugins: {
-          ...base.plugins,
-          tooltip: {
-            ...base.plugins.tooltip,
-            callbacks: { label: (ctx) => ` ${ctx.dataset.label}: ${fmt(ctx.raw)} registros` },
-          },
-        },
-      },
-    };
-  });
+  stackedBarChart(canvas, { labels: data.labels, datasets: data.datasets, colors: ["#198754", "#0dcaf0", "#ffc107"], borderRadius: 4 });
 }
 
 function r4RelRegionYearChart(data) {

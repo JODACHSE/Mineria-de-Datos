@@ -1,28 +1,14 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close, enfoque_cards, conocimientos_cards %}
 
 {% set report_code = "R4 · Análisis Multidimensional" %}
 {% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Relacional</span>' %}
 {% set report_lead = "¿Qué patrones de co-ocurrencia existen entre las variables poblacionales, territoriales y temporales del dataset EVA? Se analizan las relaciones entre los 6 cultivos básicos, las 5 regiones geográficas y los 3 tipos de semestre, identificando combinaciones dominantes, cultivos transversales y dinámicas cruzadas sobre los " ~ (total_registros | miles) ~ " registros del dataset tratado." %}
 
-{% set toc_nav = [
-  (url_for("pages.r4"),             "Poblacional",  False, True),
-  (url_for("pages.r4_territorial"), "Territorial",  False, True),
-  (url_for("pages.r4_temporal"),    "Temporal",     False, True),
-  (url_for("pages.r4_relacional"),  "Relacional",   True,  True),
-] %}
+{% set toc_nav = r4_toc_nav("relacional") %}
 
 {% set toc_title = "Contenido" %}
-{% set toc_items = [
-  ("descripcion",    "Descripción y pregunta"),
-  ("variables",      "Variables utilizadas"),
-  ("indicadores",    "Indicadores"),
-  ("visualizaciones","Visualizaciones"),
-  ("filtros",        "Filtros interactivos"),
-  ("interpretaciones","Interpretaciones"),
-  ("conocimientos",  "Conocimientos evidentes"),
-  ("limite-decision","Limitación y decisión"),
-] %}
+{% set toc_items = R4_TOC_ITEMS %}
 
 {% block title %}R4 · Dimensión Relacional — {{ proyecto_tema | capitalize }}{% endblock %}
 
@@ -60,25 +46,11 @@
     regiones) y patrones de crecimiento diferenciados por región.
   </p>
 
-  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
-    {% for icon, color, titulo, texto in [
-      ("bi-grid-3x3-gap-fill",  "success", "Enfoque relacional",     "Cruces entre variables de diferentes dimensiones: territorial, poblacional y temporal."),
-      ("bi-diagram-2-fill",     "info",    "Combinaciones activas",  active_combos | string ~ " de " ~ max_combos | string ~ " pares cultivo×región posibles tienen registros en el dataset."),
-      ("bi-arrows-fullscreen",  "warning", "Síntesis multidimensional", "Esta dimensión integra los hallazgos de Poblacional, Territorial y Temporal en un análisis cruzado único."),
-    ] %}
-    <div class="col">
-      <div class="card h-100 border-0 bg-body-tertiary card-hover">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi {{ icon }} text-{{ color }}"></i>
-            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
-          </div>
-          <p class="small text-body-secondary mb-0">{{ texto }}</p>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ enfoque_cards([
+    ("bi-grid-3x3-gap-fill",  "success", "Enfoque relacional",     "Cruces entre variables de diferentes dimensiones: territorial, poblacional y temporal."),
+    ("bi-diagram-2-fill",     "info",    "Combinaciones activas",  active_combos | string ~ " de " ~ max_combos | string ~ " pares cultivo×región posibles tienen registros en el dataset."),
+    ("bi-arrows-fullscreen",  "warning", "Síntesis multidimensional", "Esta dimensión integra los hallazgos de Poblacional, Territorial y Temporal en un análisis cruzado único."),
+  ]) }}
 </section>
 
 {# ────────────────────────────── VARIABLES ─── #}
@@ -492,44 +464,7 @@
     },
   ] %}
 
-  <div class="row g-4">
-    {% for c in conocimientos %}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm card-hover">
-        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
-          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
-            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
-          </div>
-          <div>
-            {{ tag(c.n, c.color) }}
-            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row row-cols-1 row-cols-md-2 g-3">
-            {% for campo, valor in [
-              ("Pregunta", c.pregunta),
-              ("Variables", c.variables),
-              ("Procedimiento", c.procedimiento),
-              ("Evidencia", c.evidencia),
-              ("Hallazgo", c.hallazgo),
-              ("Interpretación", c.interpretacion),
-              ("Utilidad", c.utilidad),
-              ("Limitación", c.limitacion),
-            ] %}
-            <div class="col">
-              <p class="small mb-0">
-                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
-                {{ valor }}
-              </p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ conocimientos_cards(conocimientos) }}
 </section>
 
 {# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}

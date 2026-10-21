@@ -51,6 +51,32 @@ ETAPAS = [
     for n in range(5, 9)
 ]
 
+R4_DIMENSIONES = [
+    ("pages.r4", "poblacional", "Poblacional"),
+    ("pages.r4_territorial", "territorial", "Territorial"),
+    ("pages.r4_temporal", "temporal", "Temporal"),
+    ("pages.r4_relacional", "relacional", "Relacional"),
+]
+
+R4_TOC_ITEMS = [
+    ("descripcion", "Descripción y pregunta"),
+    ("variables", "Variables utilizadas"),
+    ("indicadores", "Indicadores"),
+    ("visualizaciones", "Visualizaciones"),
+    ("filtros", "Filtros interactivos"),
+    ("interpretaciones", "Interpretaciones"),
+    ("conocimientos", "Conocimientos evidentes"),
+    ("limite-decision", "Limitación y decisión"),
+]
+
+
+def r4_toc_nav(active):
+    """Navegación lateral compartida entre las 4 páginas de dimensiones de R4."""
+    from flask import url_for
+
+    return [(url_for(endpoint), label, key == active, True) for endpoint, key, label in R4_DIMENSIONES]
+
+
 FASES_CRISP = [
     ("Comprensión del negocio", "Delimitar la paradoja producción-vs-inseguridad alimentaria en Colombia."),
     ("Comprensión de los datos", "EVA (municipal) + FAOSTAT (nacional): explorar cobertura, volumen y calidad."),

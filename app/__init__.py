@@ -20,7 +20,7 @@ def create_app(config_class: type = Config) -> Flask:
 
     @app.context_processor
     def inject_globals():
-        from .etapas import ETAPAS
+        from .etapas import ETAPAS, R4_TOC_ITEMS, r4_toc_nav
 
         cfg = app.config
         return {
@@ -36,6 +36,8 @@ def create_app(config_class: type = Config) -> Flask:
             "developers": cfg["DEVELOPERS"],
             "etapas": ETAPAS,
             "github_repo_url": cfg["GITHUB_REPO_URL"],
+            "r4_toc_nav": r4_toc_nav,
+            "R4_TOC_ITEMS": R4_TOC_ITEMS,
         }
 
     @app.template_filter("miles")
