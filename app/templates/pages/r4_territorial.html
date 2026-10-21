@@ -1,28 +1,14 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close, enfoque_cards, conocimientos_cards %}
 
 {% set report_code = "R4 · Análisis Multidimensional" %}
 {% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Territorial</span>' %}
 {% set report_lead = "¿Cómo se distribuye la población y sus principales características entre los territorios disponibles? Se analizan los " ~ (total_registros | miles) ~ " registros del dataset EVA a través de " ~ total_depts ~ " departamentos y " ~ (total_munis | miles) ~ " municipios únicos, identificando concentraciones, disparidades regionales y densidad de reporte territorial." %}
 
-{% set toc_nav = [
-  (url_for("pages.r4"),             "Poblacional",  False, True),
-  (url_for("pages.r4_territorial"), "Territorial",  True,  True),
-  (url_for("pages.r4_temporal"),    "Temporal",     False, True),
-  (url_for("pages.r4_relacional"),   "Relacional",   False, True),
-] %}
+{% set toc_nav = r4_toc_nav("territorial") %}
 
 {% set toc_title = "Contenido" %}
-{% set toc_items = [
-  ("descripcion",    "Descripción y pregunta"),
-  ("variables",      "Variables utilizadas"),
-  ("indicadores",    "Indicadores"),
-  ("visualizaciones","Visualizaciones"),
-  ("filtros",        "Filtros interactivos"),
-  ("interpretaciones","Interpretaciones"),
-  ("conocimientos",  "Conocimientos evidentes"),
-  ("limite-decision","Limitación y decisión"),
-] %}
+{% set toc_items = R4_TOC_ITEMS %}
 
 {% block title %}R4 · Dimensión Territorial — {{ proyecto_tema | capitalize }}{% endblock %}
 
@@ -57,25 +43,11 @@
     concentraciones, disparidades y patrones regionales en la cobertura del reporte agropecuario.
   </p>
 
-  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
-    {% for icon, color, titulo, texto in [
-      ("bi-geo-alt-fill",   "success", "Unidad territorial",    "Departamento como unidad de agrupación principal; municipio como granularidad máxima disponible."),
-      ("bi-map-fill",       "info",    "Cobertura geográfica",  "32 departamentos de Colombia. Los más grandes en extensión no son necesariamente los más representados."),
-      ("bi-layers-fill",    "warning", "Enfoque del análisis",  "Concentración de registros, densidad de reporte (registros/municipio) y distribución por región geográfica."),
-    ] %}
-    <div class="col">
-      <div class="card h-100 border-0 bg-body-tertiary card-hover">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi {{ icon }} text-{{ color }}"></i>
-            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
-          </div>
-          <p class="small text-body-secondary mb-0">{{ texto }}</p>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ enfoque_cards([
+    ("bi-geo-alt-fill",   "success", "Unidad territorial",    "Departamento como unidad de agrupación principal; municipio como granularidad máxima disponible."),
+    ("bi-map-fill",       "info",    "Cobertura geográfica",  "32 departamentos de Colombia. Los más grandes en extensión no son necesariamente los más representados."),
+    ("bi-layers-fill",    "warning", "Enfoque del análisis",  "Concentración de registros, densidad de reporte (registros/municipio) y distribución por región geográfica."),
+  ]) }}
 </section>
 
 {# ────────────────────────────── VARIABLES ─── #}
@@ -491,44 +463,7 @@
     },
   ] %}
 
-  <div class="row g-4">
-    {% for c in conocimientos %}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm card-hover">
-        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
-          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
-            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
-          </div>
-          <div>
-            {{ tag(c.n, c.color) }}
-            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row row-cols-1 row-cols-md-2 g-3">
-            {% for campo, valor in [
-              ("Pregunta", c.pregunta),
-              ("Variables", c.variables),
-              ("Procedimiento", c.procedimiento),
-              ("Evidencia", c.evidencia),
-              ("Hallazgo", c.hallazgo),
-              ("Interpretación", c.interpretacion),
-              ("Utilidad", c.utilidad),
-              ("Limitación", c.limitacion),
-            ] %}
-            <div class="col">
-              <p class="small mb-0">
-                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
-                {{ valor }}
-              </p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ conocimientos_cards(conocimientos) }}
 </section>
 
 {# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}

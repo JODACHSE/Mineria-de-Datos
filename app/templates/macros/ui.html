@@ -114,3 +114,65 @@
   </table>
 </div>
 {% endmacro %}
+
+{# Fila de tarjetas de "enfoque" (icono + título + texto). items: [(icon, color, titulo, texto)]. #}
+{% macro enfoque_cards(items) %}
+<div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
+  {% for icon, color, titulo, texto in items %}
+  <div class="col">
+    <div class="card h-100 border-0 bg-body-tertiary card-hover">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <i class="bi {{ icon }} text-{{ color }}"></i>
+          <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
+        </div>
+        <p class="small text-body-secondary mb-0">{{ texto }}</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{# Tarjetas de "conocimientos evidentes" (R4): pregunta/variables/procedimiento/evidencia/
+   hallazgo/interpretación/utilidad/limitación. items: [{n, color, icon, titulo, pregunta, ...}]. #}
+{% macro conocimientos_cards(items) %}
+<div class="row g-4">
+  {% for c in items %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm card-hover">
+      <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
+        <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
+          <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
+        </div>
+        <div>
+          {{ tag(c.n, c.color) }}
+          <span class="fw-semibold ms-2">{{ c.titulo }}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          {% for campo, valor in [
+            ("Pregunta", c.pregunta),
+            ("Variables", c.variables),
+            ("Procedimiento", c.procedimiento),
+            ("Evidencia", c.evidencia),
+            ("Hallazgo", c.hallazgo),
+            ("Interpretación", c.interpretacion),
+            ("Utilidad", c.utilidad),
+            ("Limitación", c.limitacion),
+          ] %}
+          <div class="col">
+            <p class="small mb-0">
+              <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
+              {{ valor }}
+            </p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endmacro %}

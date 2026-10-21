@@ -1,28 +1,14 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close, enfoque_cards, conocimientos_cards %}
 
 {% set report_code = "R4 · Análisis Multidimensional" %}
 {% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Temporal</span>' %}
 {% set report_lead = "¿Cómo ha evolucionado la frecuencia y composición de los registros agropecuarios a lo largo del tiempo? Se analizan los " ~ (total_registros | miles) ~ " registros del dataset EVA entre " ~ first_year ~ " y " ~ last_year ~ ", identificando tendencias interanuales, estacionalidad semestral y el comportamiento temporal de los seis cultivos básicos." %}
 
-{% set toc_nav = [
-  (url_for("pages.r4"),             "Poblacional",  False, True),
-  (url_for("pages.r4_territorial"), "Territorial",  False, True),
-  (url_for("pages.r4_temporal"),    "Temporal",     True,  True),
-  (url_for("pages.r4_relacional"),   "Relacional",   False, True),
-] %}
+{% set toc_nav = r4_toc_nav("temporal") %}
 
 {% set toc_title = "Contenido" %}
-{% set toc_items = [
-  ("descripcion",    "Descripción y pregunta"),
-  ("variables",      "Variables utilizadas"),
-  ("indicadores",    "Indicadores"),
-  ("visualizaciones","Visualizaciones"),
-  ("filtros",        "Filtros interactivos"),
-  ("interpretaciones","Interpretaciones"),
-  ("conocimientos",  "Conocimientos evidentes"),
-  ("limite-decision","Limitación y decisión"),
-] %}
+{% set toc_items = R4_TOC_ITEMS %}
 
 {% block title %}R4 · Dimensión Temporal — {{ proyecto_tema | capitalize }}{% endblock %}
 
@@ -57,25 +43,11 @@
     individual de cada uno de los seis cultivos básicos en el período.
   </p>
 
-  <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
-    {% for icon, color, titulo, texto in [
-      ("bi-calendar3",       "success", "Cobertura temporal",   "6 años completos (2019–2024), con estructura semestral (A/B) y registros anuales sin estacionalidad."),
-      ("bi-graph-up-arrow",  "info",    "Enfoque de tendencia", "Variación interanual (YoY), crecimiento acumulado y detección del año con mayor salto en la serie."),
-      ("bi-layers-fill",     "warning", "Composición interna",  "Descomposición por semestre y por cultivo para identificar qué impulsa los cambios en el volumen de reporte."),
-    ] %}
-    <div class="col">
-      <div class="card h-100 border-0 bg-body-tertiary card-hover">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <i class="bi {{ icon }} text-{{ color }}"></i>
-            <h3 class="h6 fw-bold mb-0">{{ titulo }}</h3>
-          </div>
-          <p class="small text-body-secondary mb-0">{{ texto }}</p>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ enfoque_cards([
+    ("bi-calendar3",       "success", "Cobertura temporal",   "6 años completos (2019–2024), con estructura semestral (A/B) y registros anuales sin estacionalidad."),
+    ("bi-graph-up-arrow",  "info",    "Enfoque de tendencia", "Variación interanual (YoY), crecimiento acumulado y detección del año con mayor salto en la serie."),
+    ("bi-layers-fill",     "warning", "Composición interna",  "Descomposición por semestre y por cultivo para identificar qué impulsa los cambios en el volumen de reporte."),
+  ]) }}
 </section>
 
 {# ────────────────────────────── VARIABLES ─── #}
@@ -494,44 +466,7 @@
     },
   ] %}
 
-  <div class="row g-4">
-    {% for c in conocimientos %}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm card-hover">
-        <div class="card-header bg-{{ c.color }} bg-opacity-10 border-0 d-flex align-items-center gap-3">
-          <div class="p-2 rounded-3 bg-{{ c.color }} bg-opacity-25">
-            <i class="bi {{ c.icon }} text-{{ c.color }}"></i>
-          </div>
-          <div>
-            {{ tag(c.n, c.color) }}
-            <span class="fw-semibold ms-2">{{ c.titulo }}</span>
-          </div>
-        </div>
-        <div class="card-body">
-          <div class="row row-cols-1 row-cols-md-2 g-3">
-            {% for campo, valor in [
-              ("Pregunta", c.pregunta),
-              ("Variables", c.variables),
-              ("Procedimiento", c.procedimiento),
-              ("Evidencia", c.evidencia),
-              ("Hallazgo", c.hallazgo),
-              ("Interpretación", c.interpretacion),
-              ("Utilidad", c.utilidad),
-              ("Limitación", c.limitacion),
-            ] %}
-            <div class="col">
-              <p class="small mb-0">
-                <span class="fw-semibold text-{{ c.color }}">{{ campo }}:</span>
-                {{ valor }}
-              </p>
-            </div>
-            {% endfor %}
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
+  {{ conocimientos_cards(conocimientos) }}
 </section>
 
 {# ────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
