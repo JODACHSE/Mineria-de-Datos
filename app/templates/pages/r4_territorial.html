@@ -377,13 +377,16 @@
         <div class="accordion-body small">
           <p>
             La región <strong>Andina</strong> domina ampliamente el dataset, con la mayor participación
-            de registros. Esto es consistente con que la Región Andina concentra la mayor densidad
-            de población, actividad agrícola diversificada y capacidades institucionales de reporte.
+            de registros. Una hipótesis plausible es que esto esté asociado a su mayor densidad de
+            población, actividad agrícola diversificada y capacidad institucional de reporte, aunque
+            el dataset no mide directamente ninguna de esas tres variables.
           </p>
           <p class="mb-0">
             Las regiones <strong>Amazonía</strong> y <strong>Orinoquía</strong>, a pesar de su
-            extensión territorial, tienen baja representación en el dataset porque sus condiciones
-            agroecológicas limitan los cultivos básicos seleccionados (Maíz, Arroz, Papa, etc.).
+            extensión territorial, tienen baja representación en el dataset. Esto podría explicarse
+            por condiciones agroecológicas que limitan los cultivos básicos seleccionados (Maíz, Arroz,
+            Papa, etc.), pero esa explicación es una hipótesis: el dataset no incluye variables
+            agroecológicas que permitan confirmarla.
           </p>
         </div>
       </div>
@@ -433,7 +436,7 @@
       "procedimiento": "Conteo de frecuencias por departamento; ranking descendente; cálculo de participación porcentual acumulada.",
       "evidencia": top_dept ~ " lidera con " ~ top_dept_pct | string ~ " %; los 5 principales concentran el " ~ top5_pct | string ~ " % de los registros. " ~ bottom_dept ~ " tiene apenas " ~ bottom_dept_pct | string ~ " %.",
       "hallazgo": "El dataset presenta una fuerte concentración en los departamentos andinos, con 5 departamentos acumulando casi la mitad de todos los registros.",
-      "interpretacion": "La concentración en la Región Andina refleja su mayor densidad agropecuaria, mayor red municipal de reporte y mayor diversificación de cultivos básicos. Los departamentos de frontera agrícola (Amazonía, Orinoquía) tienen baja representación porque los cultivos básicos seleccionados no son sus principales productos.",
+      "interpretacion": "Una hipótesis plausible es que la concentración en la Región Andina esté asociada a mayor densidad agropecuaria, mayor red municipal de reporte y mayor diversificación de cultivos básicos; el dataset no mide ninguna de esas tres variables, por lo que no puede confirmarse directamente. De forma similar, la baja representación de los departamentos de frontera agrícola (Amazonía, Orinoquía) podría explicarse porque los cultivos básicos seleccionados no son sus principales productos, pero esto tampoco es verificable con las variables disponibles.",
       "utilidad": "Permite ajustar el peso estadístico por departamento en modelos nacionales y alerta sobre el riesgo de generalización: inferencias nacionales basadas en este dataset tendrán mayor precisión para la Región Andina.",
       "limitacion": "La concentración de registros no implica que los departamentos con pocos registros sean menos importantes en seguridad alimentaria; simplemente son menos representados en EVA para estos cultivos.",
     },
@@ -445,7 +448,7 @@
       "procedimiento": "Clasificación de departamentos por región geográfica según el mapa administrativo colombiano; suma de registros por región; cálculo de participación porcentual.",
       "evidencia": "La Región Andina concentra el mayor porcentaje de registros; Amazonía y Orinoquía tienen las participaciones más bajas pese a ser las regiones más extensas.",
       "hallazgo": "Existe una marcada asimetría regional: las regiones con mayor extensión territorial tienen menor representación en el dataset de cultivos básicos.",
-      "interpretacion": "La extensión territorial no predice la representación en el dataset. La intensidad de la actividad agropecuaria municipal, la institucionalidad de reporte y la aptitud agronómica para los seis cultivos básicos determinan cuántos registros aporta cada región.",
+      "interpretacion": "La extensión territorial no predice la representación en el dataset — esto sí es verificable con los datos. La intensidad de la actividad agropecuaria municipal, la institucionalidad de reporte y la aptitud agronómica para los seis cultivos básicos son hipótesis razonables para explicar cuántos registros aporta cada región, pero ninguna de las tres se mide directamente en el dataset.",
       "utilidad": "Justifica el uso de análisis regionales diferenciados en lugar de promedios nacionales; la Región Caribe puede requerir análisis independiente dado su perfil productivo diferenciado.",
       "limitacion": "La clasificación regional por departamento puede ocultar heterogeneidad interna: Antioquia, por ejemplo, tiene zonas con perfil agrícola de múltiples regiones.",
     },

@@ -13,8 +13,8 @@
 {% block title %}R4 · Dimensión Relacional — {{ proyecto_tema | capitalize }}{% endblock %}
 
 {% block report_stats %}
-<div class="col">{{ stat(active_combos ~ "/" ~ max_combos, "Combinaciones cultivo×región activas", countup=False) }}</div>
-<div class="col">{{ stat(top_combo_pct | string ~ " %", "Participación de " ~ top_combo_cultivo ~ " en " ~ top_combo_region, countup=False) }}</div>
+<div class="col">{{ stat(active_combos ~ "/" ~ max_combos, "Ternas cultivo×región×semestre activas", countup=False) }}</div>
+<div class="col">{{ stat(top_combo_pct | string ~ " %", "Participación de " ~ top_combo_cultivo ~ " en " ~ top_combo_region ~ " (" ~ top_combo_sem ~ ")", countup=False) }}</div>
 <div class="col">{{ stat(transversal_cultivo, "Cultivo más transversal (" ~ transversal_regions ~ " regiones)", countup=False) }}</div>
 <div class="col">{{ stat(total_registros | miles, "Registros analizados (EVA R2 tratado)", countup=False) }}</div>
 {% endblock %}
@@ -37,8 +37,10 @@
 
   <p>
     La <strong>Dimensión Relacional y Multivariada</strong> sintetiza los hallazgos de las tres
-    dimensiones anteriores examinando cómo las variables interactúan entre sí. En lugar de analizar
-    cada variable de forma independiente, se construyen cruces bidimensionales:
+    dimensiones anteriores examinando cómo las variables interactúan entre sí. El indicador principal
+    (IND-1/IND-2) cruza las <strong>tres variables conjuntamente —Cultivo × Región × Semestre—</strong>,
+    no un conteo derivado de cruzar solo dos de ellas. Las tres visualizaciones muestran, además,
+    proyecciones bidimensionales de ese mismo cruce para facilitar la lectura:
     <strong>Cultivo × Región</strong> (poblacional-territorial),
     <strong>Cultivo × Semestre</strong> (poblacional-temporal) y
     <strong>Región × Año</strong> (territorial-temporal). El objetivo es identificar
@@ -47,8 +49,8 @@
   </p>
 
   {{ enfoque_cards([
-    ("bi-grid-3x3-gap-fill",  "success", "Enfoque relacional",     "Cruces entre variables de diferentes dimensiones: territorial, poblacional y temporal."),
-    ("bi-diagram-2-fill",     "info",    "Combinaciones activas",  active_combos | string ~ " de " ~ max_combos | string ~ " pares cultivo×región posibles tienen registros en el dataset."),
+    ("bi-grid-3x3-gap-fill",  "success", "Enfoque relacional",     "Cruce trivariado Cultivo × Región × Semestre, complementado con proyecciones bidimensionales por par de dimensiones."),
+    ("bi-diagram-2-fill",     "info",    "Combinaciones activas",  active_combos | string ~ " de " ~ max_combos | string ~ " ternas cultivo×región×semestre posibles tienen registros en el dataset."),
     ("bi-arrows-fullscreen",  "warning", "Síntesis multidimensional", "Esta dimensión integra los hallazgos de Poblacional, Territorial y Temporal en un análisis cruzado único."),
   ]) }}
 </section>
@@ -108,8 +110,8 @@
             </div>
             {{ tag("IND-1", "success") }}
           </div>
-          <p class="small text-body-secondary mb-1">Combinación cultivo×región dominante</p>
-          <div class="fw-bold text-success lh-sm" style="font-size:1.15rem;">{{ top_combo_cultivo }} × {{ top_combo_region }}</div>
+          <p class="small text-body-secondary mb-1">Terna cultivo×región×semestre dominante</p>
+          <div class="fw-bold text-success lh-sm" style="font-size:1rem;">{{ top_combo_cultivo }} × {{ top_combo_region }} × {{ top_combo_sem }}</div>
           <p class="small text-body-secondary mt-2 mb-0">
             <strong>{{ top_combo_n | miles }}</strong> registros —
             <strong>{{ top_combo_pct }} %</strong> del total del dataset.
@@ -132,10 +134,10 @@
             </div>
             {{ tag("IND-2", "info") }}
           </div>
-          <p class="small text-body-secondary mb-1">Combinaciones cultivo×región activas</p>
+          <p class="small text-body-secondary mb-1">Ternas cultivo×región×semestre activas</p>
           <div class="fs-2 fw-bold text-info lh-1">{{ active_combos }}<span class="fs-5 text-body-secondary"> / {{ max_combos }}</span></div>
           <p class="small text-body-secondary mt-2 mb-0">
-            <strong>{{ active_combos }}</strong> de los <strong>{{ max_combos }}</strong> pares posibles
+            <strong>{{ active_combos }}</strong> de las <strong>{{ max_combos }}</strong> ternas posibles
             ({{ (active_combos / max_combos * 100) | round(1) }} %) tienen al menos un registro en el dataset.
           </p>
         </div>
@@ -304,6 +306,7 @@
           <tr>
             <th scope="col">Cultivo</th>
             <th scope="col">Región</th>
+            <th scope="col">Semestre</th>
             <th scope="col" class="text-end">Registros</th>
             <th scope="col" class="text-end">Participación</th>
           </tr>
@@ -321,6 +324,7 @@
                 'secondary'
               }}">{{ row.region }}</span>
             </td>
+            <td class="text-body-secondary">{{ row.semestre }}</td>
             <td class="text-end font-monospace">{{ row.n | miles }}</td>
             <td class="text-end font-monospace">{{ row.pct }} %</td>
           </tr>
@@ -349,16 +353,21 @@
       <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            La combinación <strong>{{ top_combo_cultivo }} × {{ top_combo_region }}</strong> es la dominante
-            con <strong>{{ top_combo_n | miles }}</strong> registros (<strong>{{ top_combo_pct }} %</strong>
-            del total). Este cruce revela que la Región Andina no solo concentra más registros en términos
+            La terna <strong>{{ top_combo_cultivo }} × {{ top_combo_region }} × {{ top_combo_sem }}</strong>
+            es la dominante con <strong>{{ top_combo_n | miles }}</strong> registros
+            (<strong>{{ top_combo_pct }} %</strong> del total) — el gráfico de arriba proyecta en dos ejes
+            (Región × Cultivo) este mismo cruce, que IND-1/IND-2 calculan sobre las tres variables a la vez.
+            Este resultado muestra que la Región Andina no solo concentra más registros en términos
             absolutos, sino que su distribución interna está marcada por la prevalencia de un cultivo
-            específico, reforzando el patrón de especialización observado en la Dimensión Territorial.
+            específico en un semestre particular, en línea con el patrón de especialización observado en
+            la Dimensión Territorial.
           </p>
           <p class="mb-0">
             Las regiones de menor representación (Orinoquía, Amazonía) muestran perfiles de cultivos
-            distintos: los cultivos que dominan en la Región Andina tienen poca presencia allí, lo que
-            confirma la heterogeneidad agroecológica del territorio colombiano.
+            distintos: los cultivos que dominan en la Región Andina tienen poca presencia allí. Esto es
+            coherente con una heterogeneidad agroecológica del territorio colombiano, aunque el dataset no
+            mide directamente variables agroecológicas, por lo que esa explicación sigue siendo una
+            hipótesis y no una relación comprobada.
           </p>
         </div>
       </div>
@@ -428,27 +437,27 @@
   {% set conocimientos = [
     {
       "n": "C-1", "color": "success", "icon": "bi-diagram-3-fill",
-      "titulo": "Dominancia de " ~ top_combo_cultivo ~ " en la Región " ~ top_combo_region,
-      "pregunta": "¿Qué combinación cultivo×región concentra más registros y cuánto representa del total?",
-      "variables": "Cultivo (categórica-poblacional), Región (derivada-territorial), conteo de registros (numérica derivada).",
-      "procedimiento": "Cruce bidimensional cultivo×región; conteo de frecuencias para todas las combinaciones posibles; identificación del par con mayor frecuencia absoluta.",
-      "evidencia": top_combo_cultivo ~ " en " ~ top_combo_region ~ ": " ~ (top_combo_n | miles) ~ " registros (" ~ top_combo_pct | string ~ " % del total). La combinación dominante supera por un margen significativo a las demás.",
-      "hallazgo": "Una sola combinación cultivo×región (" ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ ") concentra más del " ~ top_combo_pct | string ~ " % de todos los registros del dataset.",
-      "interpretacion": "La co-dominancia de " ~ top_combo_cultivo ~ " en la Región Andina refleja la confluencia de dos factores: la Región Andina es la más representada territorialmente, y " ~ top_combo_cultivo ~ " es el cultivo más frecuente. Su combinación amplifica ambos efectos, creando una concentración que puede sesgar análisis nacionales si no se controla.",
-      "utilidad": "Justifica la necesidad de análisis estratificados: un modelo global entrenado con estos datos tendrá un sesgo implícito hacia " ~ top_combo_cultivo ~ " en la Región Andina. La segmentación por región o cultivo es indispensable para resultados representativos.",
+      "titulo": "Dominancia de " ~ top_combo_cultivo ~ " en " ~ top_combo_region ~ " (" ~ top_combo_sem ~ ")",
+      "pregunta": "¿Qué terna cultivo×región×semestre concentra más registros y cuánto representa del total?",
+      "variables": "Cultivo (categórica-poblacional), Región (derivada-territorial), Semestre (derivada-temporal), conteo de registros (numérica derivada).",
+      "procedimiento": "Cruce trivariado Cultivo×Región×Semestre; conteo de frecuencias para las 90 ternas posibles (6×5×3); identificación de la terna con mayor frecuencia absoluta. A diferencia de un cruce bidimensional, este conteo no se reduce a solo dos variables.",
+      "evidencia": top_combo_cultivo ~ " en " ~ top_combo_region ~ " durante el " ~ top_combo_sem ~ ": " ~ (top_combo_n | miles) ~ " registros (" ~ top_combo_pct | string ~ " % del total). La terna dominante supera por un margen significativo a las demás.",
+      "hallazgo": "Una sola terna cultivo×región×semestre (" ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ " × " ~ top_combo_sem ~ ") concentra más del " ~ top_combo_pct | string ~ " % de todos los registros del dataset.",
+      "interpretacion": "Una explicación plausible es que esta terna resulte de la confluencia de tres factores observables por separado: la Región Andina es la más representada territorialmente, " ~ top_combo_cultivo ~ " es el cultivo más frecuente, y el " ~ top_combo_sem ~ " concentra más registros que los demás periodos. Esto es una asociación entre magnitudes, no una relación causal: el dataset no permite establecer por qué coinciden.",
+      "utilidad": "Justifica la necesidad de análisis estratificados: un modelo global entrenado con estos datos tendrá un sesgo implícito hacia " ~ top_combo_cultivo ~ " en la Región Andina durante el " ~ top_combo_sem ~ ". La segmentación por región, cultivo y semestre es indispensable para resultados representativos.",
       "limitacion": "La dominancia en número de registros no implica dominancia en producción. Un análisis de " ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ " basado en toneladas o hectáreas podría mostrar un patrón distinto.",
     },
     {
       "n": "C-2", "color": "info", "icon": "bi-grid-3x3-gap-fill",
-      "titulo": "Alta cobertura relacional: " ~ active_combos ~ " de " ~ max_combos ~ " combinaciones activas",
-      "pregunta": "¿Qué proporción de las combinaciones cultivo×región posibles tiene representación en el dataset?",
-      "variables": "Cultivo (categórica, 6 valores), Región (derivada, 5 valores), registro lógico de presencia/ausencia.",
-      "procedimiento": "Construcción de la matriz de presencia cultivo×región (6×5=30 pares posibles); conteo de celdas con al menos un registro.",
-      "evidencia": active_combos | string ~ " de " ~ max_combos | string ~ " pares posibles tienen registros (" ~ (active_combos / max_combos * 100) | round(1) | string ~ " %). Hay " ~ (max_combos - active_combos) | string ~ " combinaciones sin ningún registro.",
-      "hallazgo": "El dataset presenta alta cobertura relacional: la mayoría de los pares cultivo×región posibles están representados, aunque con intensidades muy desiguales.",
-      "interpretacion": "La alta cobertura indica que los seis cultivos básicos tienen cierta presencia en todas o casi todas las regiones. Sin embargo, la desigualdad de intensidades sugiere que muchas combinaciones tienen cobertura marginal (pocos registros) frente a las combinaciones dominantes. Las celdas vacías corresponden a condiciones agroecológicas incompatibles con el cultivo en esa región.",
-      "utilidad": "La cobertura casi completa de la matriz facilita el uso de técnicas multivariadas (análisis de correspondencias, modelos de panel) sin imputación excesiva. Las celdas con pocos registros deben tratarse con técnicas robustas a datos escasos.",
-      "limitacion": "La presencia de al menos un registro no garantiza que la combinación tenga suficiente masa estadística para análisis confiables. Combinaciones con menos de 50 registros deberían reportarse como datos escasos, no como datos representativos.",
+      "titulo": "Alta cobertura relacional: " ~ active_combos ~ " de " ~ max_combos ~ " ternas activas",
+      "pregunta": "¿Qué proporción de las ternas cultivo×región×semestre posibles tiene representación en el dataset?",
+      "variables": "Cultivo (categórica, 6 valores), Región (derivada, 5 valores), Semestre (derivada, 3 valores), registro lógico de presencia/ausencia.",
+      "procedimiento": "Construcción de la matriz de presencia cultivo×región×semestre (6×5×3=90 ternas posibles); conteo de celdas con al menos un registro.",
+      "evidencia": active_combos | string ~ " de " ~ max_combos | string ~ " ternas posibles tienen registros (" ~ (active_combos / max_combos * 100) | round(1) | string ~ " %). Hay " ~ (max_combos - active_combos) | string ~ " ternas sin ningún registro.",
+      "hallazgo": "El dataset presenta alta cobertura relacional: la mayoría de las ternas cultivo×región×semestre posibles están representadas, aunque con intensidades muy desiguales.",
+      "interpretacion": "La alta cobertura indica que los seis cultivos básicos tienen cierta presencia en todas o casi todas las regiones y semestres. Sin embargo, la desigualdad de intensidades sugiere que muchas ternas tienen cobertura marginal (pocos registros) frente a las dominantes. Una hipótesis razonable es que las celdas vacías correspondan a condiciones agroecológicas incompatibles con el cultivo en esa región, pero el dataset no incluye variables agroecológicas que permitan confirmarlo directamente.",
+      "utilidad": "La cobertura casi completa de la matriz facilita el uso de técnicas multivariadas (análisis de correspondencias, modelos de panel) sin imputación excesiva. Las ternas con pocos registros deben tratarse con técnicas robustas a datos escasos.",
+      "limitacion": "La presencia de al menos un registro no garantiza que la terna tenga suficiente masa estadística para análisis confiables. Ternas con menos de 50 registros deberían reportarse como datos escasos, no como datos representativos.",
     },
     {
       "n": "C-3", "color": "warning", "icon": "bi-arrows-fullscreen",
@@ -492,8 +501,8 @@
             agrícola real. Adicionalmente, la variable <em>Región</em> es derivada mediante un mapeo
             manual y agrupa realidades agroecológicas heterogéneas dentro de cada región. Por último,
             los análisis de co-ocurrencia no establecen causalidad: que {{ top_combo_cultivo }} sea
-            frecuente en {{ top_combo_region }} no explica por qué, ni implica que deba mantenerse
-            así en el futuro.
+            frecuente en {{ top_combo_region }} durante el {{ top_combo_sem }} no explica por qué,
+            ni implica que deba mantenerse así en el futuro.
           </p>
         </div>
       </div>
@@ -508,16 +517,17 @@
             <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
           </div>
           <p class="small mb-0">
-            El análisis multidimensional confirma que el dataset EVA tiene una estructura relacional
-            compleja pero comprensible: <strong>{{ active_combos }} combinaciones activas</strong>,
-            una dominante clara ({{ top_combo_cultivo }} × {{ top_combo_region }}) y un cultivo
+            El análisis multidimensional muestra que el dataset EVA tiene una estructura relacional
+            compleja pero comprensible: <strong>{{ active_combos }} ternas cultivo×región×semestre
+            activas</strong> de {{ max_combos }} posibles, una terna dominante clara
+            ({{ top_combo_cultivo }} × {{ top_combo_region }} × {{ top_combo_sem }}) y un cultivo
             transversal identificado ({{ transversal_cultivo }}, {{ transversal_regions }} regiones).
-            Se recomienda <strong>usar el triple cruce Cultivo × Región × Semestre</strong> como
-            estratificación base para cualquier modelo predictivo, en lugar de tratar las variables
-            de forma independiente. El cultivo {{ transversal_cultivo }} debe recibir tratamiento
-            especial como variable de referencia en comparaciones inter-regionales, y los modelos
-            deben incluir términos de interacción explícitos entre Cultivo y Región para capturar
-            la heterogeneidad del territorio colombiano.
+            Se recomienda <strong>usar el cruce Cultivo × Región × Semestre</strong> (ya calculado en
+            IND-1/IND-2) como estratificación base para cualquier modelo predictivo, en lugar de
+            tratar las variables de forma independiente. El cultivo {{ transversal_cultivo }} debe
+            recibir tratamiento especial como variable de referencia en comparaciones
+            inter-regionales, y los modelos deben incluir términos de interacción explícitos entre
+            Cultivo, Región y Semestre para capturar la heterogeneidad del territorio colombiano.
           </p>
         </div>
       </div>
@@ -526,8 +536,8 @@
 </section>
 
 {% call callout("bi-flag-fill") %}
-  <strong>R4 · Dim. Relacional:</strong> {{ active_combos }} de {{ max_combos }} combinaciones cultivo×región
-  tienen registros. La combinación dominante es {{ top_combo_cultivo }} × {{ top_combo_region }}
+  <strong>R4 · Dim. Relacional:</strong> {{ active_combos }} de {{ max_combos }} ternas cultivo×región×semestre
+  tienen registros. La terna dominante es {{ top_combo_cultivo }} × {{ top_combo_region }} × {{ top_combo_sem }}
   ({{ top_combo_pct }} % del total). El cultivo más transversal es {{ transversal_cultivo }},
   presente en {{ transversal_regions }} de {{ filter_regiones | length }} regiones geográficas.
 {% endcall %}

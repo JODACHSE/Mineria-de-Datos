@@ -66,5 +66,8 @@ class Config:
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
     R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
     VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
+    # Informe de Power BI de la Etapa 4 (Conocimiento evidente). Vacío mientras
+    # no se publique; la plantilla r4.html muestra un estado "Próximamente".
+    POWERBI_REPORT_URL = os.environ.get("POWERBI_REPORT_URL", "")
     FAOSTAT_TOKEN = os.environ.get("FAOSTAT_TOKEN", "")
     FAOSTAT_AREA_COLOMBIA = "44"

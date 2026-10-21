@@ -34,9 +34,11 @@ ETAPAS = [
     },
     {
         "codigo": "R4",
-        "titulo": "Análisis Multidimensional",
-        "resumen": "Cuatro tableros de control: dimensión poblacional, territorial, temporal y "
-                   "relacional-multivariada sobre los datos de producción agrícola EVA y FAOSTAT.",
+        "titulo": "Conocimiento evidente",
+        "resumen": "Cuatro preguntas de análisis exploratorio (poblacional, territorial, temporal "
+                   "y multivariada) sobre los datos de producción agrícola EVA, con indicadores, "
+                   "visualizaciones, filtros y conocimientos evidentes documentados. Informe "
+                   "completo disponible en Power BI.",
         "estado": "completado",
         "url_endpoint": "pages.r4",
     },

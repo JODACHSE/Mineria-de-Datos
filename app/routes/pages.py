@@ -60,6 +60,7 @@ def r4():
     if ctx is None:
         ctx = build_r4_dim_poblacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_poblacional", ctx)
+    ctx = {**ctx, "powerbi_report_url": current_app.config.get("POWERBI_REPORT_URL", "")}
     return render_template("pages/r4.html", **ctx)
 
 
