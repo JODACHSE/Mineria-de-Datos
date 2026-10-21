@@ -6,7 +6,6 @@ import { play } from "./sound.js";
 import { notify } from "./notify.js";
 
 const NUMERIC = new Set(["Valor", "AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"]);
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export function initExplorer() {
   const root = document.getElementById("data-explorer");
@@ -32,7 +31,16 @@ export function initExplorer() {
   function fillSelect(select, values) {
     if (!select) return;
     const current = select.value;
-    select.innerHTML = `<option value="">Todos</option>` + values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+    const optAll = document.createElement("option");
+    optAll.value = "";
+    optAll.textContent = "Todos";
+    const options = values.map((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      return opt;
+    });
+    select.replaceChildren(optAll, ...options);
     select.value = values.includes(current) ? current : "";
   }
 
@@ -50,26 +58,53 @@ export function initExplorer() {
 
       const flagCols = state.version === "tratado" ? json.columns.filter((c) => c.startsWith("_")) : [];
       const cols = json.display_columns.concat(flagCols);
-      thead.innerHTML = cols.map((c) => `<th class="${NUMERIC.has(c) ? "text-end" : ""}">${esc(c)}</th>`).join("");
+      thead.replaceChildren(...cols.map((c) => {
+        const th = document.createElement("th");
+        if (NUMERIC.has(c)) th.className = "text-end";
+        th.textContent = c;
+        return th;
+      }));
       fillSelect(selProducto, json.productos_disponibles);
       fillSelect(selElemento, json.elementos_disponibles);
 
-      tbody.innerHTML = json.rows.map((row) => `<tr>${cols.map((c) => {
-        const raw = row[c];
-        let text = raw ?? "—";
-        let cls = "";
-        if (typeof raw === "boolean") { text = raw ? "Sí" : "No"; cls = raw ? "text-danger fw-semibold" : "text-body-tertiary"; }
-        else if (NUMERIC.has(c) && typeof raw === "number") { text = raw.toLocaleString("es-CO"); cls = "text-end font-monospace"; }
-        return `<td class="${cls}">${esc(text)}</td>`;
-      }).join("")}</tr>`).join("")
-        || `<tr><td colspan="${cols.length}" class="text-center text-body-secondary py-4">Sin resultados para este filtro.</td></tr>`;
+      if (json.rows.length === 0) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = cols.length;
+        td.className = "text-center text-body-secondary py-4";
+        td.textContent = "Sin resultados para este filtro.";
+        tr.appendChild(td);
+        tbody.replaceChildren(tr);
+      } else {
+        const rows = json.rows.map((row) => {
+          const tr = document.createElement("tr");
+          for (const c of cols) {
+            const raw = row[c];
+            let text = raw ?? "—";
+            let cls = "";
+            if (typeof raw === "boolean") { text = raw ? "Sí" : "No"; cls = raw ? "text-danger fw-semibold" : "text-body-tertiary"; }
+            else if (NUMERIC.has(c) && typeof raw === "number") { text = raw.toLocaleString("es-CO"); cls = "text-end font-monospace"; }
+            const td = document.createElement("td");
+            if (cls) td.className = cls;
+            td.textContent = text;
+            tr.appendChild(td);
+          }
+          return tr;
+        });
+        tbody.replaceChildren(...rows);
+      }
 
       meta.textContent = `${json.total.toLocaleString("es-CO")} registros encontrados · página ${json.page} de ${json.total_pages}`;
       pageInfo.textContent = `${json.page} / ${json.total_pages}`;
       prev.disabled = json.page <= 1;
       next.disabled = json.page >= json.total_pages;
     } catch (err) {
-      tbody.innerHTML = `<tr><td class="text-danger">No fue posible cargar los datos (${esc(err.message)}).</td></tr>`;
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.className = "text-danger";
+      td.textContent = `No fue posible cargar los datos (${err.message}).`;
+      tr.appendChild(td);
+      tbody.replaceChildren(tr);
       notify("No fue posible cargar los datos. Verifica la conexión con el servidor.", "danger");
       play("error");
     }
