@@ -108,7 +108,7 @@
 {# Contenedor de tabla responsive con estilo homogéneo. #}
 {% macro table_open(wrap=False, extra="") %}
 <div class="table-responsive rounded border mb-3">
-  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}">
+  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}">{# NOSONAR: macro reutilizable; cada página que la usa añade su propio <thead><th> (ver table_close). #}
 {% endmacro %}
 {% macro table_close() %}
   </table>

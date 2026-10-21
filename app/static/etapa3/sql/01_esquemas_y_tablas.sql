@@ -57,8 +57,8 @@ GO
 /* --------------------------------------------------------------- catálogos */
 IF OBJECT_ID(N'cat.Municipio') IS NULL
 CREATE TABLE cat.Municipio (
-    CodigoMunicipioDane CHAR(5)       NOT NULL PRIMARY KEY,   -- CHAR para conservar el cero inicial (05030)
-    CodigoDeptoDane     CHAR(2)       NOT NULL,
+    CodigoMunicipioDane CHAR(5)       NOT NULL PRIMARY KEY,   -- CHAR para conservar el cero inicial (05030) -- NOSONAR: T-SQL (SQL Server), no Oracle; VARCHAR2 no existe en este dialecto.
+    CodigoDeptoDane     CHAR(2)       NOT NULL,                -- NOSONAR: idem, ancho fijo intencional.
     Departamento        NVARCHAR(100) NOT NULL,
     Municipio           NVARCHAR(150) NOT NULL
 );

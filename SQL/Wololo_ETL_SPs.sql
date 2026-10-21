@@ -132,13 +132,13 @@ BEGIN
 
     IF @dataset = 'EVA'
     BEGIN
-        ;WITH n AS (SELECT NumeroFila, rn = ROW_NUMBER() OVER (ORDER BY IdStg) FROM dbo.stg_EVA WHERE IdLote = @IdLote)
-        UPDATE n SET NumeroFila = rn;
+        ;WITH n AS (SELECT IdLote, NumeroFila, rn = ROW_NUMBER() OVER (ORDER BY IdStg) FROM dbo.stg_EVA WHERE IdLote = @IdLote)
+        UPDATE n SET NumeroFila = rn WHERE IdLote = @IdLote;
     END
     ELSE
     BEGIN
-        ;WITH n AS (SELECT NumeroFila, rn = ROW_NUMBER() OVER (ORDER BY IdStg) FROM dbo.stg_FAOSTAT WHERE IdLote = @IdLote)
-        UPDATE n SET NumeroFila = rn;
+        ;WITH n AS (SELECT IdLote, NumeroFila, rn = ROW_NUMBER() OVER (ORDER BY IdStg) FROM dbo.stg_FAOSTAT WHERE IdLote = @IdLote)
+        UPDATE n SET NumeroFila = rn WHERE IdLote = @IdLote;
     END
 END;
 GO

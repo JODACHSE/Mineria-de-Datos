@@ -137,7 +137,7 @@ def build_integration_table(eva_df: pd.DataFrame) -> None:
     ).round(1)
     merged = merged.sort_values(["Cultivo", "Anio"])
 
-    payload = {"columns": list(merged.columns), "rows": merged.where(pd.notnull(merged), None).values.tolist()}
+    payload = {"columns": list(merged.columns), "rows": merged.where(pd.notnull(merged), None).to_numpy().tolist()}
     path = R1_JSON_DIR / "integracion_eva_faostat.json"
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, ensure_ascii=False)

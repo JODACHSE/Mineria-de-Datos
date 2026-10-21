@@ -1,12 +1,16 @@
 """Application factory de la app Flask."""
 from flask import Flask, render_template
+from flask_wtf import CSRFProtect
 
 from .config import Config
+
+csrf = CSRFProtect()
 
 
 def create_app(config_class: type = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
+    csrf.init_app(app)
 
     from .routes.api import api_bp
     from .routes.pages import pages_bp
