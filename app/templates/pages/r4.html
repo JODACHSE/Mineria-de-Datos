@@ -23,6 +23,73 @@
 
 {% block report_body %}
 
+{# ──────────────────────────────────── CONOCIMIENTO EVIDENTE (propósito de la etapa) ─── #}
+<section id="conocimiento-evidente" class="mb-5 reveal">
+  <div class="card border-0 shadow-sm bg-body-tertiary">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+        <h2 class="h5 fw-bold mb-0">Conocimiento evidente</h2>
+      </div>
+      <p class="small text-body-secondary mb-3" style="max-width:70ch;">
+        Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
+        {{ proyecto_periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
+        indicadores, comparaciones y visualizaciones. Cada una de las cuatro preguntas siguientes se
+        desarrolla en su propia página (navegación lateral) y, de forma equivalente, en un tablero del
+        informe de Power BI.
+      </p>
+
+      <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
+        <div class="col">
+          <a class="text-decoration-none" href="{{ url_for('pages.r4') }}">
+            <div class="p-3 rounded-3 border h-100 card-hover">
+              <span class="badge text-bg-success rounded-pill mb-1">1 · Poblacional</span>
+              <p class="small mb-0">¿Cómo está compuesta y distribuida la población analizada según sus principales características productivas y descriptivas?</p>
+            </div>
+          </a>
+        </div>
+        <div class="col">
+          <a class="text-decoration-none" href="{{ url_for('pages.r4_territorial') }}">
+            <div class="p-3 rounded-3 border h-100 card-hover">
+              <span class="badge text-bg-info rounded-pill mb-1">2 · Territorial</span>
+              <p class="small mb-0">¿Cómo se distribuye la población y sus principales características entre los territorios disponibles?</p>
+            </div>
+          </a>
+        </div>
+        <div class="col">
+          <a class="text-decoration-none" href="{{ url_for('pages.r4_temporal') }}">
+            <div class="p-3 rounded-3 border h-100 card-hover">
+              <span class="badge text-bg-warning rounded-pill mb-1">3 · Temporal</span>
+              <p class="small mb-0">¿Cómo ha evolucionado la frecuencia y composición de los registros agropecuarios a lo largo del tiempo?</p>
+            </div>
+          </a>
+        </div>
+        <div class="col">
+          <a class="text-decoration-none" href="{{ url_for('pages.r4_relacional') }}">
+            <div class="p-3 rounded-3 border h-100 card-hover">
+              <span class="badge text-bg-secondary rounded-pill mb-1">4 · Multivariada</span>
+              <p class="small mb-0">¿Qué patrones de co-ocurrencia existen entre Cultivo, Región y Semestre, y cuáles combinaciones dominan el reporte agropecuario colombiano?</p>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="d-flex flex-wrap align-items-center gap-2 pt-2 border-top">
+        <i class="bi bi-bar-chart-line-fill text-success"></i>
+        <span class="small fw-semibold">Informe de Power BI:</span>
+        {% if powerbi_report_url %}
+        <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+          Abrir informe <i class="bi bi-box-arrow-up-right ms-1"></i>
+        </a>
+        {% else %}
+        <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
+        <span class="small text-body-secondary">— se publicará el enlace (o inserción) del tablero de Power BI aquí.</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+
 {# ──────────────────────────────────── DESCRIPCIÓN ─── #}
 <section id="descripcion" class="mb-5 reveal">
   <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
@@ -34,7 +101,7 @@
     <p class="fw-semibold mb-1">Pregunta analítica</p>
     <p class="mb-0 fst-italic text-body-secondary">
       ¿Cómo está compuesta y distribuida la población analizada según sus principales características
-      demográficas y descriptivas?
+      productivas y descriptivas?
     </p>
   </blockquote>
 
@@ -424,7 +491,7 @@
       "procedimiento": "Conteo de frecuencias absolutas por valor de la columna Cultivo; cálculo de participación porcentual sobre el total.",
       "evidencia": top_cultivo ~ " concentra el " ~ top_cultivo_pct | string ~ " % de los registros (" ~ (top_cultivo_n | miles) ~ " de " ~ (total_registros | miles) ~ ").",
       "hallazgo": "El dataset está dominado por el " ~ top_cultivo ~ ", que casi duplica en registros al segundo cultivo más frecuente.",
-      "interpretacion": "La predominancia del " ~ top_cultivo ~ " es consistente con su condición de cultivo de subsistencia más extendido del país, presente en todas las regiones con diversidad de altitudes y climas.",
+      "interpretacion": "Una hipótesis plausible es que la predominancia del " ~ top_cultivo ~ " esté asociada a su condición de cultivo de subsistencia extendido en el país, cultivable en diferentes altitudes y climas. El dataset no incluye variables agroecológicas, por lo que esta explicación no puede comprobarse directamente con los datos; es una asociación, no una relación causal establecida.",
       "utilidad": "Prioriza el " ~ top_cultivo ~ " en análisis de seguridad alimentaria como cultivo de mayor impacto estadístico y orienta la ponderación de modelos predictivos.",
       "limitacion": "La sobre-representación puede sesgar análisis multivariados si no se estratifica la muestra por cultivo.",
     },

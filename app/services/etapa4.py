@@ -437,6 +437,7 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
     cultivo_region: dict[str, Counter] = {}
     cultivo_semestre: dict[str, Counter] = {}
     region_year: dict[str, Counter] = {}
+    combo3: Counter = Counter()
     year_set: set[int] = set()
 
     for r in rows:
@@ -455,27 +456,30 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         cultivo_region.setdefault(cultivo, Counter())[region] += 1
         cultivo_semestre.setdefault(cultivo, Counter())[sem] += 1
         region_year.setdefault(region, Counter())[year] += 1
+        combo3[(cultivo, region, sem)] += 1
         year_set.add(year)
 
     cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_region]
     years_sorted = sorted(year_set)
 
     # ---- indicadores ------------------------------------------------
-    # IND-1: combinación cultivo×región más frecuente
-    top_combo_cultivo, top_combo_region, top_combo_n = max(
-        ((c, r, cultivo_region[c][r])
-         for c in cultivo_region for r in cultivo_region[c]
-         if cultivo_region[c][r] > 0),
-        key=lambda x: x[2],
-    )
+    # combo3_valid: cruce trivariado real Cultivo × Región × Semestre —no un
+    # conteo derivado de cruzar solo dos variables— restringido al universo
+    # de los 6 cultivos básicos y las 5 regiones geográficas para que el
+    # denominador de IND-2 sea estable.
+    combo3_valid = {
+        k: v for k, v in combo3.items()
+        if k[0] in cultivos_ordered and k[1] in _REGION_ORDER
+    }
+
+    # IND-1: combinación cultivo×región×semestre más frecuente
+    top_combo_key, top_combo_n = max(combo3_valid.items(), key=lambda kv: kv[1])
+    top_combo_cultivo, top_combo_region, top_combo_sem = top_combo_key
     top_combo_pct = _pct(top_combo_n, total)
 
-    # IND-2: combinaciones activas sobre el máximo posible (6 cultivos × 5 regiones)
-    active_combos = sum(
-        1 for c in cultivos_ordered for r in _REGION_ORDER
-        if cultivo_region.get(c, Counter()).get(r, 0) > 0
-    )
-    max_combos = len(cultivos_ordered) * len(_REGION_ORDER)
+    # IND-2: combinaciones activas sobre el máximo posible (6 cultivos × 5 regiones × 3 semestres)
+    active_combos = len(combo3_valid)
+    max_combos = len(cultivos_ordered) * len(_REGION_ORDER) * len(SEM_LABELS)
 
     # IND-3: cultivo más transversal (presente en más regiones)
     transversal_cultivo = max(
@@ -524,16 +528,18 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
     }
 
     # ---- tabla y cross data -----------------------------------------
+    # Tabla trivariada real (Cultivo × Región × Semestre), ordenada por
+    # frecuencia: evidencia visible de que IND-1/IND-2 cruzan las 3 variables
+    # conjuntamente y no solo derivan un conteo de un cruce bivariado.
     tabla_rows = [
         {
             "cultivo": c,
             "region": r,
-            "n": cultivo_region.get(c, Counter()).get(r, 0),
-            "pct": _pct(cultivo_region.get(c, Counter()).get(r, 0), total),
+            "semestre": s,
+            "n": n,
+            "pct": _pct(n, total),
         }
-        for c in cultivos_ordered
-        for r in _REGION_ORDER
-        if cultivo_region.get(c, Counter()).get(r, 0) > 0
+        for (c, r, s), n in sorted(combo3_valid.items(), key=lambda kv: -kv[1])
     ]
 
     # cross_data[cultivo][region] = n  (for JS filter summaries)
@@ -547,6 +553,7 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         "total_registros": total,
         "top_combo_cultivo": top_combo_cultivo,
         "top_combo_region": top_combo_region,
+        "top_combo_sem": top_combo_sem,
         "top_combo_n": top_combo_n,
         "top_combo_pct": top_combo_pct,
         "active_combos": active_combos,
