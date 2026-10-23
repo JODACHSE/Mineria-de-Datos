@@ -74,17 +74,54 @@
         </div>
       </div>
 
-      <div class="d-flex flex-wrap align-items-center gap-2 pt-2 border-top">
-        <i class="bi bi-bar-chart-line-fill text-success"></i>
-        <span class="small fw-semibold">Informe de Power BI:</span>
-        {% if powerbi_report_url %}
-        <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
-          Abrir informe <i class="bi bi-box-arrow-up-right ms-1"></i>
-        </a>
+            <div class="pt-2 border-top">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <i class="bi bi-bar-chart-line-fill text-success"></i>
+          <span class="small fw-semibold">Informe interactivo de Power BI</span>
+          <span class="ms-auto d-flex gap-2">
+            {% if powerbi_report_url %}
+            <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+              Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
+            </a>
+            {% endif %}
+            {% if powerbi_pbix_url %}
+            <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-download me-1"></i>Descargar .pbix
+            </a>
+            {% endif %}
+          </span>
+        </div>
+        {% if powerbi_embed_url %}
+        <div class="ratio ratio-16x9 rounded border shadow-sm">
+          <iframe title="Informe Power BI · Conocimiento evidente (EVA)" src="{{ powerbi_embed_url }}"
+                  frameborder="0" allowfullscreen loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        {% elif powerbi_report_url %}
+        <p class="small text-body-secondary mb-0">
+          El informe se abre con el botón de arriba. Para incrustarlo aquí, configure
+          <code>POWERBI_EMBED_URL</code> (Power BI Service: Archivo → Insertar informe → Sitio web o portal).
+        </p>
         {% else %}
         <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
-        <span class="small text-body-secondary">— se publicará el enlace (o inserción) del tablero de Power BI aquí.</span>
+        <span class="small text-body-secondary">Publica el informe en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
         {% endif %}
+        <p class="small text-body-secondary mt-2 mb-0">
+          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
+          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
+        </p>
+      </div>
+
+      {# ── Informe técnico de la etapa (documento) ── #}
+      <div class="pt-2 border-top mt-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-file-earmark-word-fill text-success"></i>
+          <span class="small fw-semibold">Informe técnico de la etapa:</span>
+          <a class="btn btn-success btn-sm"
+             href="https://mailunicundiedu-my.sharepoint.com/:w:/g/personal/afrodriguezcorrea_ucundinamarca_edu_co/cQr_CkcSDq53T7NqFK_EWRxnEgUCkSyOSqD90EMQYWTciLjKPA"
+             target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
+        </div>
       </div>
     </div>
   </div>
