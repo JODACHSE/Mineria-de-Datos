@@ -1,5 +1,5 @@
 """Application factory de la app Flask."""
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for
 from flask_wtf import CSRFProtect
 
 from .config import Config
@@ -23,6 +23,18 @@ def create_app(config_class: type = Config) -> Flask:
         from .etapas import ETAPAS, R4_TOC_ITEMS, r4_toc_nav
 
         cfg = app.config
+
+        # Enlace de descarga del .pbix si existe en docs/ (para la sección R4).
+        pbix_file = cfg["POWERBI_PBIX_FILE"]
+        try:
+            pbix_url = (
+                url_for("pages.descargar_doc", filename=pbix_file)
+                if (cfg["DOCS_DIR"] / pbix_file).exists()
+                else ""
+            )
+        except Exception:
+            pbix_url = ""
+
         return {
             "app_name": cfg["APP_NAME"],
             "proyecto_tema": cfg["PROYECTO_TEMA"],
@@ -36,6 +48,9 @@ def create_app(config_class: type = Config) -> Flask:
             "developers": cfg["DEVELOPERS"],
             "etapas": ETAPAS,
             "github_repo_url": cfg["GITHUB_REPO_URL"],
+            "powerbi_report_url": cfg["POWERBI_REPORT_URL"],
+            "powerbi_embed_url": cfg["POWERBI_EMBED_URL"],
+            "powerbi_pbix_url": pbix_url,
             "r4_toc_nav": r4_toc_nav,
             "R4_TOC_ITEMS": R4_TOC_ITEMS,
         }

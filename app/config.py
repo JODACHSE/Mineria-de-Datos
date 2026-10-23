@@ -66,8 +66,10 @@ class Config:
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
     R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
     VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
-    # Informe de Power BI de la Etapa 4 (Conocimiento evidente). Vacío mientras
-    # no se publique; la plantilla r4.html muestra un estado "Próximamente".
-    POWERBI_REPORT_URL = os.environ.get("POWERBI_REPORT_URL", "")
-    FAOSTAT_TOKEN = os.environ.get("FAOSTAT_TOKEN", "")
-    FAOSTAT_AREA_COLOMBIA = "44"
+
+        # Informe de Power BI (Publicar en la web). URL pública del "Publish to web".
+    POWERBI_REPORT_URL = os.environ.get("POWERBI_REPORT_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
+    POWERBI_EMBED_URL = os.environ.get("POWERBI_EMBED_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
+    # Carpeta docs/ (raíz del proyecto) y nombre del .pbix para descargarlo desde la web.
+    DOCS_DIR = BASE_DIR / "docs"
+    POWERBI_PBIX_FILE = os.environ.get("POWERBI_PBIX_FILE", "EVA_PowerBI_wololo.pbix")

@@ -1,7 +1,7 @@
 """Blueprint `pages`: todas las vistas HTML del sitio."""
 from __future__ import annotations
 
-from flask import Blueprint, current_app, render_template
+from flask import Blueprint, current_app, render_template, send_from_directory
 
 from app.etapas import ETAPAS, FASES_CRISP
 from app.routes import _dirs
@@ -102,3 +102,8 @@ def entregables():
 @pages_bp.route("/sobre-nosotros")
 def about():
     return render_template("pages/about.html")
+
+@pages_bp.route("/docs/<path:filename>")
+def descargar_doc(filename):
+    """Sirve archivos descargables (p. ej. el .pbix) desde la carpeta docs/ del proyecto."""
+    return send_from_directory(current_app.config["DOCS_DIR"], filename, as_attachment=True)
