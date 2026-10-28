@@ -69,7 +69,11 @@ class Config:
 
         # Informe de Power BI (Publicar en la web). URL pública del "Publish to web".
     POWERBI_REPORT_URL = os.environ.get("POWERBI_REPORT_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
-    POWERBI_EMBED_URL = os.environ.get("POWERBI_EMBED_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
+    # Embeds por página (una por dimensión de R4), apuntan al mismo informe con pageName distinto.
+    POWERBI_R4_POBLACIONAL_URL = os.environ.get("POWERBI_R4_POBLACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=4429d44521a72f684755")
+    POWERBI_R4_TERRITORIAL_URL = os.environ.get("POWERBI_R4_TERRITORIAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=933585140258a290e5b5")
+    POWERBI_R4_TEMPORAL_URL = os.environ.get("POWERBI_R4_TEMPORAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=cc4de66d143540f8e1c4")
+    POWERBI_R4_RELACIONAL_URL = os.environ.get("POWERBI_R4_RELACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=95f533e177084c73fb5d")
     # Carpeta docs/ (raíz del proyecto) y nombre del .pbix para descargarlo desde la web.
     DOCS_DIR = BASE_DIR / "docs"
     POWERBI_PBIX_FILE = os.environ.get("POWERBI_PBIX_FILE", "EVA_PowerBI_wololo.pbix")

@@ -21,6 +21,40 @@
 
 {% block report_body %}
 
+{# ────────────────────────────── INFORME (propósito de la etapa) ─── #}
+<section id="conocimiento-evidente" class="mb-5 reveal">
+  <div class="card border-0 shadow-sm bg-body-tertiary">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+        <h2 class="h5 fw-bold mb-0">Informe</h2>
+      </div>
+      <p class="small text-body-secondary mb-3" style="max-width:70ch;">
+        Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
+        {{ proyecto_periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
+        indicadores, comparaciones y visualizaciones. Cada una de las cuatro dimensiones (Poblacional,
+        Territorial, Temporal y Relacional — navegación lateral) se desarrolla en su propia página,
+        con su propio tablero embebido del informe de Power BI.
+      </p>
+
+      <div class="pt-2 border-top">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-file-earmark-word-fill text-success"></i>
+          <span class="small fw-semibold">Informe técnico de la etapa:</span>
+          <a class="btn btn-success btn-sm"
+             href="https://mailunicundiedu-my.sharepoint.com/:w:/g/personal/afrodriguezcorrea_ucundinamarca_edu_co/cQr_CkcSDq53T7NqFK_EWRxnEgUCkSyOSqD90EMQYWTciLjKPA"
+             target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
+        </div>
+        <p class="small text-body-secondary mt-2 mb-0">
+          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
+          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 {# ────────────────────────────── DESCRIPCIÓN ─── #}
 <section id="descripcion" class="mb-5 reveal">
   <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
@@ -178,70 +212,40 @@
     <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
     <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
   </div>
-  <p class="text-body-secondary small mb-4">Haz clic en una barra de VIZ-1 para filtrar la tabla por ese departamento.</p>
+  <p class="text-body-secondary small mb-4">
+    Tablero interactivo de Power BI para la Dimensión Territorial (3 visualizaciones: VIZ-1, VIZ-2 y VIZ-3).
+    Filtra por departamento, cultivo o región directamente sobre el informe.
+  </p>
 
-  <div class="row g-4">
-
-    {# VIZ-1: Top 15 departamentos #}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-1">
-            <div class="d-flex align-items-center gap-2">
-              {{ tag("VIZ-1", "success") }}
-              <h3 class="h6 fw-bold mb-0">Top 15 departamentos por número de registros</h3>
-            </div>
-            <small class="text-body-secondary">Click en una barra para filtrar</small>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Frecuencia absoluta de los 15 departamentos con mayor representación en el dataset.
-            El tooltip muestra también la cantidad de municipios únicos por departamento.
-          </p>
-          <div class="chart-frame" style="max-height:340px;">
-            <canvas id="chart-dept" aria-label="Top 15 departamentos por registros en EVA"></canvas>
-          </div>
-        </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <i class="bi bi-bar-chart-line-fill text-success"></i>
+        <span class="small fw-semibold">Informe interactivo de Power BI · Dimensión Territorial</span>
+        <span class="ms-auto d-flex gap-2">
+          {% if powerbi_report_url %}
+          <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+            Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+          {% endif %}
+          {% if powerbi_pbix_url %}
+          <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-download me-1"></i>Descargar .pbix
+          </a>
+          {% endif %}
+        </span>
       </div>
-    </div>
-
-    {# VIZ-2 + VIZ-3 #}
-    <div class="col-md-5">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-2", "info") }}
-            <h3 class="h6 fw-bold mb-0">Distribución por región geográfica</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Participación de cada región (Andina, Caribe, Orinoquía, Pacífica, Amazonía) en el total
-            de registros. El tooltip incluye el número de departamentos de cada región.
-          </p>
-          <div class="chart-frame" style="max-height:300px;">
-            <canvas id="chart-region" aria-label="Registros por región geográfica"></canvas>
-          </div>
-        </div>
+      {% if powerbi_territorial_embed_url %}
+      <div class="rounded border shadow-sm overflow-hidden mx-auto" style="aspect-ratio:600/373.5;max-width:900px;">
+        <iframe title="Informe Power BI · Dimensión Territorial (EVA)" src="{{ powerbi_territorial_embed_url }}"
+                width="100%" height="100%" frameborder="0" allowfullscreen loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
+      {% else %}
+      <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
+      <span class="small text-body-secondary">Publica la página en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
+      {% endif %}
     </div>
-
-    <div class="col-md-7">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-3", "warning") }}
-            <h3 class="h6 fw-bold mb-0">Densidad de reporte: registros por municipio</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Relación entre el total de registros y los municipios únicos reportados para los 15
-            departamentos principales. Un valor alto indica que sus municipios reportan muchos
-            cultivos y/o periodos; un valor bajo indica cobertura amplia pero poco profunda.
-          </p>
-          <div class="chart-frame" style="max-height:300px;">
-            <canvas id="chart-density" aria-label="Registros por municipio para top 15 departamentos"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </section>
 
@@ -347,21 +351,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
-          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Top 15 departamentos por registros
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> La mitad de las evaluaciones se concentra en 5 departamentos
         </button>
       </h3>
       <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            La distribución revela una <strong>fuerte asimetría</strong>: los 5 primeros departamentos
-            ({{ top5_depts | join(", ") }}) concentran el <strong>{{ top5_pct }} %</strong> de los
-            registros, con el resto distribuido en 27 departamentos. Esta concentración es característica
-            de regiones con mayor diversificación agrícola y mayor densidad municipal.
+            Los cinco departamentos con más registros —<strong>Antioquia, Boyacá, Cundinamarca,
+            Santander y Nariño</strong>— concentran el <strong>41.5 %</strong> de las evaluaciones,
+            con Antioquia a la cabeza (<strong>10.2 %</strong>, 5.008 registros). El hallazgo surge de
+            un ranking de departamentos y el cálculo de la participación del top-5 sobre el total.
           </p>
           <p class="mb-0">
-            El tooltip de cada barra muestra además el número de municipios únicos que reportan datos,
-            lo que permite diferenciar entre departamentos con muchos registros por concentración
-            de cultivos vs. departamentos con cobertura municipal amplia.
+            El registro se concentra en el centro andino del país, lo que sugiere focalizar allí los
+            esfuerzos de validación de datos. Esta concentración de registros no debe interpretarse
+            como concentración de producción real.
           </p>
         </div>
       </div>
@@ -370,23 +374,22 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
-          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Distribución por región geográfica
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> La región Andina domina el registro
         </button>
       </h3>
       <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            La región <strong>Andina</strong> domina ampliamente el dataset, con la mayor participación
-            de registros. Una hipótesis plausible es que esto esté asociado a su mayor densidad de
-            población, actividad agrícola diversificada y capacidad institucional de reporte, aunque
-            el dataset no mide directamente ninguna de esas tres variables.
+            Agrupando los departamentos por región geográfica, la región <strong>Andina</strong>
+            concentra el <strong>59.3 %</strong> de los registros (29.033), mientras que la
+            <strong>Amazonía</strong> apenas representa el <strong>3.1 %</strong> (1.496). El cálculo
+            agrupa los registros por región y los divide entre el total.
           </p>
           <p class="mb-0">
-            Las regiones <strong>Amazonía</strong> y <strong>Orinoquía</strong>, a pesar de su
-            extensión territorial, tienen baja representación en el dataset. Esto podría explicarse
-            por condiciones agroecológicas que limitan los cultivos básicos seleccionados (Maíz, Arroz,
-            Papa, etc.), pero esa explicación es una hipótesis: el dataset no incluye variables
-            agroecológicas que permitan confirmarla.
+            Existe un fuerte desbalance de cobertura regional, lo que enciende una alerta de
+            subregistro en Amazonía y Orinoquía. Esta distribución refleja tanto la densidad de
+            municipios como la intensidad del registro, no solo la actividad agrícola real de cada
+            región.
           </p>
         </div>
       </div>
@@ -395,22 +398,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
-          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Densidad de reporte (registros/municipio)
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Amplia cobertura municipal, con casos extremos
         </button>
       </h3>
       <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            El gráfico de barras agrupadas combina la densidad de reporte (registros por municipio,
-            eje izquierdo) con el número de municipios únicos (eje derecho). Departamentos con
-            alta densidad y pocos municipios son especializados: concentran cultivos diversos en
-            pocas localidades. Departamentos con baja densidad y muchos municipios tienen cobertura
-            amplia pero con menos cultivos reportados por localidad.
+            El dataset reporta <strong>1.098 municipios</strong> distribuidos en los
+            <strong>32 departamentos</strong> de Colombia, calculados mediante el conteo de
+            municipios únicos por departamento. El departamento con menor cobertura es
+            <strong>San Andrés</strong>, con un mínimo de <strong>42 registros</strong>.
           </p>
           <p class="mb-0">
-            Esta métrica es útil para identificar departamentos donde la calidad y exhaustividad
-            del reporte municipal puede ser más limitada o donde existe mayor especialización
-            por zona geográfica interna.
+            La cobertura nacional es amplia, pero heterogénea: constituye una base sólida para el
+            análisis territorial, aunque los municipios con muy pocos registros son poco
+            representativos y deben interpretarse con cautela.
           </p>
         </div>
       </div>
@@ -429,40 +431,40 @@
 
   {% set conocimientos = [
     {
-      "n": "C-1", "color": "success", "icon": "bi-bar-chart-line-fill",
-      "titulo": "Concentración territorial en la Región Andina",
-      "pregunta": "¿Cuáles son los departamentos con mayor y menor representación en el dataset y qué implica para el análisis?",
-      "variables": "Departamento (categórica), total de registros (numérica derivada).",
-      "procedimiento": "Conteo de frecuencias por departamento; ranking descendente; cálculo de participación porcentual acumulada.",
-      "evidencia": top_dept ~ " lidera con " ~ top_dept_pct | string ~ " %; los 5 principales concentran el " ~ top5_pct | string ~ " % de los registros. " ~ bottom_dept ~ " tiene apenas " ~ bottom_dept_pct | string ~ " %.",
-      "hallazgo": "El dataset presenta una fuerte concentración en los departamentos andinos, con 5 departamentos acumulando casi la mitad de todos los registros.",
-      "interpretacion": "Una hipótesis plausible es que la concentración en la Región Andina esté asociada a mayor densidad agropecuaria, mayor red municipal de reporte y mayor diversificación de cultivos básicos; el dataset no mide ninguna de esas tres variables, por lo que no puede confirmarse directamente. De forma similar, la baja representación de los departamentos de frontera agrícola (Amazonía, Orinoquía) podría explicarse porque los cultivos básicos seleccionados no son sus principales productos, pero esto tampoco es verificable con las variables disponibles.",
-      "utilidad": "Permite ajustar el peso estadístico por departamento en modelos nacionales y alerta sobre el riesgo de generalización: inferencias nacionales basadas en este dataset tendrán mayor precisión para la Región Andina.",
-      "limitacion": "La concentración de registros no implica que los departamentos con pocos registros sean menos importantes en seguridad alimentaria; simplemente son menos representados en EVA para estos cultivos.",
+      "n": "VIZ-1", "color": "success", "icon": "bi-bar-chart-line-fill",
+      "titulo": "La mitad de las evaluaciones se concentra en 5 departamentos",
+      "pregunta": "¿Qué departamentos concentran la mayor parte de los registros y qué implica para el análisis territorial?",
+      "variables": "Departamento, Registros.",
+      "procedimiento": "Ranking de departamentos por registros y cálculo de la participación del top-5 sobre el total.",
+      "evidencia": "Gráfico de barras por departamento + tarjeta de Participación top-5 departamentos %.",
+      "hallazgo": "Top-5 (Antioquia, Boyacá, Cundinamarca, Santander, Nariño) = 41.5 % de los registros; Antioquia lidera con 10.2 % (5.008).",
+      "interpretacion": "El registro se concentra en el centro andino del país.",
+      "utilidad": "Focaliza los esfuerzos de validación de datos en esa zona.",
+      "limitacion": "Concentración de registros no equivale a concentración de producción.",
     },
     {
-      "n": "C-2", "color": "info", "icon": "bi-map-fill",
-      "titulo": "Dominio de la Región Andina en la distribución regional",
-      "pregunta": "¿Cómo se distribuyen los registros entre las grandes regiones geográficas de Colombia?",
-      "variables": "Departamento (categórica), región geográfica (variable derivada del mapeo departamento→región).",
-      "procedimiento": "Clasificación de departamentos por región geográfica según el mapa administrativo colombiano; suma de registros por región; cálculo de participación porcentual.",
-      "evidencia": "La Región Andina concentra el mayor porcentaje de registros; Amazonía y Orinoquía tienen las participaciones más bajas pese a ser las regiones más extensas.",
-      "hallazgo": "Existe una marcada asimetría regional: las regiones con mayor extensión territorial tienen menor representación en el dataset de cultivos básicos.",
-      "interpretacion": "La extensión territorial no predice la representación en el dataset — esto sí es verificable con los datos. La intensidad de la actividad agropecuaria municipal, la institucionalidad de reporte y la aptitud agronómica para los seis cultivos básicos son hipótesis razonables para explicar cuántos registros aporta cada región, pero ninguna de las tres se mide directamente en el dataset.",
-      "utilidad": "Justifica el uso de análisis regionales diferenciados en lugar de promedios nacionales; la Región Caribe puede requerir análisis independiente dado su perfil productivo diferenciado.",
-      "limitacion": "La clasificación regional por departamento puede ocultar heterogeneidad interna: Antioquia, por ejemplo, tiene zonas con perfil agrícola de múltiples regiones.",
+      "n": "VIZ-2", "color": "info", "icon": "bi-map-fill",
+      "titulo": "La región Andina domina el registro",
+      "pregunta": "¿Cómo se distribuyen los registros entre las regiones geográficas de Colombia?",
+      "variables": "Región, Registros.",
+      "procedimiento": "Conteo de registros por región dividido entre el total.",
+      "evidencia": "Gráfico de anillos por región.",
+      "hallazgo": "Andina = 59.3 % (29.033); Amazonía = solo 3.1 % (1.496).",
+      "interpretacion": "Existe un fuerte desbalance de cobertura regional.",
+      "utilidad": "Alerta sobre el subregistro en Amazonía y Orinoquía.",
+      "limitacion": "Refleja densidad de municipios y de registro, no solo actividad agrícola.",
     },
     {
-      "n": "C-3", "color": "warning", "icon": "bi-graph-up",
-      "titulo": "Diferencias en densidad de reporte entre departamentos",
-      "pregunta": "¿Existe variabilidad en la intensidad del reporte por municipio entre departamentos?",
-      "variables": "CodigoMunicipioDane (código), Departamento (categórica), total de registros (numérica derivada).",
-      "procedimiento": "Conteo de municipios únicos por departamento; cálculo de la relación registros/municipios; ranking por esta métrica.",
-      "evidencia": "Los departamentos del top 15 presentan densidades que varían entre ~20 y ~40 registros por municipio, lo que indica diferencias importantes en la exhaustividad del reporte.",
-      "hallazgo": "Los departamentos andinos tienen densidades de reporte más altas (más cultivos y periodos reportados por municipio) que los departamentos periféricos.",
-      "interpretacion": "Una densidad alta indica que los municipios de ese departamento reportan más combinaciones de cultivos y periodos, lo que puede reflejar mayor diversificación agrícola o mayor rigurosidad en el sistema de reporte municipal.",
-      "utilidad": "Identifica qué departamentos tienen datos más completos para análisis multivariados y cuáles podrían necesitar mayor atención en el proceso de gobernanza de datos.",
-      "limitacion": "La densidad de reporte mide cantidad, no calidad. Un departamento puede tener muchos registros pero con alta proporción de valores faltantes o inconsistencias.",
+      "n": "VIZ-3", "color": "warning", "icon": "bi-geo-alt-fill",
+      "titulo": "Amplia cobertura municipal, con casos extremos",
+      "pregunta": "¿Qué tan amplia y homogénea es la cobertura municipal del dataset?",
+      "variables": "Departamento, Código de municipio, Registros.",
+      "procedimiento": "Conteo distinto de municipios por departamento; identificación del mínimo por departamento.",
+      "evidencia": "Tarjeta de número de municipios + tabla por departamento.",
+      "hallazgo": "1.098 municipios en 32 departamentos; San Andrés es el mínimo, con 42 registros.",
+      "interpretacion": "La cobertura nacional es amplia pero heterogénea.",
+      "utilidad": "Es una base sólida para el análisis territorial.",
+      "limitacion": "Los municipios con muy pocos registros son poco representativos.",
     },
   ] %}
 
@@ -533,16 +535,9 @@
 
 {% endblock %}
 
-{% block vendor_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
-{% endblock %}
-
 {% block page_data %}
 <script id="page-data" type="application/json">{{
   {
-    "dept":    dept_chart,
-    "region":  region_chart,
-    "density": density_chart,
     "cross":   cross_data,
     "total":   total_registros
   } | tojson

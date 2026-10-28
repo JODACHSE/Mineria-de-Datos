@@ -23,97 +23,23 @@
 
 {% block report_body %}
 
-{# ──────────────────────────────────── CONOCIMIENTO EVIDENTE (propósito de la etapa) ─── #}
+{# ──────────────────────────────────── INFORME (propósito de la etapa) ─── #}
 <section id="conocimiento-evidente" class="mb-5 reveal">
   <div class="card border-0 shadow-sm bg-body-tertiary">
     <div class="card-body p-4">
       <div class="d-flex align-items-center gap-2 mb-2">
         <i class="bi bi-lightbulb-fill text-success fs-5"></i>
-        <h2 class="h5 fw-bold mb-0">Conocimiento evidente</h2>
+        <h2 class="h5 fw-bold mb-0">Informe</h2>
       </div>
       <p class="small text-body-secondary mb-3" style="max-width:70ch;">
         Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
         {{ proyecto_periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
-        indicadores, comparaciones y visualizaciones. Cada una de las cuatro preguntas siguientes se
-        desarrolla en su propia página (navegación lateral) y, de forma equivalente, en un tablero del
-        informe de Power BI.
+        indicadores, comparaciones y visualizaciones. Cada una de las cuatro dimensiones (Poblacional,
+        Territorial, Temporal y Relacional — navegación lateral) se desarrolla en su propia página,
+        con su propio tablero embebido del informe de Power BI.
       </p>
 
-      <div class="row row-cols-1 row-cols-md-2 g-3 mb-3">
-        <div class="col">
-          <a class="text-decoration-none" href="{{ url_for('pages.r4') }}">
-            <div class="p-3 rounded-3 border h-100 card-hover">
-              <span class="badge text-bg-success rounded-pill mb-1">1 · Poblacional</span>
-              <p class="small mb-0">¿Cómo está compuesta y distribuida la población analizada según sus principales características productivas y descriptivas?</p>
-            </div>
-          </a>
-        </div>
-        <div class="col">
-          <a class="text-decoration-none" href="{{ url_for('pages.r4_territorial') }}">
-            <div class="p-3 rounded-3 border h-100 card-hover">
-              <span class="badge text-bg-info rounded-pill mb-1">2 · Territorial</span>
-              <p class="small mb-0">¿Cómo se distribuye la población y sus principales características entre los territorios disponibles?</p>
-            </div>
-          </a>
-        </div>
-        <div class="col">
-          <a class="text-decoration-none" href="{{ url_for('pages.r4_temporal') }}">
-            <div class="p-3 rounded-3 border h-100 card-hover">
-              <span class="badge text-bg-warning rounded-pill mb-1">3 · Temporal</span>
-              <p class="small mb-0">¿Cómo ha evolucionado la frecuencia y composición de los registros agropecuarios a lo largo del tiempo?</p>
-            </div>
-          </a>
-        </div>
-        <div class="col">
-          <a class="text-decoration-none" href="{{ url_for('pages.r4_relacional') }}">
-            <div class="p-3 rounded-3 border h-100 card-hover">
-              <span class="badge text-bg-secondary rounded-pill mb-1">4 · Multivariada</span>
-              <p class="small mb-0">¿Qué patrones de co-ocurrencia existen entre Cultivo, Región y Semestre, y cuáles combinaciones dominan el reporte agropecuario colombiano?</p>
-            </div>
-          </a>
-        </div>
-      </div>
-
-            <div class="pt-2 border-top">
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <i class="bi bi-bar-chart-line-fill text-success"></i>
-          <span class="small fw-semibold">Informe interactivo de Power BI</span>
-          <span class="ms-auto d-flex gap-2">
-            {% if powerbi_report_url %}
-            <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
-              Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
-            </a>
-            {% endif %}
-            {% if powerbi_pbix_url %}
-            <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
-              <i class="bi bi-download me-1"></i>Descargar .pbix
-            </a>
-            {% endif %}
-          </span>
-        </div>
-        {% if powerbi_embed_url %}
-        <div class="ratio ratio-16x9 rounded border shadow-sm">
-          <iframe title="Informe Power BI · Conocimiento evidente (EVA)" src="{{ powerbi_embed_url }}"
-                  frameborder="0" allowfullscreen loading="lazy"
-                  referrerpolicy="no-referrer-when-downgrade"></iframe>
-        </div>
-        {% elif powerbi_report_url %}
-        <p class="small text-body-secondary mb-0">
-          El informe se abre con el botón de arriba. Para incrustarlo aquí, configure
-          <code>POWERBI_EMBED_URL</code> (Power BI Service: Archivo → Insertar informe → Sitio web o portal).
-        </p>
-        {% else %}
-        <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
-        <span class="small text-body-secondary">Publica el informe en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
-        {% endif %}
-        <p class="small text-body-secondary mt-2 mb-0">
-          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
-          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
-        </p>
-      </div>
-
-      {# ── Informe técnico de la etapa (documento) ── #}
-      <div class="pt-2 border-top mt-2">
+      <div class="pt-2 border-top">
         <div class="d-flex flex-wrap align-items-center gap-2">
           <i class="bi bi-file-earmark-word-fill text-success"></i>
           <span class="small fw-semibold">Informe técnico de la etapa:</span>
@@ -122,6 +48,10 @@
              target="_blank" rel="noopener">
             <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
         </div>
+        <p class="small text-body-secondary mt-2 mb-0">
+          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
+          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
+        </p>
       </div>
     </div>
   </div>
@@ -284,66 +214,40 @@
     <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
     <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
   </div>
-  <p class="text-body-secondary small mb-4">Haz clic en una barra del gráfico de cultivos para aplicar ese filtro directamente en la sección de filtros.</p>
+  <p class="text-body-secondary small mb-4">
+    Tablero interactivo de Power BI para la Dimensión Poblacional (3 visualizaciones: VIZ-1, VIZ-2 y VIZ-3).
+    Filtra por cultivo, ciclo de cultivo o grupo de cultivo directamente sobre el informe.
+  </p>
 
-  <div class="row g-4">
-
-    <div class="col-12">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-1">
-            <div class="d-flex align-items-center gap-2">
-              {{ tag("VIZ-1", "success") }}
-              <h3 class="h6 fw-bold mb-0">Distribución de registros por cultivo</h3>
-            </div>
-            <small class="text-body-secondary">Click en una barra para filtrar</small>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Frecuencia absoluta de cada cultivo en el dataset. Refleja qué cultivos reportan más
-            municipios y periodos, no necesariamente cuáles producen más toneladas.
-          </p>
-          <div class="chart-frame" style="max-height:300px;">
-            <canvas id="chart-cultivos" aria-label="Registros por cultivo en el dataset EVA"></canvas>
-          </div>
-        </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <i class="bi bi-bar-chart-line-fill text-success"></i>
+        <span class="small fw-semibold">Informe interactivo de Power BI · Dimensión Poblacional</span>
+        <span class="ms-auto d-flex gap-2">
+          {% if powerbi_report_url %}
+          <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+            Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+          {% endif %}
+          {% if powerbi_pbix_url %}
+          <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-download me-1"></i>Descargar .pbix
+          </a>
+          {% endif %}
+        </span>
       </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-2", "info") }}
-            <h3 class="h6 fw-bold mb-0">Ciclo de cultivo</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Proporción entre cultivos transitorios (cosecha estacional) y permanentes (producción continua).
-          </p>
-          <div class="chart-frame" style="max-height:280px;">
-            <canvas id="chart-ciclo" aria-label="Distribución por ciclo de cultivo (permanente vs transitorio)"></canvas>
-          </div>
-        </div>
+      {% if powerbi_poblacional_embed_url %}
+      <div class="rounded border shadow-sm overflow-hidden mx-auto" style="aspect-ratio:600/373.5;max-width:900px;">
+        <iframe title="Informe Power BI · Dimensión Poblacional (EVA)" src="{{ powerbi_poblacional_embed_url }}"
+                width="100%" height="100%" frameborder="0" allowfullscreen loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
+      {% else %}
+      <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
+      <span class="small text-body-secondary">Publica la página en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
+      {% endif %}
     </div>
-
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-3", "warning") }}
-            <h3 class="h6 fw-bold mb-0">Estado físico al momento de cosecha</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Categoría de estado físico del cultivo: diferencia si se recolecta en verde, en seco u
-            otra presentación, lo que afecta la medición del peso y el rendimiento.
-          </p>
-          <div class="chart-frame" style="max-height:280px;">
-            <canvas id="chart-estado" aria-label="Distribución por estado físico del cultivo"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </section>
 
@@ -439,22 +343,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
-          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Distribución de registros por cultivo
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Maíz domina la población evaluada
         </button>
       </h3>
       <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            El gráfico de barras horizontales revela una distribución <strong>claramente asimétrica</strong>:
-            el <strong>{{ top_cultivo }}</strong> domina con el <strong>{{ top_cultivo_pct }} %</strong>
-            del total de registros, reflejando su amplia presencia geográfica en prácticamente todos los
-            departamentos y municipios productores de Colombia.
+            El <strong>Maíz</strong> es el cultivo básico más evaluado en el dataset EVA: concentra el
+            <strong>37.8 %</strong> de los registros (18.490 de 48.932), muy por encima del resto de
+            cultivos. El hallazgo surge del conteo de registros por cultivo sobre el total y se refleja
+            en la tarjeta "Participación cultivo líder %" del tablero.
           </p>
           <p class="mb-0">
-            En el otro extremo, el <strong>{{ minoritario_cultivo }}</strong> ({{ minoritario_pct }} %)
-            muestra una distribución geográfica más restringida, asociada a condiciones climáticas o
-            de suelo específicas. La distribución no implica mayor volumen de producción; cultivos como
-            la Papa tienen altos rendimientos por hectárea pese a tener menos registros.
+            Esto convierte al Maíz en el cultivo básico más extendido en la evaluación municipal, útil
+            para priorizar el seguimiento de abastecimiento. Sin embargo, más evaluaciones no implican
+            necesariamente más producción ni más área sembrada.
           </p>
         </div>
       </div>
@@ -463,20 +366,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
-          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Ciclo de cultivo (Transitorio vs Permanente)
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> La canasta es casi toda de ciclo transitorio
         </button>
       </h3>
       <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            El gráfico de anillos muestra la proporción entre cultivos <strong>transitorios</strong>
-            (Maíz, Arroz, Papa, Yuca, Frijol — cosecha 1-2 veces por año) y <strong>permanentes</strong>
-            (Plátano — producción continua). La predominancia de los transitorios indica que la
-            mayoría de los registros corresponden a ciclos productivos con alta variabilidad estacional.
+            Agrupando los registros por <strong>CicloCultivo</strong>, el <strong>90.1 %</strong>
+            (44.108 registros) corresponde a cultivos <strong>transitorios</strong> y solo el
+            <strong>9.9 %</strong> (4.824, únicamente Plátano) a cultivos <strong>permanentes</strong>.
+            El dato se calcula como el conteo por ciclo dividido entre el total.
           </p>
           <p class="mb-0">
-            Esto implica una mayor sensibilidad del dataset a factores climáticos y a los dos semestres
-            de reporte (primer y segundo semestre), lo que debe considerarse en los análisis temporales.
+            Predominan los cultivos de ciclo corto (dos cosechas al año), lo que hace pertinente un
+            seguimiento semestral para el 90 % de los casos. El conteo mezcla distintas desagregaciones
+            de un mismo cultivo, por lo que no debe leerse como número de cultivos distintos.
           </p>
         </div>
       </div>
@@ -485,21 +389,20 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
-          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Estado físico al momento de cosecha
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> El arroz es el cultivo menos evaluado
         </button>
       </h3>
       <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            El estado físico diferencia si el producto se recolecta en su presentación natural
-            (<em>En fresco</em>), tras secado natural (<em>Grano seco</em>) u otra forma
-            (<em>Paddy o cáscara verde</em>). Esta distinción es crítica para comparar rendimientos:
-            el peso en verde puede ser hasta 3 veces mayor que en seco para el mismo cultivo.
+            En el extremo opuesto al Maíz, el <strong>Arroz</strong> es el cultivo con menor número de
+            registros: apenas el <strong>8.5 %</strong> del total (4.138 registros), según el conteo
+            mínimo por cultivo.
           </p>
           <p class="mb-0">
-            La concentración en "Grano seco" refleja que la mayoría de los cultivos básicos (Arroz,
-            Maíz, Frijol) se miden tras el proceso de deshidratación, mientras que el Plátano y la
-            Papa se miden en fresco.
+            Su bajo volumen de registro se concentra en pocos municipios arroceros, lo que señala una
+            baja cobertura de evaluación para un cultivo estratégico en la seguridad alimentaria del
+            país. Esta baja frecuencia de registro no implica baja importancia productiva o social.
           </p>
         </div>
       </div>
@@ -521,40 +424,40 @@
 
   {% set conocimientos = [
     {
-      "n": "C-1", "color": "success", "icon": "bi-bar-chart-line-fill",
-      "titulo": "Predominancia del Maíz en el dataset",
-      "pregunta": "¿Cuál es el cultivo con mayor presencia en el dataset y qué implica para la representatividad del análisis?",
-      "variables": "Cultivo (categórica), total de registros (numérica derivada).",
-      "procedimiento": "Conteo de frecuencias absolutas por valor de la columna Cultivo; cálculo de participación porcentual sobre el total.",
-      "evidencia": top_cultivo ~ " concentra el " ~ top_cultivo_pct | string ~ " % de los registros (" ~ (top_cultivo_n | miles) ~ " de " ~ (total_registros | miles) ~ ").",
-      "hallazgo": "El dataset está dominado por el " ~ top_cultivo ~ ", que casi duplica en registros al segundo cultivo más frecuente.",
-      "interpretacion": "Una hipótesis plausible es que la predominancia del " ~ top_cultivo ~ " esté asociada a su condición de cultivo de subsistencia extendido en el país, cultivable en diferentes altitudes y climas. El dataset no incluye variables agroecológicas, por lo que esta explicación no puede comprobarse directamente con los datos; es una asociación, no una relación causal establecida.",
-      "utilidad": "Prioriza el " ~ top_cultivo ~ " en análisis de seguridad alimentaria como cultivo de mayor impacto estadístico y orienta la ponderación de modelos predictivos.",
-      "limitacion": "La sobre-representación puede sesgar análisis multivariados si no se estratifica la muestra por cultivo.",
+      "n": "VIZ-1", "color": "success", "icon": "bi-trophy-fill",
+      "titulo": "Maíz domina la población evaluada",
+      "pregunta": "¿Cuál es el cultivo con mayor número de evaluaciones registradas y qué implica para la representatividad del análisis?",
+      "variables": "Cultivo, Registros.",
+      "procedimiento": "Conteo de registros por cultivo dividido entre el total (48.932).",
+      "evidencia": "Gráfico de barras por cultivo + tarjeta de Participación del cultivo líder %.",
+      "hallazgo": "Maíz = 37.8 % de los registros (18.490 de 48.932).",
+      "interpretacion": "Es el cultivo básico más extendido en la evaluación municipal: se reporta en prácticamente todos los departamentos productores del país.",
+      "utilidad": "Prioriza el Maíz en el seguimiento de abastecimiento agropecuario.",
+      "limitacion": "Más evaluaciones no equivalen a más producción ni a más área sembrada.",
     },
     {
-      "n": "C-2", "color": "info", "icon": "bi-arrow-repeat",
-      "titulo": "Dominio de los cultivos transitorios",
-      "pregunta": "¿Qué proporción del dataset corresponde a cultivos transitorios frente a permanentes y qué diferencia analítica implica?",
-      "variables": "CicloCultivo (categórica), Cultivo (categórica).",
-      "procedimiento": "Agrupación por CicloCultivo y conteo de frecuencias; cruce con Cultivo para confirmar la clasificación.",
-      "evidencia": "5 de los 6 cultivos del dataset son transitorios (Maíz, Arroz, Papa, Yuca, Frijol); solo el Plátano es permanente.",
-      "hallazgo": "El dataset refleja una población productiva mayoritariamente transitoria, con ciclos de cosecha de 4 a 12 meses.",
-      "interpretacion": "La predominancia de transitorios implica alta sensibilidad a variaciones estacionales y climáticas. Los análisis temporales deben considerar la estacionalidad semestral como factor estructural.",
-      "utilidad": "Fundamenta la necesidad de análisis estacionales diferenciados entre cultivos transitorios y permanentes en la Dimensión Temporal.",
-      "limitacion": "La clasificación Permanente/Transitorio no captura cultivos con ciclos intermedios o que varían por región.",
+      "n": "VIZ-2", "color": "info", "icon": "bi-arrow-repeat",
+      "titulo": "La canasta es casi toda de ciclo transitorio",
+      "pregunta": "¿Qué proporción de los registros corresponde a cultivos transitorios frente a permanentes?",
+      "variables": "CicloCultivo, Registros.",
+      "procedimiento": "Conteo de registros por ciclo de cultivo dividido entre el total.",
+      "evidencia": "Gráfico de anillos por CicloCultivo.",
+      "hallazgo": "Transitorio = 90.1 % (44.108); Permanente = 9.9 % (4.824, solo Plátano).",
+      "interpretacion": "Predominan los cultivos de ciclo corto, con dos cosechas por año.",
+      "utilidad": "El seguimiento semestral es pertinente para el 90 % de los casos.",
+      "limitacion": "El conteo mezcla desagregaciones de un mismo cultivo.",
     },
     {
-      "n": "C-3", "color": "warning", "icon": "bi-check2-all",
-      "titulo": "Alta completitud de las variables numéricas post-ETL",
-      "pregunta": "¿Qué porcentaje de registros tiene las cuatro variables numéricas completas y qué implica para el análisis productivo?",
-      "variables": "AreaSembrada, AreaCosechada, Produccion, Rendimiento (numéricas); Cultivo (categórica).",
-      "procedimiento": "Para cada registro se verifica si los cuatro campos son distintos de nulo; se calcula la tasa de completitud total.",
-      "evidencia": completitud_pct | string ~ " % de los registros (" ~ (completos_n | miles) ~ " de " ~ (total_registros | miles) ~ ") tienen las 4 variables numéricas presentes.",
-      "hallazgo": "El proceso ETL de SSIS (R3) logró una completitud del " ~ completitud_pct | string ~ " %, garantizando que prácticamente todos los registros están disponibles para análisis cuantitativo.",
-      "interpretacion": "Una completitud tan alta es resultado directo de las reglas de tratamiento aplicadas en la Etapa 3: los registros con campos numéricos no convertibles fueron separados a la tabla de revisión, de modo que el dataset tratado solo contiene valores numéricos válidos.",
-      "utilidad": "Permite aplicar modelos de regresión, clusterización y análisis de rendimiento sobre el conjunto completo sin necesidad de imputación o exclusión.",
-      "limitacion": "La completitud mide presencia de valor, no exactitud. Un campo puede estar presente pero ser incorrecto; la validez exacta se aborda en la Dimensión Relacional.",
+      "n": "VIZ-3", "color": "warning", "icon": "bi-graph-down",
+      "titulo": "El arroz es el cultivo menos evaluado",
+      "pregunta": "¿Cuál es el cultivo con menor número de registros y qué implica para su cobertura de evaluación?",
+      "variables": "Cultivo, Registros.",
+      "procedimiento": "Conteo mínimo de registros por cultivo.",
+      "evidencia": "Gráfico de barras por cultivo.",
+      "hallazgo": "Arroz = 8.5 % de los registros (4.138), el valor más bajo de los seis cultivos básicos.",
+      "interpretacion": "Su registro se concentra en pocos municipios arroceros.",
+      "utilidad": "Señala baja cobertura de evaluación para un cultivo estratégico.",
+      "limitacion": "Baja frecuencia de registro no implica baja importancia productiva.",
     },
   ] %}
 
@@ -625,16 +528,9 @@
 
 {% endblock %}
 
-{% block vendor_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
-{% endblock %}
-
 {% block page_data %}
 <script id="page-data" type="application/json">{{
   {
-    "cultivos": cultivos_chart,
-    "ciclo": ciclo_chart,
-    "estado": estado_chart,
     "cross": cross_data,
     "total": total_registros
   } | tojson
@@ -645,10 +541,6 @@
   const pageData = JSON.parse(document.getElementById("page-data").textContent);
   const TOTAL = pageData.total;
   const CROSS = pageData.cross;
-  const CULTIVOS_DATA = {};
-  pageData.cultivos.labels.forEach((c, i) => {
-    CULTIVOS_DATA[c] = { n: pageData.cultivos.values[i], pct: pageData.cultivos.pcts[i] };
-  });
 
   const selCultivo = document.getElementById("filter-cultivo");
   const selCiclo   = document.getElementById("filter-ciclo");

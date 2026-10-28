@@ -49,8 +49,11 @@ def create_app(config_class: type = Config) -> Flask:
             "etapas": ETAPAS,
             "github_repo_url": cfg["GITHUB_REPO_URL"],
             "powerbi_report_url": cfg["POWERBI_REPORT_URL"],
-            "powerbi_embed_url": cfg["POWERBI_EMBED_URL"],
             "powerbi_pbix_url": pbix_url,
+            "powerbi_poblacional_embed_url": cfg["POWERBI_R4_POBLACIONAL_URL"],
+            "powerbi_territorial_embed_url": cfg["POWERBI_R4_TERRITORIAL_URL"],
+            "powerbi_temporal_embed_url": cfg["POWERBI_R4_TEMPORAL_URL"],
+            "powerbi_relacional_embed_url": cfg["POWERBI_R4_RELACIONAL_URL"],
             "r4_toc_nav": r4_toc_nav,
             "R4_TOC_ITEMS": R4_TOC_ITEMS,
         }
