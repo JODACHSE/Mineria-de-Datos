@@ -21,6 +21,40 @@
 
 {% block report_body %}
 
+{# ────────────────────────────── INFORME (propósito de la etapa) ─── #}
+<section id="conocimiento-evidente" class="mb-5 reveal">
+  <div class="card border-0 shadow-sm bg-body-tertiary">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+        <h2 class="h5 fw-bold mb-0">Informe</h2>
+      </div>
+      <p class="small text-body-secondary mb-3" style="max-width:70ch;">
+        Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
+        {{ proyecto_periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
+        indicadores, comparaciones y visualizaciones. Cada una de las cuatro dimensiones (Poblacional,
+        Territorial, Temporal y Relacional — navegación lateral) se desarrolla en su propia página,
+        con su propio tablero embebido del informe de Power BI.
+      </p>
+
+      <div class="pt-2 border-top">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-file-earmark-word-fill text-success"></i>
+          <span class="small fw-semibold">Informe técnico de la etapa:</span>
+          <a class="btn btn-success btn-sm"
+             href="https://mailunicundiedu-my.sharepoint.com/:w:/g/personal/afrodriguezcorrea_ucundinamarca_edu_co/cQr_CkcSDq53T7NqFK_EWRxnEgUCkSyOSqD90EMQYWTciLjKPA"
+             target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
+        </div>
+        <p class="small text-body-secondary mt-2 mb-0">
+          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
+          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
 {# ────────────────────────────── DESCRIPCIÓN ─── #}
 <section id="descripcion" class="mb-5 reveal">
   <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
@@ -182,70 +216,40 @@
     <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
     <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
   </div>
-  <p class="text-body-secondary small mb-4">Haz clic en una barra de VIZ-1 para filtrar la tabla por ese cultivo.</p>
+  <p class="text-body-secondary small mb-4">
+    Tablero interactivo de Power BI para la Dimensión Relacional (3 visualizaciones: VIZ-1, VIZ-2 y VIZ-3).
+    Filtra por cultivo o región directamente sobre el informe.
+  </p>
 
-  <div class="row g-4">
-
-    {# VIZ-1: Región × Cultivo agrupado #}
-    <div class="col-12">
-      <div class="card border-0 shadow-sm">
-        <div class="card-body">
-          <div class="d-flex align-items-center justify-content-between mb-1">
-            <div class="d-flex align-items-center gap-2">
-              {{ tag("VIZ-1", "success") }}
-              <h3 class="h6 fw-bold mb-0">Cruce territorial-poblacional: registros por región y cultivo</h3>
-            </div>
-            <small class="text-body-secondary">Click en una barra para filtrar</small>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Barras agrupadas por región geográfica; cada color representa un cultivo básico.
-            Permite identificar qué cultivos dominan en cada región y cuáles son marginales.
-          </p>
-          <div class="chart-frame" style="max-height:320px;">
-            <canvas id="chart-rel-region" aria-label="Registros por región geográfica y cultivo"></canvas>
-          </div>
-        </div>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <i class="bi bi-bar-chart-line-fill text-success"></i>
+        <span class="small fw-semibold">Informe interactivo de Power BI · Dimensión Relacional</span>
+        <span class="ms-auto d-flex gap-2">
+          {% if powerbi_report_url %}
+          <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+            Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+          {% endif %}
+          {% if powerbi_pbix_url %}
+          <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-download me-1"></i>Descargar .pbix
+          </a>
+          {% endif %}
+        </span>
       </div>
-    </div>
-
-    {# VIZ-2 + VIZ-3 #}
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-2", "info") }}
-            <h3 class="h6 fw-bold mb-0">Cruce poblacional-temporal: cultivo × semestre</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Barras apiladas por cultivo; cada segmento representa el semestre (Primer, Segundo, Anual).
-            Muestra qué cultivos tienen mayor estacionalidad semestral.
-          </p>
-          <div class="chart-frame" style="max-height:300px;">
-            <canvas id="chart-rel-semestre" aria-label="Registros por cultivo y semestre"></canvas>
-          </div>
-        </div>
+      {% if powerbi_relacional_embed_url %}
+      <div class="rounded border shadow-sm overflow-hidden mx-auto" style="aspect-ratio:600/373.5;max-width:900px;">
+        <iframe title="Informe Power BI · Dimensión Relacional (EVA)" src="{{ powerbi_relacional_embed_url }}"
+                width="100%" height="100%" frameborder="0" allowfullscreen loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
       </div>
+      {% else %}
+      <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
+      <span class="small text-body-secondary">Publica la página en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
+      {% endif %}
     </div>
-
-    <div class="col-md-6">
-      <div class="card border-0 shadow-sm h-100">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-1">
-            {{ tag("VIZ-3", "warning") }}
-            <h3 class="h6 fw-bold mb-0">Cruce temporal-territorial: evolución por región</h3>
-          </div>
-          <p class="small text-body-secondary mb-3">
-            Líneas por región geográfica a lo largo de los años. Permite comparar si el
-            crecimiento observado en la serie temporal es uniforme en todas las regiones o
-            está concentrado en algunas.
-          </p>
-          <div class="chart-frame" style="max-height:300px;">
-            <canvas id="chart-rel-region-year" aria-label="Evolución de registros por región geográfica"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </div>
 </section>
 
@@ -347,27 +351,20 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
-          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Cruce territorial-poblacional (Región × Cultivo)
+          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Solo 52 de 90 ternas están pobladas
         </button>
       </h3>
       <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            La terna <strong>{{ top_combo_cultivo }} × {{ top_combo_region }} × {{ top_combo_sem }}</strong>
-            es la dominante con <strong>{{ top_combo_n | miles }}</strong> registros
-            (<strong>{{ top_combo_pct }} %</strong> del total) — el gráfico de arriba proyecta en dos ejes
-            (Región × Cultivo) este mismo cruce, que IND-1/IND-2 calculan sobre las tres variables a la vez.
-            Este resultado muestra que la Región Andina no solo concentra más registros en términos
-            absolutos, sino que su distribución interna está marcada por la prevalencia de un cultivo
-            específico en un semestre particular, en línea con el patrón de especialización observado en
-            la Dimensión Territorial.
+            De las <strong>90 ternas posibles</strong> (6 cultivos × 5 regiones × 3 tipos de semestre),
+            solo <strong>52 (57.8 %)</strong> tienen al menos un registro. El cálculo cuenta las ternas
+            Cultivo × Región × Semestre con registros, sobre el total de combinaciones posibles (6×5×3).
           </p>
           <p class="mb-0">
-            Las regiones de menor representación (Orinoquía, Amazonía) muestran perfiles de cultivos
-            distintos: los cultivos que dominan en la Región Andina tienen poca presencia allí. Esto es
-            coherente con una heterogeneidad agroecológica del territorio colombiano, aunque el dataset no
-            mide directamente variables agroecológicas, por lo que esa explicación sigue siendo una
-            hipótesis y no una relación comprobada.
+            Existe una fuerte especialización: no todos los cultivos se evalúan en todas las regiones y
+            semestres. Esto permite identificar huecos de cobertura, aunque una terna vacía puede
+            reflejar tanto una ausencia real del cultivo como un subregistro.
           </p>
         </div>
       </div>
@@ -376,23 +373,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
-          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> Cruce poblacional-temporal (Cultivo × Semestre)
+          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> La terna líder es Maíz × Andina × Primer semestre
         </button>
       </h3>
       <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            El gráfico apilado por cultivo muestra que la distribución semestral varía entre cultivos.
-            Algunos están fuertemente ligados al ciclo estacional (más registros en un semestre),
-            mientras que otros como la <strong>Yuca</strong> o el <strong>Plátano</strong> tienden a
-            tener mayor proporción de registros anuales (sin diferenciación semestral), consistente
-            con que son cultivos de ciclo largo o permanente.
+            La combinación más frecuente es <strong>Maíz × Andina × Primer semestre</strong>, con
+            <strong>5.469 registros (11.2 %)</strong> del total; el par Maíz × Andina acumula
+            <strong>10.562 registros (21.6 %)</strong>. El cálculo identifica el máximo de registros
+            entre las 90 ternas posibles.
           </p>
           <p class="mb-0">
-            Esta diferenciación entre cultivos transitorios (con fuerte estacionalidad) y permanentes
-            (distribución anual) es importante para diseñar modelos de predicción: los cultivos
-            transitorios requieren modelos estacionales (SARIMA, regresión con variables dummy de
-            semestre), mientras que los permanentes admiten modelos de tendencia simple.
+            El maíz andino del primer semestre es el perfil dominante del registro agropecuario, y
+            constituye un foco natural para el análisis y la política pública. Esta medida es
+            frecuencia de evaluación, no volumen de producción.
           </p>
         </div>
       </div>
@@ -401,23 +396,21 @@
     <div class="accordion-item border rounded mb-2">
       <h3 class="accordion-header">
         <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
-          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> Cruce temporal-territorial (Región × Año)
+          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> El maíz es el cultivo más transversal
         </button>
       </h3>
       <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
         <div class="accordion-body small">
           <p>
-            Las líneas por región revelan si el crecimiento total del dataset (identificado en la
-            Dimensión Temporal) es <strong>uniforme</strong> entre regiones o <strong>asimétrico</strong>.
-            La Región Andina, al dominar el dataset, impulsa la mayor parte del crecimiento total.
-            Las demás regiones muestran tendencias más planas, lo que sugiere que el salto observado
-            en el total es principalmente un fenómeno andino.
+            El <strong>Maíz</strong> está presente en las <strong>5 regiones geográficas</strong>:
+            29 de los 30 pares posibles cultivo×región tienen al menos un registro. Sin embargo, al
+            incorporar el semestre como tercera variable, las combinaciones activas caen a 52 de 90.
           </p>
           <p class="mb-0">
-            El modo de interacción <em>index</em> del tooltip permite comparar todas las regiones
-            en un mismo año. Un año donde varias regiones crecen simultáneamente indica un cambio
-            sistémico en el EVA (expansión de cobertura nacional), mientras que si solo una región
-            crece, el cambio es local.
+            Al cruzar solo dos variables casi todo se combina; es la tercera variable (semestre) la
+            que revela los huecos reales de cobertura, lo que justifica el análisis multivariado
+            frente al bivariado. "Activo" aquí significa al menos un registro, no mide intensidad de
+            producción.
           </p>
         </div>
       </div>
@@ -436,40 +429,40 @@
 
   {% set conocimientos = [
     {
-      "n": "C-1", "color": "success", "icon": "bi-diagram-3-fill",
-      "titulo": "Dominancia de " ~ top_combo_cultivo ~ " en " ~ top_combo_region ~ " (" ~ top_combo_sem ~ ")",
-      "pregunta": "¿Qué terna cultivo×región×semestre concentra más registros y cuánto representa del total?",
-      "variables": "Cultivo (categórica-poblacional), Región (derivada-territorial), Semestre (derivada-temporal), conteo de registros (numérica derivada).",
-      "procedimiento": "Cruce trivariado Cultivo×Región×Semestre; conteo de frecuencias para las 90 ternas posibles (6×5×3); identificación de la terna con mayor frecuencia absoluta. A diferencia de un cruce bidimensional, este conteo no se reduce a solo dos variables.",
-      "evidencia": top_combo_cultivo ~ " en " ~ top_combo_region ~ " durante el " ~ top_combo_sem ~ ": " ~ (top_combo_n | miles) ~ " registros (" ~ top_combo_pct | string ~ " % del total). La terna dominante supera por un margen significativo a las demás.",
-      "hallazgo": "Una sola terna cultivo×región×semestre (" ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ " × " ~ top_combo_sem ~ ") concentra más del " ~ top_combo_pct | string ~ " % de todos los registros del dataset.",
-      "interpretacion": "Una explicación plausible es que esta terna resulte de la confluencia de tres factores observables por separado: la Región Andina es la más representada territorialmente, " ~ top_combo_cultivo ~ " es el cultivo más frecuente, y el " ~ top_combo_sem ~ " concentra más registros que los demás periodos. Esto es una asociación entre magnitudes, no una relación causal: el dataset no permite establecer por qué coinciden.",
-      "utilidad": "Justifica la necesidad de análisis estratificados: un modelo global entrenado con estos datos tendrá un sesgo implícito hacia " ~ top_combo_cultivo ~ " en la Región Andina durante el " ~ top_combo_sem ~ ". La segmentación por región, cultivo y semestre es indispensable para resultados representativos.",
-      "limitacion": "La dominancia en número de registros no implica dominancia en producción. Un análisis de " ~ top_combo_cultivo ~ " × " ~ top_combo_region ~ " basado en toneladas o hectáreas podría mostrar un patrón distinto.",
+      "n": "VIZ-1", "color": "success", "icon": "bi-grid-3x3-gap-fill",
+      "titulo": "Solo 52 de 90 ternas están pobladas",
+      "pregunta": "¿Cuántas de las combinaciones posibles de Cultivo × Región × Semestre tienen al menos un registro?",
+      "variables": "Cultivo, Región, Semestre.",
+      "procedimiento": "Conteo de ternas con al menos un registro, sobre el total de combinaciones posibles (6 cultivos × 5 regiones × 3 semestres = 90).",
+      "evidencia": "Tarjeta de Ternas pobladas + matriz cultivo × región.",
+      "hallazgo": "52 de 90 ternas activas (57.8 %).",
+      "interpretacion": "Existe una fuerte especialización: no todo cultivo se evalúa en toda región y semestre.",
+      "utilidad": "Identifica huecos de cobertura en el reporte agropecuario.",
+      "limitacion": "Una terna vacía puede ser ausencia real del cultivo o subregistro.",
     },
     {
-      "n": "C-2", "color": "info", "icon": "bi-grid-3x3-gap-fill",
-      "titulo": "Alta cobertura relacional: " ~ active_combos ~ " de " ~ max_combos ~ " ternas activas",
-      "pregunta": "¿Qué proporción de las ternas cultivo×región×semestre posibles tiene representación en el dataset?",
-      "variables": "Cultivo (categórica, 6 valores), Región (derivada, 5 valores), Semestre (derivada, 3 valores), registro lógico de presencia/ausencia.",
-      "procedimiento": "Construcción de la matriz de presencia cultivo×región×semestre (6×5×3=90 ternas posibles); conteo de celdas con al menos un registro.",
-      "evidencia": active_combos | string ~ " de " ~ max_combos | string ~ " ternas posibles tienen registros (" ~ (active_combos / max_combos * 100) | round(1) | string ~ " %). Hay " ~ (max_combos - active_combos) | string ~ " ternas sin ningún registro.",
-      "hallazgo": "El dataset presenta alta cobertura relacional: la mayoría de las ternas cultivo×región×semestre posibles están representadas, aunque con intensidades muy desiguales.",
-      "interpretacion": "La alta cobertura indica que los seis cultivos básicos tienen cierta presencia en todas o casi todas las regiones y semestres. Sin embargo, la desigualdad de intensidades sugiere que muchas ternas tienen cobertura marginal (pocos registros) frente a las dominantes. Una hipótesis razonable es que las celdas vacías correspondan a condiciones agroecológicas incompatibles con el cultivo en esa región, pero el dataset no incluye variables agroecológicas que permitan confirmarlo directamente.",
-      "utilidad": "La cobertura casi completa de la matriz facilita el uso de técnicas multivariadas (análisis de correspondencias, modelos de panel) sin imputación excesiva. Las ternas con pocos registros deben tratarse con técnicas robustas a datos escasos.",
-      "limitacion": "La presencia de al menos un registro no garantiza que la terna tenga suficiente masa estadística para análisis confiables. Ternas con menos de 50 registros deberían reportarse como datos escasos, no como datos representativos.",
+      "n": "VIZ-2", "color": "info", "icon": "bi-trophy-fill",
+      "titulo": "La terna líder es Maíz × Andina × Primer semestre",
+      "pregunta": "¿Cuál es la combinación de Cultivo × Región × Semestre con más registros?",
+      "variables": "Cultivo, Región, Semestre, Registros.",
+      "procedimiento": "Identificación del máximo de registros entre las 90 ternas posibles y cálculo de su participación sobre el total.",
+      "evidencia": "Matriz cultivo × región + tarjeta de Participación de la terna líder %.",
+      "hallazgo": "Maíz × Andina × Primer semestre = 5.469 registros (11.2 %); el par Maíz × Andina = 10.562 (21.6 %).",
+      "interpretacion": "El maíz andino del primer semestre es el perfil dominante del registro.",
+      "utilidad": "Es un foco natural de análisis y de política pública.",
+      "limitacion": "Es frecuencia de evaluación, no volumen de producción.",
     },
     {
-      "n": "C-3", "color": "warning", "icon": "bi-arrows-fullscreen",
-      "titulo": transversal_cultivo ~ " como el cultivo de mayor alcance territorial",
-      "pregunta": "¿Qué cultivo está presente en el mayor número de regiones geográficas?",
-      "variables": "Cultivo (categórica), Región (derivada), presencia binaria por combinación.",
-      "procedimiento": "Para cada cultivo, conteo del número de regiones con al menos un registro; ranking descendente por número de regiones cubiertas.",
-      "evidencia": transversal_cultivo ~ " tiene registros en " ~ transversal_regions | string ~ " de las " ~ filter_regiones | length | string ~ " regiones geográficas, el mayor alcance territorial de todos los cultivos básicos.",
-      "hallazgo": transversal_cultivo ~ " es el cultivo más transversal del dataset: su presencia se extiende a través de " ~ transversal_regions | string ~ " regiones, lo que lo convierte en el cultivo con mayor diversidad territorial.",
-      "interpretacion": "La transversalidad de " ~ transversal_cultivo ~ " puede reflejar su adaptabilidad agroecológica (crece en diferentes altitudes, climas y tipos de suelo), su importancia estratégica para la seguridad alimentaria (lo que motiva su cultivo incluso en regiones subóptimas), o ambas. Este cultivo es el mejor candidato para análisis de tendencias nacionales con representatividad territorial.",
-      "utilidad": "Los cultivos con alta transversalidad territorial son los más adecuados para construir índices agregados a nivel nacional. " ~ transversal_cultivo ~ " puede ser usado como referencia para normalizar o comparar el comportamiento de otros cultivos más especializados regionalmente.",
-      "limitacion": "La transversalidad se mide por número de regiones con registros, no por participación de mercado ni por extensión de área sembrada. Un cultivo puede aparecer en muchas regiones con registros muy pequeños, lo que inflaría artificialmente su índice de transversalidad.",
+      "n": "VIZ-3", "color": "warning", "icon": "bi-diagram-3-fill",
+      "titulo": "El maíz es el cultivo más transversal",
+      "pregunta": "¿Qué cultivo tiene mayor presencia a lo largo de las regiones geográficas?",
+      "variables": "Cultivo, Región.",
+      "procedimiento": "Conteo de pares cultivo-región activos.",
+      "evidencia": "Barras agrupadas por región y cultivo + tarjeta de Pares cultivo-región activos.",
+      "hallazgo": "Maíz presente en las 5 regiones; 29 de 30 pares cultivo×región activos, pero caen a 52/90 al añadir el semestre.",
+      "interpretacion": "En 2 variables casi todo se combina; la tercera variable (semestre) revela los huecos reales.",
+      "utilidad": "Justifica el análisis multivariado (3 variables) frente al bivariado.",
+      "limitacion": '"Activo" significa al menos un registro, no mide intensidad.',
     },
   ] %}
 
@@ -544,16 +537,9 @@
 
 {% endblock %}
 
-{% block vendor_scripts %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
-{% endblock %}
-
 {% block page_data %}
 <script id="page-data" type="application/json">{{
   {
-    "region_cultivo":    region_cultivo_chart,
-    "cultivo_semestre":  cultivo_semestre_chart,
-    "region_year":       region_year_chart,
     "cross":             cross_data,
     "total":             total_registros
   } | tojson

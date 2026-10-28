@@ -2,8 +2,9 @@
 
 Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
 Sitio web en **Flask** que publica los entregables **R1 · Del problema a los
-datos**, **R2 · Diagnóstico y calidad de los datos** y **R3 · Tratamiento ETL
-con SSIS**, con un explorador de datos y métricas de calidad servidas por una
+datos**, **R2 · Diagnóstico y calidad de los datos**, **R3 · Tratamiento ETL
+con SSIS** y **R4 · Conocimiento evidente** (análisis exploratorio con
+Power BI), con un explorador de datos y métricas de calidad servidas por una
 API propia.
 
 **Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
@@ -57,18 +58,21 @@ Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
 │   │   ├── layouts/         # base.html (Bootstrap + temas) · report.html (hero + TOC + scrollspy)
 │   │   ├── components/      # navbar, ticker, footer, toc, data_explorer, toast, back_to_top
 │   │   ├── macros/ui.html   # stat, section_head, callout, tag, quality_bar, source_card…
-│   │   ├── pages/           # home, r1, r2, entregables, about
+│   │   ├── pages/           # home, r1, r2, r3, r4 (+ r4_territorial/temporal/ ), entregables, about
 │   │   └── errors/404.html
 │   ├── static/
 │   │   ├── css/app.css      # ~50 líneas propias
 │   │   ├── js/app.js        # entrada; modules/: sound (uisfx), theme, motion, explorer, charts, notify
-│   │   ├── data/R1|R2/      # datasets curados / tratados + log_tratamiento.json
+│   │   ├── data/R1|R2|R3/   # datasets curados / tratados + log_tratamiento.json + iteraciones.json
+│   │   ├── etapa3/          # assets servidos de R3: SSIS (sql/, img/), R3.zip, informe PDF/DOCX
 │   │   └── assets/img/
-│   └── data/                # CSV originales (trazabilidad)
-├── etapa3/                  # R3: solución SSIS (EVA.dtsx, FAOSTAT.dtsx) + scripts SQL y catálogos
-├── scripts/                 # fetch_faostat, rebuild_chart, process_eva, clean_datasets, etapa3_iteraciones
+│   └── data/                # CSV originales (trazabilidad) — ver "Reproducir los datos"
+├── SQL/                     # esquema y SPs maestros de Wololo_ETL (SQL Server)
+├── scripts/
+│   ├── fetch_faostat.py · rebuild_chart.py · process_eva.py · clean_datasets.py · etapa3_iteraciones.py
+│   └── R3/                  # proyecto SSIS de Visual Studio (EVA.dtsx, FAOSTAT.dtsx, R3.dtproj)
+├── docs/R3/                 # detalle técnico ampliado de los paquetes SSIS (EVA, FAOSTAT)
 ├── tests/                   # pytest: rutas, API y calidad
-├── .github/workflows/ci.yml # pytest en cada push
 ├── render.yaml · Procfile · .python-version
 ├── requirements.txt · requirements-dev.txt   
 ├── setup.sh · setup.bat · .env.example
@@ -108,6 +112,7 @@ python run.py
 |------|-------------|
 | `/` | Landing |
 | `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
+| `/r4` · `/r4/territorial` · `/r4/temporal` · `/r4/relacional` | R4 · Conocimiento evidente: las 4 preguntas de análisis (poblacional, territorial, temporal, multivariada) y el acceso al informe de Power BI |
 | `/entregables` | Hoja de ruta (8 etapas) |
 | `/sobre-nosotros` | Equipo |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
@@ -140,9 +145,24 @@ Our World in Data (CC BY 4.0). Uso estrictamente académico.
 
 - Página: `/r3` — resumen, reglas, diagramas de los paquetes, resultados de las tres
   iteraciones, comparación de calidad, ejemplos, prueba de re-ejecución, video y descarga
-  del informe (`app/static/etapa3/`).
-- Paquetes y SQL: ver [`etapa3/README.md`](etapa3/README.md).
+  del informe (assets servidos desde `app/static/etapa3/`).
+- Proyecto SSIS (Visual Studio): [`scripts/R3/`](scripts/R3/) — `EVA.dtsx`, `FAOSTAT.dtsx`,
+  `R3.dtproj`. Esquema y stored procedures maestros en [`SQL/`](SQL/).
+- Documentación técnica detallada de cada paquete (control flow, data flow, reglas,
+  manejo de errores): [`docs/R3/Mineria_ETL_EVA.md`](docs/R3/Mineria_ETL_EVA.md) ·
+  [`docs/R3/Mineria_ETL_FAOSTAT.md`](docs/R3/Mineria_ETL_FAOSTAT.md).
 - Resultados de las iteraciones: `python scripts/etapa3_iteraciones.py`
   → `app/static/data/R3/iteraciones.json`.
 - Video: definir `VIDEO_ETAPA3_URL` (YouTube o Google Drive público) en `.env` o en las
   variables de entorno de Render para que se embeba en `/r3`.
+
+## Etapa 4 · Conocimiento evidente
+
+- Páginas: `/r4` (propósito de la etapa, las 4 preguntas y acceso al informe de Power BI),
+  `/r4/territorial`, `/r4/temporal`, `/r4/relacional` — cada una con sus indicadores,
+  visualizaciones, filtros y conocimientos evidentes.
+- Informe de Power BI: pendiente de publicar. Cuando esté listo, definir
+  `POWERBI_REPORT_URL` en `.env` o en las variables de entorno de Render para que el
+  botón "Abrir informe" en `/r4` quede activo.
+- Archivo `.pbix`, medidas DAX documentadas e instrucciones para abrirlo/actualizarlo:
+  pendiente — se publicará en una carpeta `powerbi/` en la raíz del repositorio.
