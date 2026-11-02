@@ -1,0 +1,266 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, conocimientos_cards %}
+
+{% set report_code = "R5 · Análisis multidimensional" %}
+{% set report_title = 'Vista ' ~ vista.num ~ '<br><span class="text-success">' ~ vista.titulo ~ '</span>' %}
+{% set report_lead = vista.pregunta %}
+
+{% set toc_nav_title = "Análisis multidimensional" %}
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("pregunta", "Pregunta y relación con R4"),
+  ("modelo", "Dimensiones, medidas y jerarquías"),
+  ("explorador", "Explorador OLAP"),
+  ("matriz", "Matriz de resultados"),
+  ("interpretacion", "Interpretación"),
+  ("conocimientos", "Conocimientos"),
+  ("limite-decision", "Limitación y decisión"),
+] %}
+
+{% block title %}R5 · {{ vista.titulo }} — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(vista.num ~ " / 4", "Pregunta de análisis", countup=False) }}</div>
+<div class="col">{{ stat(vista.dimensiones | length, "Dimensiones cruzadas") }}</div>
+<div class="col">{{ stat(vista.medidas | length, "Medidas disponibles") }}</div>
+<div class="col">{{ stat("48.932", "Hechos en el modelo estrella", countup=False) }}</div>
+{% endblock %}
+
+{% macro sec(num, id, title) %}
+<div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+  <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">{{ num }}</span>
+  <h2 class="h3 fw-bold mb-0">{{ title }}</h2>
+</div>
+{% endmacro %}
+
+{% block report_body %}
+
+<section id="pregunta" class="mb-5 reveal">
+  {{ sec(1, "pregunta", "Pregunta y relación con R4") }}
+  <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
+    <p class="fw-semibold mb-1">Pregunta específica</p>
+    <p class="mb-0 fst-italic text-body-secondary">{{ vista.pregunta }}</p>
+  </blockquote>
+  <p><strong>Cómo profundiza la etapa anterior.</strong> {{ vista.profundiza }}</p>
+  <p class="small text-body-secondary mb-0">
+    <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (MinAgricultura/UPRA, datos.gov.co),
+    versión tratada en R2/R3 · <i class="bi bi-calendar3 me-1"></i>Cobertura: 2019–2024, 1.098 municipios de 32 departamentos.
+  </p>
+</section>
+
+<section id="modelo" class="mb-5 reveal">
+  {{ sec(2, "modelo", "Dimensiones, medidas y jerarquías") }}
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body">
+        <h3 class="h6 fw-bold"><i class="bi bi-box me-1 text-success"></i>Dimensiones</h3>
+        <ul class="small mb-0 ps-3">{% for d in vista.dimensiones %}<li>{{ d }}</li>{% endfor %}</ul>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body">
+        <h3 class="h6 fw-bold"><i class="bi bi-calculator me-1 text-success"></i>Medidas</h3>
+        <ul class="small mb-0 ps-3">
+          {% for m in vista.medidas_info %}
+          <li><strong>{{ m.label }}</strong> ({{ m.unit }}) · <span class="font-monospace">{{ m.agg }}</span>
+            {% if not m.additive %}{{ tag("no aditiva", "warning") }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      </div></div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body">
+        <h3 class="h6 fw-bold"><i class="bi bi-diagram-3 me-1 text-success"></i>Jerarquías</h3>
+        <ul class="small mb-0 ps-3">
+          {% for j in vista.jerarquias_info %}<li><strong>{{ j.dim }}:</strong> {{ j.niveles | join(" → ") }}</li>{% endfor %}
+        </ul>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="explorador" class="mb-5" data-olap-root>
+  {{ sec(3, "explorador", "Explorador OLAP") }}
+
+  {# ---- controles ---- #}
+  <div class="card border-0 shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        {% for f in vista.config.filters %}
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold" for="olap-f-{{ f.level }}"><i class="bi bi-funnel me-1"></i>{{ f.label }}</label>
+          <select class="form-select form-select-sm" id="olap-f-{{ f.level }}" data-olap-filter="{{ f.level }}">
+            <option value="">Todos</option>
+            {% for o in filter_options[f.level] %}<option value="{{ o }}">{{ o }}</option>{% endfor %}
+          </select>
+        </div>
+        {% endfor %}
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold" for="olap-measure"><i class="bi bi-calculator me-1"></i>Medida</label>
+          <select class="form-select form-select-sm" id="olap-measure">
+            {% for m in vista.medidas_info %}<option value="{{ m.key }}">{{ m.label }} ({{ m.unit }})</option>{% endfor %}
+          </select>
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label small fw-semibold" for="olap-cols"><i class="bi bi-layout-three-columns me-1"></i>Columnas</label>
+          <select class="form-select form-select-sm" id="olap-cols">
+            {% for c in vista.config.cols_options %}
+            <option value="{{ c }}">{{ olap_meta.levels[c].label if c else "Sin columnas" }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% if vista.config.quality_toggle %}
+      <div class="form-check form-switch mt-3 mb-0">
+        <input class="form-check-input" type="checkbox" role="switch" id="olap-coherente">
+        <label class="form-check-label small" for="olap-coherente">Excluir filas con área cosechada &gt; sembrada (sensibilidad de calidad)</label>
+      </div>
+      {% endif %}
+
+      <hr>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="small fw-semibold me-1">Filas:</span>
+        <nav aria-label="Nivel de la jerarquía en filas"><ol class="breadcrumb mb-0 small" id="olap-levels"></ol></nav>
+        <div class="ms-md-auto d-flex flex-wrap gap-2">
+          <button class="btn btn-sm btn-outline-success" id="olap-rollup" type="button"><i class="bi bi-zoom-out me-1"></i>Roll-up</button>
+          <button class="btn btn-sm btn-outline-success" id="olap-drill" type="button" title="Baja un nivel sin filtrar; para bajar en un miembro, haga clic en su fila o barra"><i class="bi bi-zoom-in me-1"></i>Drill-down</button>
+          <button class="btn btn-sm btn-outline-success" id="olap-pivot" type="button"><i class="bi bi-arrow-left-right me-1"></i>Pivot</button>
+          <button class="btn btn-sm btn-outline-secondary" id="olap-reset" type="button"><i class="bi bi-arrow-counterclockwise me-1"></i>Restablecer</button>
+        </div>
+      </div>
+      <div class="mt-3 small" aria-live="polite">
+        <span class="badge text-bg-success me-2" id="olap-op">Consulta base</span>
+        <span class="fw-semibold">Selección activa:</span> <span id="olap-chips"></span>
+      </div>
+    </div>
+  </div>
+
+  {% if ejemplos %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <span class="small fw-semibold"><i class="bi bi-signpost-2 me-1"></i>Ejemplos guiados:</span>
+    {% for e in ejemplos %}
+    <button class="btn btn-sm btn-success" type="button" data-olap-example="{{ e.id }}"><i class="bi {{ e.icon }} me-1"></i>{{ e.op }} · {{ e.titulo }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {# ---- indicadores ---- #}
+  <h3 class="h5 fw-bold mb-3">Indicadores</h3>
+  <div class="row row-cols-1 row-cols-md-3 g-3 mb-4" id="olap-kpis">
+    {% for i in range(3) %}
+    <div class="col"><div class="card h-100 border-0 shadow-sm"><div class="card-body">
+      <div class="small text-body-secondary" data-kpi-label>…</div>
+      <div class="fs-4 fw-bold text-success font-monospace lh-sm my-1"><span data-kpi-value>…</span> <small class="fs-6 text-body-secondary" data-kpi-unit></small></div>
+      <div class="small text-body-secondary" data-kpi-detail></div>
+    </div></div></div>
+    {% endfor %}
+  </div>
+
+  {# ---- visualizaciones ---- #}
+  <h3 class="h5 fw-bold mb-3">Visualizaciones</h3>
+  <div class="row g-4 mb-2">
+    <div class="col-xl-6">
+      <div class="card h-100 border-0 shadow-sm"><div class="card-body">
+        <h4 class="h6 fw-bold mb-1">Gráfica 1 · {{ vista.config.chart1_title }}</h4>
+        <p class="small text-body-secondary mb-2" id="olap-c1-note"></p>
+        <div class="chart-frame"><canvas id="olap-chart1" role="img" aria-label="{{ vista.config.chart1_title }}"></canvas></div>
+      </div></div>
+    </div>
+    <div class="col-xl-6">
+      <div class="card h-100 border-0 shadow-sm"><div class="card-body">
+        <h4 class="h6 fw-bold mb-1">Gráfica 2 · {{ vista.config.chart2_title }}</h4>
+        <p class="small text-body-secondary mb-2" id="olap-c2-note"></p>
+        <div class="chart-frame"><canvas id="olap-chart2" role="img" aria-label="{{ vista.config.chart2_title }}"></canvas></div>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+<section id="matriz" class="mb-5">
+  {{ sec(4, "matriz", "Matriz de resultados") }}
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <div class="btn-group btn-group-sm" role="group" aria-label="Mostrar valores o porcentajes" id="olap-display">
+      <input type="radio" class="btn-check" name="olap-display" id="disp-valor" value="valor" checked>
+      <label class="btn btn-outline-secondary" for="disp-valor">Valor</label>
+      <input type="radio" class="btn-check" name="olap-display" id="disp-fila" value="fila">
+      <label class="btn btn-outline-secondary" for="disp-fila">% de fila</label>
+      <input type="radio" class="btn-check" name="olap-display" id="disp-col" value="col">
+      <label class="btn btn-outline-secondary" for="disp-col">% de columna</label>
+    </div>
+    <span class="small text-body-secondary" id="olap-matrix-note"></span>
+  </div>
+  <div class="table-responsive rounded border mb-2" style="max-height:32rem;">
+    <table class="table table-sm table-hover align-middle mb-0 small text-nowrap" id="olap-matrix">
+      <caption class="visually-hidden">Matriz que cruza las dimensiones seleccionadas</caption>
+    </table>
+  </div>
+  <p class="small text-body-secondary">Clic en el nombre de una fila = drill-down en ese miembro. Los totales y subtotales se
+    calculan con su propia consulta al modelo, de modo que las medidas no aditivas no se suman.</p>
+
+  <details class="small mb-3">
+    <summary class="fw-semibold">Consulta SQL ejecutada sobre el modelo estrella</summary>
+    <pre class="bg-body-tertiary border rounded p-3 mt-2 mb-0" style="white-space:pre-wrap;"><code id="olap-sql"></code></pre>
+  </details>
+  <details class="small">
+    <summary class="fw-semibold">Historial de operaciones</summary>
+    <ol class="mt-2 mb-0" id="olap-log"></ol>
+  </details>
+
+  {% for e in ejemplos %}
+  <div class="card border-0 bg-body-tertiary mt-3"><div class="card-body small">
+    <p class="fw-semibold mb-1"><i class="bi {{ e.icon }} text-success me-1"></i>Ejemplo · {{ e.op }}: {{ e.titulo }}</p>
+    <p class="mb-1"><strong>Dimensiones:</strong> {{ e.dimensiones }} · <strong>Medidas:</strong> {{ e.medidas }}</p>
+    <p class="mb-0"><strong>Nivel y filtros:</strong> {{ e.nivel }} La interpretación del resultado se desarrolla en los conocimientos de esta vista.</p>
+  </div></div>
+  {% endfor %}
+</section>
+
+<section id="interpretacion" class="mb-5 reveal">
+  {{ sec(5, "interpretacion", "Interpretación de los resultados") }}
+  <ul class="mb-0">{% for t in vista.interpretacion %}<li class="mb-2">{{ t }}</li>{% endfor %}</ul>
+</section>
+
+<section id="conocimientos" class="mb-5 reveal">
+  {{ sec(6, "conocimientos", "Conocimientos multidimensionales") }}
+  <p class="text-body-secondary small mb-4">Las cifras se calculan al cargar la página con consultas al modelo estrella.
+    Las explicaciones que los datos no comprueban se presentan como hipótesis.</p>
+  {{ conocimientos_cards(conocimientos, "Dimensiones y medidas") }}
+</section>
+
+<section id="limite-decision" class="mb-5 reveal">
+  {{ sec(7, "limite-decision", "Limitación y decisión") }}
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning"><div class="card-body">
+        <h3 class="h6 fw-bold text-warning-emphasis"><i class="bi bi-exclamation-triangle-fill me-1"></i>Limitación del análisis</h3>
+        <p class="small mb-0">{{ vista.limitacion }}</p>
+      </div></div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success"><div class="card-body">
+        <h3 class="h6 fw-bold text-success"><i class="bi bi-lightbulb-fill me-1"></i>Decisión sustentada en los datos</h3>
+        <p class="small mb-0">{{ vista.decision }}</p>
+      </div></div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="olap-config" type="application/json">{{ {
+  "slug": vista.slug,
+  "api": url_for("api.r5_vista", slug=vista.slug),
+  "config": vista.config,
+  "medidas": vista.medidas,
+  "meta": olap_meta,
+  "series": series_members,
+  "ejemplos": ejemplos | map(attribute="state") | list,
+  "ejemplo_ids": ejemplos | map(attribute="id") | list,
+  "ejemplo_ops": ejemplos | map(attribute="op") | list,
+} | tojson }}</script>
+{% endblock %}

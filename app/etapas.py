@@ -42,6 +42,15 @@ ETAPAS = [
         "estado": "completado",
         "url_endpoint": "pages.r4",
     },
+    {
+        "codigo": "R5",
+        "titulo": "Análisis multidimensional",
+        "resumen": "Modelo estrella (SQLite) con 4 dimensiones, 7 medidas y 4 jerarquías sobre el EVA "
+                   "tratado; cuatro vistas interactivas con drill-down, roll-up, slice, dice y pivot, "
+                   "validaciones del modelo y ocho conocimientos multidimensionales.",
+        "estado": "completado",
+        "url_endpoint": "pages.r5",
+    },
 ] + [
     {
         "codigo": f"R{n}",
@@ -50,7 +59,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(5, 9)
+    for n in range(6, 9)
 ]
 
 R4_DIMENSIONES = [

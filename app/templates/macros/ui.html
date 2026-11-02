@@ -136,7 +136,7 @@
 
 {# Tarjetas de "conocimientos evidentes" (R4): pregunta/variables/procedimiento/evidencia/
    hallazgo/interpretación/utilidad/limitación. items: [{n, color, icon, titulo, pregunta, ...}]. #}
-{% macro conocimientos_cards(items) %}
+{% macro conocimientos_cards(items, variables_label="Variables") %}
 <div class="row g-4">
   {% for c in items %}
   <div class="col-12">
@@ -154,7 +154,7 @@
         <div class="row row-cols-1 row-cols-md-2 g-3">
           {% for campo, valor in [
             ("Pregunta", c.pregunta),
-            ("Variables", c.variables),
+            (variables_label, c.variables),
             ("Procedimiento", c.procedimiento),
             ("Evidencia", c.evidencia),
             ("Hallazgo", c.hallazgo),

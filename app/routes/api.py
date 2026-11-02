@@ -6,6 +6,8 @@ from flask import Blueprint, current_app, jsonify, request
 from app.quality import DATASETS, compute_quality
 from app.routes import _dirs
 from app.services import datasets as ds
+from app.services.etapa5 import VISTAS_BY_SLUG, parse_state, vista_query
+from app.services.olap import OlapError
 from app.services.reports import profile_dataset, query_dataset
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
@@ -35,6 +37,18 @@ def quality(name):
     except KeyError:
         return _not_found(name)
     return jsonify(dataset=name, **compute_quality(data, name))
+
+
+@api_bp.route("/r5/<slug>")
+def r5_vista(slug):
+    """Consulta OLAP de una vista de R5. Params: rows, cols, measure, f_<nivel> (repetible)."""
+    if slug not in VISTAS_BY_SLUG:
+        return jsonify(error=f"Vista '{slug}' no existe. Usa una de: {list(VISTAS_BY_SLUG)}"), 404
+    try:
+        state = parse_state(slug, request.args)
+        return jsonify(state=state, **vista_query(current_app.config["R5_DB_PATH"], slug, state))
+    except OlapError as exc:
+        return jsonify(error=str(exc)), 400
 
 
 @api_bp.route("/profile/<name>")
