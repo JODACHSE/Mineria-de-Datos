@@ -29,3 +29,7 @@ instance/
 **/bin/
 **/obj/
 *.dtproj.user
+
+# R5: modelo estrella generado por scripts/R5/build_star.py
+app/data/R5/*.sqlite
+app/data/R5/*.tmp
