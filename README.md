@@ -3,8 +3,8 @@
 Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
 Sitio web en **Flask** que publica los entregables **R1 · Del problema a los
 datos**, **R2 · Diagnóstico y calidad de los datos**, **R3 · Tratamiento ETL
-con SSIS** y **R4 · Conocimiento evidente** (análisis exploratorio con
-Power BI), con un explorador de datos y métricas de calidad servidas por una
+con SSIS**, **R4 · Conocimiento evidente** (análisis exploratorio con
+Power BI) y **R5 · Análisis multidimensional** (modelo estrella + OLAP), con un explorador de datos y métricas de calidad servidas por una
 API propia.
 
 **Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
@@ -113,11 +113,13 @@ python run.py
 | `/` | Landing |
 | `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
 | `/r4` · `/r4/territorial` · `/r4/temporal` · `/r4/relacional` | R4 · Conocimiento evidente: las 4 preguntas de análisis (poblacional, territorial, temporal, multivariada) y el acceso al informe de Power BI |
+| `/r5` · `/r5/territorial` · `/r5/temporal` · `/r5/sistemas` · `/r5/cosecha` | R5 · Análisis multidimensional: modelo estrella, validaciones y las 4 vistas OLAP (`?ej=<id>` abre un ejemplo guiado) |
 | `/entregables` | Hoja de ruta (8 etapas) |
 | `/sobre-nosotros` | Equipo |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
 | `/api/quality/<nombre>` | Diagnóstico R1 |
 | `/api/profile/<nombre>?version=` | Perfilamiento + 6 dimensiones (R2) |
+| `/api/r5/<vista>` | Consulta OLAP (`rows`, `cols`, `measure`, `f_<nivel>` repetible): matriz, 3 indicadores y datos de la 2.ª gráfica |
 
 ## Reproducir los datos
 
@@ -166,3 +168,19 @@ Our World in Data (CC BY 4.0). Uso estrictamente académico.
   botón "Abrir informe" en `/r4` quede activo.
 - Archivo `.pbix`, medidas DAX documentadas e instrucciones para abrirlo/actualizarlo:
   pendiente — se publicará en una carpeta `powerbi/` en la raíz del repositorio.
+
+## Etapa 5 · Análisis multidimensional
+
+- **Modelo estrella (SQLite):** `fact_produccion_agricola` (grano: municipio × desagregación × periodo,
+  48.932 hechos) + `dim_territorio`, `dim_tiempo`, `dim_cultivo`, `dim_sistema_productivo`; 8 medidas
+  (aditivas y derivadas) y 4 jerarquías. Diagrama y diccionario: [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md).
+- **Scripts:** [`SQL/R5/01_modelo_estrella.sql`](SQL/R5/01_modelo_estrella.sql) (tablas y relaciones),
+  [`02_validaciones.sql`](SQL/R5/02_validaciones.sql), [`03_consultas_olap.sql`](SQL/R5/03_consultas_olap.sql).
+- **Transformación y carga:** [`app/services/dw.py`](app/services/dw.py), ejecutable con
+  `python scripts/R5/build_star.py` (reconstruye `app/data/R5/wololo_dw.sqlite` desde
+  `app/static/data/R2/eva_basicos.json` y muestra las validaciones). La app la construye sola al arrancar
+  si no existe, así que en Render no hace falta un paso extra.
+- **Motor OLAP:** [`app/services/olap.py`](app/services/olap.py) (drill-down, roll-up, slice, dice, pivot;
+  totales recalculados por consulta). Vistas y conocimientos: [`app/services/etapa5.py`](app/services/etapa5.py),
+  [`templates/pages/r5*.html`](app/templates/pages/), [`static/js/modules/olap.js`](app/static/js/modules/olap.js).
+- **Pruebas:** `pytest tests/test_etapa5.py`.
