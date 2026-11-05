@@ -42,6 +42,24 @@
 .back-to-top { opacity: 0; pointer-events: none; transition: opacity .3s ease; }
 .back-to-top.show { opacity: 1; pointer-events: auto; }
 
+/* --- Submenú de etapas: en línea en el offcanvas, lateral al hover en lg+ - */
+.dropdown-menu.dropdown-submenu { display: block; border: 0; padding: 0 0 .25rem 1.25rem; background: transparent; }
+.dropdown-submenu .dropdown-item { font-size: .875rem; }
+@media (min-width: 992px) {
+  .has-submenu { position: relative; }
+  .navbar .dropdown-menu.dropdown-submenu {
+    display: none;
+    top: calc(-1 * var(--bs-dropdown-padding-y) - var(--bs-dropdown-border-width));
+    right: 100%;
+    padding: var(--bs-dropdown-padding-y) 0;
+    background: var(--bs-dropdown-bg);
+    border: var(--bs-dropdown-border-width) solid var(--bs-dropdown-border-color);
+    box-shadow: var(--bs-box-shadow);
+  }
+  .has-submenu:hover > .dropdown-submenu,
+  .has-submenu:focus-within > .dropdown-submenu { display: block; }
+}
+
 /* --- Tarjetas interactivas ---------------------------------------------- */
 .card-hover { transition: transform .2s ease, box-shadow .2s ease; }
 .card-hover:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1.5rem rgba(0,0,0,.12) !important; }

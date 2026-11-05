@@ -97,8 +97,8 @@ def r4_relacional():
 
 def _r5_nav(active=None):
     """Navegación lateral compartida por la visión general de R5 y sus 4 vistas."""
-    return [(url_for("pages.r5"), "Visión general", active is None, True)] + [
-        (url_for("pages.r5_vista", slug=v["slug"]), f"{v['num']}. {v['titulo']}", v["slug"] == active, True)
+    return [(url_for("pages.r5"), "Resumen y modelo estrella", active is None, True)] + [
+        (url_for("pages.r5_vista", slug=v["slug"]), f"{v['num']}. {v['corto']}", v["slug"] == active, True)
         for v in VISTAS
     ]
 

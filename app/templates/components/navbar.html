@@ -38,15 +38,29 @@
               <a class="nav-link {{ 'active' if request.endpoint == 'pages.index' }}" href="{{ url_for('pages.index') }}">Inicio</a>
             </li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ('pages.r1','pages.r2','pages.r3','pages.r4','pages.r4_territorial','pages.r4_temporal','pages.r4_relacional','pages.entregables') }}"
+              {% set etapas_endpoints = ['pages.r1','pages.r2','pages.r3','pages.r4','pages.r4_territorial','pages.r4_temporal','pages.r4_relacional','pages.entregables'] %}
+              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in etapas_endpoints }}"
                  href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Etapas</a>
               <ul class="dropdown-menu dropdown-menu-lg-end shadow">
-                {% for e in etapas %}
-                <li>
+                {# R5 tiene su propia opción de menú («Análisis multidimensional»); no se repite aquí. #}
+                {% for e in etapas if e.codigo != 'R5' %}
+                <li class="{{ 'has-submenu' if e.subpaginas }}">
                   {% if e.url_endpoint %}
-                  <a class="dropdown-item d-flex justify-content-between gap-3 {{ 'active' if request.endpoint == e.url_endpoint }}" href="{{ url_for(e.url_endpoint) }}">
+                  {% set sub_endpoints = e.subpaginas | map(attribute='endpoint') | list if e.subpaginas else [] %}
+                  <a class="dropdown-item d-flex justify-content-between align-items-center gap-3 {{ 'active' if request.endpoint == e.url_endpoint or request.endpoint in sub_endpoints }}" href="{{ url_for(e.url_endpoint) }}">
                     <span><small class="text-body-secondary font-monospace me-2">{{ e.codigo }}</small>{{ e.titulo }}</span>
+                    {% if e.subpaginas %}<i class="bi bi-chevron-left small d-none d-lg-inline" aria-hidden="true"></i>{% endif %}
                   </a>
+                  {% if e.subpaginas %}
+                  <ul class="dropdown-menu dropdown-submenu" aria-label="Dimensiones de {{ e.titulo }}">
+                    {% for s in e.subpaginas %}
+                    <li>
+                      <a class="dropdown-item {{ 'active' if request.endpoint == s.endpoint and request.view_args == s.args }}"
+                         href="{{ url_for(s.endpoint, **s.args) }}">{{ s.label }}</a>
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
                   {% else %}
                   <span class="dropdown-item disabled d-flex justify-content-between gap-3" aria-disabled="true">
                     <span><small class="font-monospace me-2">{{ e.codigo }}</small>{{ e.titulo }}</span>
@@ -59,9 +73,22 @@
                 <li><a class="dropdown-item" href="{{ url_for('pages.entregables') }}"><i class="bi bi-map me-2"></i>Ver todas las etapas</a></li>
               </ul>
             </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint in ('pages.r5', 'pages.r5_vista') }}" href="{{ url_for('pages.r5') }}">
-                <i class="bi bi-box me-1"></i>Análisis multidimensional</a>
+            {# Opción propia del menú para R5 (requisito de la etapa): resumen + las 4 vistas. #}
+            {% set r5 = etapas | selectattr('codigo', 'equalto', 'R5') | first %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ('pages.r5', 'pages.r5_vista') }}"
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-box me-1" aria-hidden="true"></i>Análisis multidimensional</a>
+              <ul class="dropdown-menu dropdown-menu-lg-end shadow">
+                <li><a class="dropdown-item {{ 'active' if request.endpoint == 'pages.r5' }}" href="{{ url_for('pages.r5') }}">
+                  <i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Resumen y modelo estrella</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Análisis interactivos</h6></li>
+                {% for s in r5.subpaginas %}
+                <li><a class="dropdown-item {{ 'active' if request.endpoint == s.endpoint and request.view_args == s.args }}"
+                       href="{{ url_for(s.endpoint, **s.args) }}"><small class="text-body-secondary font-monospace me-2">{{ loop.index }}</small>{{ s.label }}</a></li>
+                {% endfor %}
+              </ul>
             </li>
             <li class="nav-item">
               <a class="nav-link {{ 'active' if request.endpoint == 'pages.about' }}" href="{{ url_for('pages.about') }}">Sobre nosotros</a>

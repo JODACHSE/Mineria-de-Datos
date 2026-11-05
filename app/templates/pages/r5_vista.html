@@ -2,11 +2,11 @@
 {% from "macros/ui.html" import stat, tag, callout, conocimientos_cards %}
 
 {% set report_code = "R5 · Análisis multidimensional" %}
-{% set report_title = 'Vista ' ~ vista.num ~ '<br><span class="text-success">' ~ vista.titulo ~ '</span>' %}
+{% set report_title = 'Análisis ' ~ vista.num ~ ' de ' ~ (vistas | length) ~ '<br><span class="text-success">' ~ vista.titulo ~ '</span>' %}
 {% set report_lead = vista.pregunta %}
 
-{% set toc_nav_title = "Análisis multidimensional" %}
-{% set toc_title = "Contenido" %}
+{% set toc_nav_title = "Recorrido de R5" %}
+{% set toc_title = "En este análisis" %}
 {% set toc_items = [
   ("pregunta", "Pregunta y relación con R4"),
   ("modelo", "Dimensiones, medidas y jerarquías"),
@@ -23,7 +23,7 @@
 <div class="col">{{ stat(vista.num ~ " / 4", "Pregunta de análisis", countup=False) }}</div>
 <div class="col">{{ stat(vista.dimensiones | length, "Dimensiones cruzadas") }}</div>
 <div class="col">{{ stat(vista.medidas | length, "Medidas disponibles") }}</div>
-<div class="col">{{ stat("48.932", "Hechos en el modelo estrella", countup=False) }}</div>
+<div class="col">{{ stat(cobertura.hechos, "Hechos en el modelo estrella") }}</div>
 {% endblock %}
 
 {% macro sec(num, id, title) %}
@@ -42,9 +42,35 @@
     <p class="mb-0 fst-italic text-body-secondary">{{ vista.pregunta }}</p>
   </blockquote>
   <p><strong>Cómo profundiza la etapa anterior.</strong> {{ vista.profundiza }}</p>
+  <div class="row g-3 mb-3">
+    <div class="col-lg-7">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+        <p class="fw-semibold mb-2"><i class="bi bi-arrow-return-right me-1 text-success"></i>Conocimientos evidentes de R4 que se retoman</p>
+        {% for r in r4_relacion %}
+        <div class="{{ 'mb-3' if not loop.last }}">
+          <div>{{ tag("R4 · " ~ r.pagina, "secondary") }} <span class="fw-semibold">{{ r.titulo }}</span></div>
+          <div class="text-body-secondary">{{ r.hallazgo }}</div>
+          <div><span class="fw-semibold">Por qué requiere más profundidad:</span> {{ r.por_que }}</div>
+          <div><span class="fw-semibold">Cómo se aborda aquí:</span> {{ r.como }}</div>
+        </div>
+        {% endfor %}
+      </div></div>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+        <p class="fw-semibold mb-2"><i class="bi bi-lightbulb me-1 text-success"></i>Qué se descubre en este análisis</p>
+        <ul class="list-unstyled mb-0">
+          {% for c in conocimientos %}
+          <li class="mb-1">{{ tag(c.n, c.color) }} <a href="#conocimientos" class="link-body-emphasis">{{ c.titulo }}</a></li>
+          {% endfor %}
+        </ul>
+      </div></div>
+    </div>
+  </div>
   <p class="small text-body-secondary mb-0">
     <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (MinAgricultura/UPRA, datos.gov.co),
-    versión tratada en R2/R3 · <i class="bi bi-calendar3 me-1"></i>Cobertura: 2019–2024, 1.098 municipios de 32 departamentos.
+    versión tratada en R2/R3 · <i class="bi bi-calendar3 me-1"></i>Cobertura: {{ cobertura.anio_min }}–{{ cobertura.anio_max }},
+    {{ cobertura.municipios | miles }} municipios de {{ cobertura.departamentos }} departamentos · {{ cobertura.hechos | miles }} hechos.
   </p>
 </section>
 
@@ -210,7 +236,9 @@
   <div class="card border-0 bg-body-tertiary mt-3"><div class="card-body small">
     <p class="fw-semibold mb-1"><i class="bi {{ e.icon }} text-success me-1"></i>Ejemplo · {{ e.op }}: {{ e.titulo }}</p>
     <p class="mb-1"><strong>Dimensiones:</strong> {{ e.dimensiones }} · <strong>Medidas:</strong> {{ e.medidas }}</p>
-    <p class="mb-0"><strong>Nivel y filtros:</strong> {{ e.nivel }} La interpretación del resultado se desarrolla en los conocimientos de esta vista.</p>
+    <p class="mb-1"><strong>Nivel y filtros:</strong> {{ e.nivel }}</p>
+    <p class="mb-1"><strong>Procedimiento:</strong> {{ e.procedimiento }}</p>
+    <p class="mb-0"><strong>Interpretación del resultado:</strong> {{ e.interpretacion }}</p>
   </div></div>
   {% endfor %}
 </section>
@@ -244,6 +272,34 @@
     </div>
   </div>
 </section>
+
+{# ---- navegación entre análisis ---- #}
+{% set prev = vistas[vista.num - 2] if vista.num > 1 else None %}
+{% set next = vistas[vista.num] if vista.num < vistas | length else None %}
+<nav class="row g-3 border-top pt-4" aria-label="Navegación entre los análisis de R5">
+  <div class="col-sm-6">
+    {% if prev %}
+    <a class="card h-100 border-0 shadow-sm card-hover text-decoration-none" href="{{ url_for('pages.r5_vista', slug=prev.slug) }}">
+      <div class="card-body small"><span class="text-body-secondary"><i class="bi bi-arrow-left me-1"></i>Análisis {{ prev.num }}</span>
+        <div class="fw-semibold text-body">{{ prev.corto }}</div></div></a>
+    {% else %}
+    <a class="card h-100 border-0 shadow-sm card-hover text-decoration-none" href="{{ url_for('pages.r5') }}">
+      <div class="card-body small"><span class="text-body-secondary"><i class="bi bi-arrow-left me-1"></i>Volver</span>
+        <div class="fw-semibold text-body">Resumen y modelo estrella</div></div></a>
+    {% endif %}
+  </div>
+  <div class="col-sm-6">
+    {% if next %}
+    <a class="card h-100 border-0 shadow-sm card-hover text-decoration-none text-sm-end" href="{{ url_for('pages.r5_vista', slug=next.slug) }}">
+      <div class="card-body small"><span class="text-body-secondary">Análisis {{ next.num }}<i class="bi bi-arrow-right ms-1"></i></span>
+        <div class="fw-semibold text-body">{{ next.corto }}</div></div></a>
+    {% else %}
+    <a class="card h-100 border-0 shadow-sm card-hover text-decoration-none text-sm-end" href="{{ url_for('pages.r5') }}#conclusiones">
+      <div class="card-body small"><span class="text-body-secondary">Para terminar<i class="bi bi-arrow-right ms-1"></i></span>
+        <div class="fw-semibold text-body">Conclusiones de R5</div></div></a>
+    {% endif %}
+  </div>
+</nav>
 
 {% endblock %}
 

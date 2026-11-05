@@ -43,7 +43,10 @@ def _level_dim(level):
 # =========================================================== vistas (preguntas)
 VISTAS = [
     {
-        "slug": "territorial", "num": 1, "icon": "bi-geo-alt-fill", "color": "success",
+        "slug": "territorial", "num": 1,
+        "corto": "Concentración de la producción",
+        "r4_punto": "Andina = 59,3 % de los registros; top-5 departamentos = 41,5 %.",
+        "icon": "bi-geo-alt-fill", "color": "success",
         "titulo": "Concentración territorial de la producción",
         "pregunta": "¿En qué regiones, departamentos y municipios se concentra la producción (t) de "
                     "cada cultivo básico, y cómo cambia esa concentración al bajar de región a "
@@ -77,16 +80,19 @@ VISTAS = [
                       "(una tonelada de papa no equivale a una de frijol); la concentración mide volumen físico, no "
                       "aporte calórico ni valor económico.",
         "decision": "Focalizar el monitoreo de abastecimiento en los municipios que reúnen el 50 % de la producción de "
-                    "cada cultivo (indicador 3 de la vista) en vez de distribuir el seguimiento por número de municipios.",
+                    "cada cultivo (indicador 3 de este análisis) en vez de distribuir el seguimiento por número de municipios.",
     },
     {
-        "slug": "temporal", "num": 2, "icon": "bi-calendar3", "color": "info",
+        "slug": "temporal", "num": 2,
+        "corto": "Evolución de la producción",
+        "r4_punto": "Registros +28,5 % entre 2019 y 2024, salto de +19,5 % en 2021.",
+        "icon": "bi-calendar3", "color": "info",
         "titulo": "Evolución de la producción frente a la evolución de los registros",
         "pregunta": "¿Cómo cambian la producción (t) y el rendimiento (t/ha) de cada cultivo entre "
                     "periodos equivalentes (trienios 2019–2021 y 2022–2024, años y semestres), y "
                     "coincide ese cambio con el crecimiento de registros que mostró R4?",
         "profundiza": "R4 reportó +28,5 % de registros entre 2019 y 2024 y un salto de +19,5 % en 2021. "
-                      "Esta vista separa el número de registros de la producción, compara trienios "
+                      "Este análisis separa el número de registros de la producción, compara trienios "
                       "de igual duración y baja de año a semestre para ver cambios que el total anual oculta.",
         "dimensiones": ["Tiempo", "Cultivo", "Territorio (filtro)", "Sistema productivo (columnas opcionales)"],
         "medidas": ["produccion", "rendimiento", "registros", "municipios"],
@@ -111,7 +117,10 @@ VISTAS = [
                     "seguimiento temporal; revisar por semestre los calendarios de compra y almacenamiento de arroz.",
     },
     {
-        "slug": "sistemas", "num": 3, "icon": "bi-gear-wide-connected", "color": "warning",
+        "slug": "sistemas", "num": 3,
+        "corto": "Brecha entre sistemas productivos",
+        "r4_punto": "Maíz = 37,8 % de los registros; arroz el menos evaluado.",
+        "icon": "bi-gear-wide-connected", "color": "warning",
         "titulo": "Brecha de rendimiento entre sistemas productivos",
         "pregunta": "¿Qué diferencia de rendimiento (t/ha) hay entre los sistemas tecnificado y "
                     "tradicional de maíz y arroz en cada región, y qué parte del área cosechada "
@@ -144,7 +153,10 @@ VISTAS = [
                     "donde coinciden la mayor área tradicional y el menor rendimiento.",
     },
     {
-        "slug": "cosecha", "num": 4, "icon": "bi-cloud-rain-heavy-fill", "color": "danger",
+        "slug": "cosecha", "num": 4,
+        "corto": "Área sembrada no cosechada",
+        "r4_punto": "Combinaciones cultivo × región × semestre activas (52 de 90).",
+        "icon": "bi-cloud-rain-heavy-fill", "color": "danger",
         "titulo": "Área sembrada que no llega a cosecharse",
         "pregunta": "¿Qué combinaciones de territorio, año y cultivo presentan la menor tasa de "
                     "cosecha (área cosechada / área sembrada) y dónde se acumula el área no cosechada?",
@@ -190,6 +202,15 @@ EJEMPLOS = [
         "dimensiones": "Territorio (región → departamento → municipio), Cultivo (slice = Papa).",
         "medidas": "Producción (t, SUM) y participación sobre la producción de la selección.",
         "nivel": "Región → Departamento (Andina) → Municipio (Boyacá).",
+        "procedimiento": "Se parte del nivel Región con el filtro Cultivo = Papa (SUM(producción) agrupado por "
+                          "región). Clic en «Andina» agrega el filtro región = Andina y agrupa por departamento; "
+                          "clic en «Boyacá» agrega departamento = Boyacá y agrupa por municipio. Cada paso es una "
+                          "consulta nueva que recalcula SUM(producción) y el % sobre el total de la selección "
+                          "(no sobre el nivel anterior).",
+        "interpretacion": "La participación de Boyacá dentro de la papa andina, y la de un municipio dentro de "
+                           "Boyacá, crece en cada paso del drill-down: la producción no se reparte de forma "
+                           "uniforme dentro de la región, sino que se concentra en pocos municipios del "
+                           "altiplano (cifras exactas en el conocimiento C2 de este análisis).",
     },
     {
         "id": "pivot-region-cultivo", "op": "Pivot", "vista": "territorial", "icon": "bi-arrow-left-right",
@@ -198,6 +219,14 @@ EJEMPLOS = [
         "dimensiones": "Cultivo y Territorio (región).",
         "medidas": "Producción (t); porcentajes de fila (denominador = total del cultivo).",
         "nivel": "Cultivo × Región, sin filtros.",
+        "procedimiento": "Se intercambian los ejes de la matriz base Región × Cultivo: ahora las filas son "
+                          "Cultivo y las columnas Región, sin ningún filtro activo. El GROUP BY pasa de "
+                          "(región, cultivo) a (cultivo, región); el total general y cada celda individual no "
+                          "cambian de valor, solo su posición en la matriz.",
+        "interpretacion": "El pivot no agrega información nueva, pero cambia la pregunta: en vez de «¿qué "
+                           "produce cada región?» se lee «¿de qué territorios depende cada cultivo?». La fila "
+                           "de un cultivo muestra de inmediato qué porcentaje de su producción nacional viene "
+                           "de cada región, algo que en la matriz original había que leer columna por columna.",
     },
     {
         "id": "rollup-arroz", "op": "Roll-up", "vista": "temporal", "icon": "bi-zoom-out",
@@ -207,6 +236,16 @@ EJEMPLOS = [
         "dimensiones": "Tiempo (trienio → año → periodo), Cultivo (slice = Arroz).",
         "medidas": "Producción (t, SUM).",
         "nivel": "Se parte del nivel Periodo y se pulsa Roll-up hasta Año y Trienio.",
+        "procedimiento": "Se parte del nivel Periodo (semestre) con el filtro Cultivo = Arroz y se pulsa "
+                          "Roll-up dos veces: primero se agrupa por Año (se pierde el detalle semestral) y "
+                          "luego por Trienio (se pierde el detalle anual). Cada roll-up es una consulta nueva "
+                          "SUM(producción) agrupada por el nivel padre de la jerarquía temporal, no un "
+                          "reagrupamiento visual de los datos ya traídos.",
+        "interpretacion": "Al subir de periodo a año, los semestres A y B se suman en un solo total y el "
+                           "desplazamiento de la cosecha de arroz hacia el segundo semestre (conocimiento C4) "
+                           "deja de verse; al subir de año a trienio solo queda visible la tendencia de seis "
+                           "años. El roll-up resume el comportamiento pero oculta el detalle estacional que el "
+                           "drill-down sí revela.",
     },
     {
         "id": "slice-maiz", "op": "Slice", "vista": "sistemas", "icon": "bi-scissors",
@@ -216,6 +255,14 @@ EJEMPLOS = [
         "dimensiones": "Cultivo (slice), Territorio (región) × Sistema productivo.",
         "medidas": "Rendimiento ponderado (t/ha) = SUM(producción) / SUM(área cosechada).",
         "nivel": "Región × Sistema con Cultivo = Maíz.",
+        "procedimiento": "Se aplica un único filtro sobre la dimensión Cultivo (WHERE c.cultivo = 'Maíz'); la "
+                          "matriz resultante cruza Región (filas) y Sistema productivo (columnas) con "
+                          "Rendimiento ponderado, calculado como SUM(producción) / SUM(área cosechada) para "
+                          "cada combinación región × sistema dentro de ese corte.",
+        "interpretacion": "Al aislar el maíz se ve que el rendimiento tecnificado supera entre 2 y 3 veces al "
+                           "tradicional en todas las regiones (conocimiento C5); sin el slice, esa brecha "
+                           "quedaría diluida entre los demás cultivos, que no distinguen sistema productivo o "
+                           "lo hacen con otro criterio (destino, no tecnología).",
     },
     {
         "id": "dice-arroz-caribe", "op": "Dice", "vista": "cosecha", "icon": "bi-grid-3x3-gap-fill",
@@ -225,9 +272,110 @@ EJEMPLOS = [
         "dimensiones": "Cultivo (Arroz) + Territorio (Caribe) como filtros; Departamento × Año.",
         "medidas": "Tasa de cosecha (%) = SUM(cosechada) / SUM(sembrada) × 100.",
         "nivel": "Departamento × Año, filtrado por dos dimensiones.",
+        "procedimiento": "Se combinan dos filtros sobre dimensiones distintas: Cultivo = Arroz y Región = "
+                          "Caribe (WHERE c.cultivo = 'Arroz' AND t.region = 'Caribe'); sobre ese subconjunto "
+                          "se agrupa por Departamento (filas) y Año (columnas) con Tasa de cosecha = "
+                          "100 × SUM(cosechada) / SUM(sembrada).",
+        "interpretacion": "El dice aísla justo el subconjunto donde ocurre el choque de 2021: dentro de los "
+                           "departamentos del Caribe, Sucre muestra la caída más fuerte de tasa de cosecha ese "
+                           "año (conocimiento C8), un patrón que no sería visible ni en el promedio nacional "
+                           "de arroz ni en el promedio del Caribe para todos los cultivos.",
     },
 ]
 EJEMPLOS_BY_ID = {e["id"]: e for e in EJEMPLOS}
+
+
+# ======================================================= trazabilidad con R4
+# Los 12 conocimientos evidentes de R4 (3 por página) y si requieren mayor
+# profundidad. R4 contó registros sobre una dimensión a la vez; los que se
+# retoman son los que cambian (o pueden cambiar) al medir volumen, cruzar
+# dimensiones o bajar de nivel. `vistas` = análisis de R5 que los retoman.
+R4_RELACION = [
+    {"pagina": "Poblacional", "titulo": "Maíz domina la población evaluada",
+     "hallazgo": "Maíz = 37,8 % de los registros (18.490 de 48.932).", "profundizar": True,
+     "por_que": "Un registro es una fila municipio × desagregación × periodo, no un volumen: R4 no podía saber si ese "
+                "dominio se traduce en producción ni con qué sistema productivo se logra.",
+     "como": "Cultivo × Tiempo con registros vs. producción (C3) y Cultivo × Sistema × Región con rendimiento (C5).",
+     "vistas": ["temporal", "sistemas"]},
+    {"pagina": "Poblacional", "titulo": "La canasta es casi toda de ciclo transitorio",
+     "hallazgo": "Transitorio = 90,1 %; permanente = 9,9 % (solo plátano).", "profundizar": False,
+     "por_que": "Es una propiedad estructural de la canasta que no cambia al cruzar dimensiones.",
+     "como": "Se incorpora al diseño: el ciclo es atributo de dim_cultivo y explica que el plátano solo tenga periodo "
+             "anual en dim_tiempo (queda como miembro «Anual» y no se suma a los semestres A o B).",
+     "vistas": []},
+    {"pagina": "Poblacional", "titulo": "El arroz es el cultivo menos evaluado",
+     "hallazgo": "Arroz = 8,5 % de los registros (4.138).", "profundizar": True,
+     "por_que": "Pocos registros pueden esconder un gran volumen concentrado en pocas unidades de gran escala.",
+     "como": "Territorio × Cultivo con producción (C1), Región × Sistema con área y rendimiento (C6) y Año × "
+             "Departamento con tasa de cosecha (C8).",
+     "vistas": ["territorial", "sistemas", "cosecha"]},
+    {"pagina": "Territorial", "titulo": "La mitad de las evaluaciones se concentra en 5 departamentos",
+     "hallazgo": "Top-5 departamentos = 41,5 % de los registros.", "profundizar": True,
+     "por_que": "La concentración de registros no tiene por qué coincidir con la de producción, y R4 no bajó de "
+                "departamento a municipio.",
+     "como": "Drill-down Región → Departamento → Municipio sobre la producción de cada cultivo (C2).",
+     "vistas": ["territorial"]},
+    {"pagina": "Territorial", "titulo": "La región Andina domina el registro",
+     "hallazgo": "Andina = 59,3 % de los registros; Amazonía = 3,1 %.", "profundizar": True,
+     "por_que": "Es un peso en número de filas; falta comparar ese peso con el volumen que produce cada región.",
+     "como": "Comparación % de registros vs. % de producción por región y slice por cultivo (C1).",
+     "vistas": ["territorial"]},
+    {"pagina": "Territorial", "titulo": "Amplia cobertura municipal, con casos extremos",
+     "hallazgo": "1.098 municipios en 32 departamentos; San Andrés con 42 registros.", "profundizar": False,
+     "por_que": "Es un dato de cobertura del conjunto, no un comportamiento que dependa de otra dimensión.",
+     "como": "Se conserva como medida Municipios únicos (COUNT DISTINCT) y se usa como contraste en el análisis "
+             "temporal (¿crecen los registros porque se evalúan más municipios?).",
+     "vistas": []},
+    {"pagina": "Temporal", "titulo": "El volumen de evaluaciones creció 28,5 %",
+     "hallazgo": "De 6.889 registros en 2019 a 8.855 en 2024.", "profundizar": True,
+     "por_que": "R4 midió el crecimiento de filas; no sabía si creció la producción ni si se sumaron municipios.",
+     "como": "Registros, municipios únicos y producción en trienios equivalentes y por año (C3).",
+     "vistas": ["temporal"]},
+    {"pagina": "Temporal", "titulo": "El salto ocurrió en 2021; luego se estabilizó",
+     "hallazgo": "2021 = +19,5 % de registros.", "profundizar": True,
+     "por_que": "Un salto de registros puede deberse a un cambio de medición o a un choque real; un conteo no "
+                "distingue entre ambos.",
+     "como": "Año × Desagregación del maíz (cambio de 2 a 4 desagregaciones, C3) y Año × Departamento con tasa de "
+             "cosecha del arroz (C8).",
+     "vistas": ["temporal", "cosecha"]},
+    {"pagina": "Temporal", "titulo": "Estacionalidad a favor del primer semestre",
+     "hallazgo": "Semestre A = 47,0 % vs. semestre B = 43,2 % de los registros.", "profundizar": True,
+     "por_que": "Es un agregado de todos los cultivos y años; puede ocultar cultivos que se mueven en sentido contrario.",
+     "como": "Drill-down Año → Periodo por cultivo con producción (C4).",
+     "vistas": ["temporal"]},
+    {"pagina": "Relacional", "titulo": "Solo 52 de 90 ternas están pobladas",
+     "hallazgo": "52 de 90 combinaciones cultivo × región × semestre activas (57,8 %).", "profundizar": True,
+     "por_que": "R4 dice qué combinaciones existen, no cuánta área sembrada se pierde en cada una.",
+     "como": "Territorio × Tiempo × Cultivo con tasa de cosecha y área no cosechada (C7, C8).",
+     "vistas": ["cosecha"]},
+    {"pagina": "Relacional", "titulo": "La terna líder es Maíz × Andina × Primer semestre",
+     "hallazgo": "5.469 registros (11,2 %).", "profundizar": True,
+     "por_que": "El liderazgo es en número de registros; R4 no podía verificar si ese cruce también lidera en "
+                "volumen ni con qué tecnología se produce.",
+     "como": "Slice Cultivo = Maíz con matriz Región × Sistema y rendimiento ponderado (C5).",
+     "vistas": ["sistemas"]},
+    {"pagina": "Relacional", "titulo": "El maíz es el cultivo más transversal",
+     "hallazgo": "Presente en las 5 regiones; 29 de 30 pares cultivo × región activos.", "profundizar": True,
+     "por_que": "Estar presente en todas partes no dice cuánto se produce ni con qué rendimiento.",
+     "como": "Cultivo × Sistema × Región: la presencia se explica sobre todo por el maíz tradicional (C5).",
+     "vistas": ["sistemas"]},
+]
+
+
+def _r4_para_vista(slug: str) -> list[dict]:
+    return [r for r in R4_RELACION if slug in r["vistas"]]
+
+
+def _cobertura(con) -> dict:
+    """Cobertura del modelo (para no fijar cifras en las plantillas)."""
+    one = lambda sql: con.execute(sql).fetchone()  # noqa: E731
+    anios = one("SELECT MIN(anio), MAX(anio) FROM dim_tiempo")
+    return {
+        "hechos": one("SELECT COUNT(*) FROM fact_produccion_agricola")[0],
+        "municipios": one("SELECT COUNT(DISTINCT territorio_key) FROM fact_produccion_agricola")[0],
+        "departamentos": one("SELECT COUNT(DISTINCT departamento) FROM dim_territorio WHERE territorio_key <> 0")[0],
+        "anio_min": anios[0], "anio_max": anios[1],
+    }
 
 
 # ================================================================ API de vistas
@@ -465,7 +613,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
                 "pregunta": "¿Coincide la concentración territorial de registros (R4) con la de producción?",
                 "variables": "Territorio (región, departamento) × Cultivo; medidas: Registros (COUNT) y Producción (SUM, t), como % del total nacional.",
                 "procedimiento": "Consulta base Región × Cultivo; luego slice Cultivo = Arroz y Cultivo = Plátano con drill-down a Departamento.",
-                "evidencia": "Gráfica 2 de la vista (participación en producción vs. en registros) y matriz Región × Cultivo.",
+                "evidencia": "Gráfica 2 del análisis (participación en producción vs. en registros) y matriz Región × Cultivo.",
                 "hallazgo": f"Orinoquía: {fmt(rs['Orinoquía'], 1)} % de los registros pero {fmt(ps['Orinoquía'], 1)} % de la producción "
                             f"nacional ({fmt(prod['row_totals'][prod['rows'].index('Orinoquía')])} t). Andina baja de {fmt(rs['Andina'], 1)} % "
                             f"de registros a {fmt(ps['Andina'], 1)} % de producción. Al bajar a departamento: {arroz['rows'][0]} aporta "
@@ -533,7 +681,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
                 "pregunta": "¿Qué explica que el maíz domine los registros (R4) y sea solo el 10 % de la producción?",
                 "variables": "Sistema productivo × Cultivo (Maíz) × Territorio (región); medidas: Rendimiento ponderado (t/ha), Área cosechada (ha), Producción (t), Registros.",
                 "procedimiento": "Slice Cultivo = Maíz; Región × Sistema; luego dice Región = Caribe × Cultivo = Maíz.",
-                "evidencia": "Indicadores de la vista con Cultivo = Maíz y matriz Región × Sistema (ejemplo guiado «Slice»).",
+                "evidencia": "Indicadores del análisis con Cultivo = Maíz y matriz Región × Sistema (ejemplo guiado «Slice»).",
                 "hallazgo": f"Rendimiento del maíz tecnificado {fmt(tec['rendimiento'], 2)} t/ha vs. tradicional {fmt(tra['rendimiento'], 2)} t/ha "
                             f"({fmt(tec['rendimiento'] / tra['rendimiento'], 1)}×). El tradicional reúne {fmt(_pct(tra['registros'], mz_tot['registros']), 1)} % "
                             f"de los registros y {fmt(_pct(tra['area_cosechada'], mz_tot['area_cosechada']), 1)} % del área cosechada, pero solo "
@@ -627,9 +775,12 @@ def build_r5_vista_context(db_path: Path, slug: str, cache) -> dict:
         filter_options = {f["level"]: olap.members(con, f["level"]) for f in v["config"]["filters"]}
         # Orden fijo de miembros por nivel: el color de una serie sigue a su miembro, no a su rango.
         series_members = {lv: olap.members(con, lv) for lv in LEVELS if lv not in ("municipio", "periodo")}
+        cobertura = _cobertura(con)
     return {
         "vista": _vista_meta(v),
         "vistas": VISTAS,
+        "cobertura": cobertura,
+        "r4_relacion": _r4_para_vista(slug),
         "conocimientos": _cached_conocimientos(db_path, cache)[slug],
         "ejemplos": [e for e in EJEMPLOS if e["vista"] == slug],
         "filter_options": filter_options,
@@ -653,6 +804,7 @@ def build_r5_context(db_path: Path, source_json: Path, cache) -> dict:
         "vistas": [_vista_meta(v) for v in VISTAS],
         "ejemplos": EJEMPLOS,
         "conocimientos_por_vista": conocimientos,
+        "r4_relacion": R4_RELACION,
         "validaciones": validaciones,
         "validaciones_ok": sum(1 for x in validaciones if x["ok"]),
         "counts": counts,
