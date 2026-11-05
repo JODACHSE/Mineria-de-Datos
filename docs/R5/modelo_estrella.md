@@ -4,6 +4,9 @@ Data mart en estrella sobre el EVA tratado en R2/R3 (`app/static/data/R2/eva_bas
 48.932 registros, 2019–2024, 1.098 municipios, 32 departamentos, 6 cultivos básicos).
 Implementado en **SQLite** (`app/data/R5/wololo_dw.sqlite`, se genera; no se versiona).
 
+Preguntas, ejemplos de operaciones OLAP, conocimientos y resultados de las validaciones:
+[`analisis_multidimensional.md`](analisis_multidimensional.md).
+
 - **Unidad de análisis:** la producción de un cultivo básico en un municipio.
 - **Granularidad de la tabla de hechos:** 1 municipio × 1 desagregación de cultivo × 1 periodo agrícola
   (semestre A/B para transitorios; año para el plátano, permanente).
@@ -66,6 +69,10 @@ erDiagram
 La restricción `UNIQUE (territorio_key, cultivo_key, tiempo_key)` impone la granularidad. Cada
 dimensión tiene el miembro `0 = Desconocido` para claves faltantes (hoy ningún hecho lo usa).
 
+Se distinguen tres casos: **faltante** (medida sin dato → `NULL`, ignorado por `SUM`), **categoría desconocida**
+(hecho sin municipio/cultivo/sistema identificable → clave `0`) y **respuesta negativa** (EVA reporta 0, p. ej.
+área cosechada 0 = no hubo cosecha → se conserva como 0).
+
 ## Dimensiones y jerarquías
 
 | Dimensión | Filas | Atributos | Jerarquía | Justificación |
@@ -105,7 +112,7 @@ Las participaciones (%) indican su denominador (total de la selección, de la fi
 | Anio | dim_tiempo.trienio | 2019–2021 / 2022–2024 |
 | DesagregacionCultivo, Cultivo, GrupoCultivo, CicloCultivo, EstadoFisico, NombreCientifico, CodigoCultivo | dim_cultivo.* | una fila por desagregación |
 | DesagregacionCultivo | dim_sistema_productivo | diccionario 16 → 7 sistemas |
-| AreaSembrada, AreaCosechada, Produccion | area_sembrada_ha, area_cosechada_ha, produccion_t | numéricas; faltante → 0 (no hay) |
+| AreaSembrada, AreaCosechada, Produccion | area_sembrada_ha, area_cosechada_ha, produccion_t | numéricas; faltante → NULL, nunca 0 (no hay faltantes); 0 = respuesta negativa reportada (2.298 hechos sin cosecha) |
 | Rendimiento | rendimiento_reportado_t_ha | solo trazabilidad |
 | _flag_area_incoherente | area_incoherente | 0/1; atributo degenerado usado como filtro |
 | Subgrupo, _outlier_iqr_* | — | no cargados (redundantes / ya tratados en R2) |
@@ -113,7 +120,8 @@ Las participaciones (%) indican su denominador (total de la selección, de la fi
 ## Carga y validación
 
 ```bash
-python scripts/R5/build_star.py          # crea la base, carga y valida (19 comprobaciones)
+python scripts/R5/build_star.py          # crea la base, carga y valida (21 comprobaciones)
+python scripts/R5/export_docs.py         # regenera analisis_multidimensional.md desde el modelo
 sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql
 ```
 

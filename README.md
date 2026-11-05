@@ -171,16 +171,43 @@ Our World in Data (CC BY 4.0). Uso estrictamente académico.
 
 ## Etapa 5 · Análisis multidimensional
 
-- **Modelo estrella (SQLite):** `fact_produccion_agricola` (grano: municipio × desagregación × periodo,
-  48.932 hechos) + `dim_territorio`, `dim_tiempo`, `dim_cultivo`, `dim_sistema_productivo`; 8 medidas
-  (aditivas y derivadas) y 4 jerarquías. Diagrama y diccionario: [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md).
-- **Scripts:** [`SQL/R5/01_modelo_estrella.sql`](SQL/R5/01_modelo_estrella.sql) (tablas y relaciones),
-  [`02_validaciones.sql`](SQL/R5/02_validaciones.sql), [`03_consultas_olap.sql`](SQL/R5/03_consultas_olap.sql).
-- **Transformación y carga:** [`app/services/dw.py`](app/services/dw.py), ejecutable con
-  `python scripts/R5/build_star.py` (reconstruye `app/data/R5/wololo_dw.sqlite` desde
-  `app/static/data/R2/eva_basicos.json` y muestra las validaciones). La app la construye sola al arrancar
-  si no existe, así que en Render no hace falta un paso extra.
-- **Motor OLAP:** [`app/services/olap.py`](app/services/olap.py) (drill-down, roll-up, slice, dice, pivot;
-  totales recalculados por consulta). Vistas y conocimientos: [`app/services/etapa5.py`](app/services/etapa5.py),
-  [`templates/pages/r5*.html`](app/templates/pages/), [`static/js/modules/olap.js`](app/static/js/modules/olap.js).
-- **Pruebas:** `pytest tests/test_etapa5.py`.
+**Aplicación publicada:** `PENDIENTE: URL de Render`/r5
+(menú **Análisis multidimensional**: resumen y modelo estrella + 4 análisis interactivos).
+
+### Qué contiene el repositorio
+
+| Entregable | Dónde |
+|---|---|
+| Diagrama y diccionario del modelo | [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md) (Mermaid) y `/r5#modelo` |
+| Preguntas, operaciones OLAP, conocimientos y validaciones | [`docs/R5/analisis_multidimensional.md`](docs/R5/analisis_multidimensional.md) (generado desde el modelo) |
+| Creación de tablas y relaciones | [`SQL/R5/01_modelo_estrella.sql`](SQL/R5/01_modelo_estrella.sql) |
+| Transformación y carga (ETL) | [`app/services/dw.py`](app/services/dw.py), ejecutado por [`scripts/R5/build_star.py`](scripts/R5/build_star.py) |
+| Consultas de análisis y de validación | [`SQL/R5/03_consultas_olap.sql`](SQL/R5/03_consultas_olap.sql) · [`SQL/R5/02_validaciones.sql`](SQL/R5/02_validaciones.sql) |
+| Motor OLAP (drill-down, roll-up, slice, dice, pivot) | [`app/services/olap.py`](app/services/olap.py) |
+| Vistas Flask | [`app/services/etapa5.py`](app/services/etapa5.py), [`templates/pages/r5*.html`](app/templates/pages/), [`static/js/modules/olap.js`](app/static/js/modules/olap.js) |
+| Pruebas | [`tests/test_etapa5.py`](tests/test_etapa5.py) |
+
+**Datos utilizados:** el EVA tratado en R2/R3, versionado en `app/static/data/R2/eva_basicos.json`
+(48.932 registros, 2019–2024, 1.098 municipios). Para regenerarlo desde la fuente:
+`python scripts/process_eva.py` y `python scripts/clean_datasets.py`. La base SQLite
+`app/data/R5/wololo_dw.sqlite` **no se versiona**: se construye a partir de ese JSON.
+
+**Modelo:** `fact_produccion_agricola` (grano: municipio × desagregación × periodo) +
+`dim_territorio`, `dim_tiempo`, `dim_cultivo`, `dim_sistema_productivo`; 8 medidas (aditivas y
+derivadas) y 4 jerarquías. Se eligió **SQLite** porque viene incluido en Python, es un solo archivo
+consultable desde Flask y funciona en Render (el SQL Server de R3 no está disponible allí); el ETL
+usa solo la biblioteca estándar, así que no se agregan dependencias.
+
+### Configurar, cargar y ejecutar
+
+```bash
+pip install -r requirements-dev.txt      # Flask + pytest (SQLite viene con Python)
+python scripts/R5/build_star.py          # crea la base, carga dimensiones y hechos, ejecuta 21 validaciones
+python scripts/R5/export_docs.py         # (opcional) regenera docs/R5/analisis_multidimensional.md
+python run.py                            # http://127.0.0.1:5000/r5
+pytest tests/test_etapa5.py              # pruebas del modelo, el motor OLAP y las vistas
+```
+
+La app también construye la base al arrancar si no existe o si el JSON tratado es más reciente
+(`dw.ensure`), así que en Render no hace falta un paso adicional. Para revisar las validaciones
+directamente en SQL: `sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql`.
