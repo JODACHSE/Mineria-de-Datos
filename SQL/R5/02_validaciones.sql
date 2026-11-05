@@ -34,8 +34,11 @@ SELECT 'filas_tras_join', COUNT(*) FROM fact_produccion_agricola f
 SELECT 'hechos_desconocidos', COUNT(*) FROM fact_produccion_agricola
   WHERE territorio_key = 0 OR cultivo_key = 0 OR sistema_key = 0;
 SELECT 'municipios_sin_region', COUNT(*) FROM dim_territorio WHERE region = 'Desconocido' AND territorio_key <> 0;
+-- Faltante (NULL = no hay dato) ≠ desconocido (clave 0 = categoría sin identificar) ≠ respuesta negativa (0 reportado)
+SELECT 'medidas_faltantes', COUNT(*) FROM fact_produccion_agricola                          -- 0
+  WHERE area_sembrada_ha IS NULL OR area_cosechada_ha IS NULL OR produccion_t IS NULL;
 SELECT 'area_incoherente', SUM(area_incoherente) FROM fact_produccion_agricola;            -- 6.700 en el origen
-SELECT 'area_cosechada_cero', COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0;
+SELECT 'area_cosechada_cero', COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0; -- 2.298: sin cosecha reportada
 
 -- 5. Coherencia de conteos y agregaciones (comparar con el JSON tratado)
 SELECT 'registros', COUNT(*) FROM fact_produccion_agricola;                                 -- 48.932

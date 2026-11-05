@@ -128,7 +128,9 @@ def build(r2_json: Path, db_path: Path) -> dict:
 
         # ---- hechos (búsqueda de claves sustitutas) ---------------------
         def num(v):
-            return float(v) if v not in (None, "") else 0.0
+            # Faltante → NULL (no 0): así no se confunde con una respuesta
+            # negativa reportada (p. ej., área cosechada 0 = no hubo cosecha).
+            return float(v) if v not in (None, "") else None
 
         facts = []
         for i, r in enumerate(rows, start=1):

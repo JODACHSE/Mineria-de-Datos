@@ -64,9 +64,11 @@ CREATE TABLE fact_produccion_agricola (
     tiempo_key          INTEGER NOT NULL REFERENCES dim_tiempo (tiempo_key),
     cultivo_key         INTEGER NOT NULL REFERENCES dim_cultivo (cultivo_key),
     sistema_key         INTEGER NOT NULL REFERENCES dim_sistema_productivo (sistema_key),
-    area_sembrada_ha    REAL    NOT NULL,          -- aditiva
-    area_cosechada_ha   REAL    NOT NULL,          -- aditiva
-    produccion_t        REAL    NOT NULL,          -- aditiva
+    -- Medidas aditivas. Admiten NULL a propósito: un faltante (sin dato) no es
+    -- lo mismo que un 0 reportado (no hubo cosecha). SUM/AVG ignoran los NULL.
+    area_sembrada_ha    REAL CHECK (area_sembrada_ha  >= 0),
+    area_cosechada_ha   REAL CHECK (area_cosechada_ha >= 0),
+    produccion_t        REAL CHECK (produccion_t      >= 0),
     rendimiento_reportado_t_ha REAL,               -- NO aditiva: solo trazabilidad
     area_incoherente    INTEGER NOT NULL DEFAULT 0 -- 1 si cosechada > sembrada (bandera R2)
         CHECK (area_incoherente IN (0, 1)),

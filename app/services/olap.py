@@ -260,6 +260,18 @@ def validations(con: sqlite3.Connection, r2_json: Path) -> list[dict]:
     sin_region = one("SELECT COUNT(*) FROM dim_territorio WHERE region = 'Desconocido' AND territorio_key <> 0")
     add("Faltantes y desconocidos", "Municipios sin región asignada", sin_region, 0,
         "Los 32 departamentos están en el mapeo departamento → región.")
+    medidas_src = ("AreaSembrada", "AreaCosechada", "Produccion")
+    add("Faltantes y desconocidos", "Hechos con alguna medida faltante (NULL)",
+        one("SELECT COUNT(*) FROM fact_produccion_agricola WHERE area_sembrada_ha IS NULL "
+            "OR area_cosechada_ha IS NULL OR produccion_t IS NULL"),
+        sum(1 for r in src if any(r.get(c) in (None, "") for c in medidas_src)),
+        "Un faltante sería ausencia de dato; el origen tratado no tiene ninguno en las medidas.")
+    add("Faltantes y desconocidos", "Hechos con área cosechada = 0 (respuesta negativa reportada, no faltante)",
+        one("SELECT COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0"),
+        sum(1 for r in src if float(r["AreaCosechada"]) == 0),
+        "EVA reporta que no hubo cosecha (pérdida total o cultivo en crecimiento): se conserva como 0. Suma en "
+        "área sembrada y área no cosechada, baja la tasa de cosecha y no entra en el rendimiento porque su "
+        "denominador es el área cosechada.")
     incoh = sum(1 for r in src if r.get("_flag_area_incoherente"))
     add("Faltantes y desconocidos", "Hechos con área cosechada > sembrada (se conservan con bandera)",
         one("SELECT SUM(area_incoherente) FROM fact_produccion_agricola"), incoh,

@@ -5,20 +5,24 @@
 {% set report_title = 'Análisis multidimensional<br><span class="text-success">Modelo estrella de la producción agrícola</span>' %}
 {% set report_lead = "Un data mart en estrella sobre los " ~ (resumen.registros | miles) ~ " registros del EVA tratado permite cruzar territorio, tiempo, cultivo y sistema productivo, recalcular medidas en cada nivel de detalle y profundizar en los conocimientos evidentes de R4 con drill-down, roll-up, slice, dice y pivot." %}
 
-{% set toc_nav_title = "Análisis multidimensional" %}
-{% set toc_title = "Contenido" %}
+{% set toc_nav_title = "Recorrido de R5" %}
+{% set toc_title = "Resumen" %}
 {% set toc_items = [
   ("proposito", "Propósito y datos"),
-  ("unidad", "Unidad de análisis y granularidad"),
   ("relacion-r4", "Relación con R4"),
+  ("analisis", "Los cuatro análisis"),
+  ("operaciones", "Operaciones OLAP"),
+  ("hallazgos", "Conocimientos descubiertos"),
+  ("conclusiones", "Limitaciones y conclusiones"),
+] %}
+{% set toc_extra_title = "Construcción del modelo" %}
+{% set toc_extra = [
+  ("unidad", "Unidad de análisis y granularidad"),
   ("modelo", "Modelo estrella"),
   ("diccionario", "Dimensiones, medidas y jerarquías"),
   ("carga", "Herramientas y carga"),
   ("validaciones", "Validaciones"),
-  ("vistas", "Vistas interactivas"),
-  ("operaciones", "Operaciones OLAP"),
-  ("conocimientos", "Conocimientos"),
-  ("conclusiones", "Limitaciones y conclusiones"),
+  ("condiciones", "Condiciones del análisis"),
 ] %}
 
 {% block title %}R5 · Análisis multidimensional — {{ proyecto_tema | capitalize }}{% endblock %}
@@ -64,10 +68,159 @@
       área cosechada 0; cambio de desagregación del maíz en 2021; plátano solo con periodo anual.
     </div></div></div>
   </div>
+  <div class="card border-0 shadow-sm border-start border-4 border-success">
+    <div class="card-body small">
+      <h3 class="h6 fw-bold mb-2"><i class="bi bi-signpost-split me-1 text-success"></i>Cómo recorrer esta etapa</h3>
+      <ol class="mb-0 ps-3">
+        <li><strong>Los cuatro análisis</strong> (sección 2): cada uno responde una pregunta, parte de un conocimiento
+          evidente de R4 y tiene su propia página con explorador OLAP, matriz, gráficas y conocimientos.</li>
+        <li><strong>Operaciones OLAP</strong> (sección 3): ejemplos guiados de drill-down, roll-up, slice, dice y pivot
+          que abren el análisis correspondiente ya configurado.</li>
+        <li><strong>Conocimientos descubiertos</strong> (sección 5): los ocho hallazgos con su cifra principal y el enlace al análisis que los sustenta.</li>
+        <li><strong>Construcción del modelo</strong> (secciones 7–12): modelo estrella, medidas, carga y validaciones
+          en los que se apoyan todas las cifras.</li>
+      </ol>
+    </div>
+  </div>
 </section>
 
+<section id="relacion-r4" class="mb-5 reveal">
+  {{ sec(2, "Relación con el conocimiento evidente (R4)") }}
+  <p>
+    R4 dejó doce conocimientos evidentes, todos basados en <strong>conteos de registros</strong> sobre una o tres
+    dimensiones. Se retoman los que pueden cambiar al medir <em>volumen</em>, cruzar más dimensiones o bajar de nivel;
+    los que describen la estructura o la cobertura del conjunto se incorporan al diseño del modelo sin volver a analizarlos.
+  </p>
+  {% set profundizados = r4_relacion | selectattr("profundizar") | list %}
+  <p class="small text-body-secondary">{{ profundizados | length }} de {{ r4_relacion | length }} requieren mayor profundidad.
+    La columna «Análisis» enlaza la vista de R5 que los retoma; C1–C8 son los conocimientos multidimensionales (sección 5).</p>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th scope="col">Conocimiento evidente de R4</th><th scope="col">¿Profundizar?</th><th scope="col">Por qué</th><th scope="col">Cómo lo aborda R5</th><th scope="col">Análisis</th></tr></thead>
+    <tbody>
+      {% for r in r4_relacion %}
+      <tr>
+        <td><span class="text-body-secondary">{{ r.pagina }} ·</span> <span class="fw-semibold">{{ r.titulo }}</span>
+          <div class="text-body-secondary">{{ r.hallazgo }}</div></td>
+        <td>{{ tag("Sí", "success") if r.profundizar else tag("No", "secondary") }}</td>
+        <td>{{ r.por_que }}</td>
+        <td>{{ r.como }}</td>
+        <td class="text-nowrap">
+          {% for slug in r.vistas %}{% set rv = vistas | selectattr("slug", "equalto", slug) | first %}
+          <a href="{{ url_for('pages.r5_vista', slug=slug) }}" class="d-block">{{ rv.num }}. {{ rv.corto }}</a>
+          {% else %}<span class="text-body-secondary">Diseño del modelo</span>{% endfor %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+<section id="analisis" class="mb-5 reveal">
+  {{ sec(3, "Los cuatro análisis") }}
+  <p class="small text-body-secondary">Cada análisis profundiza un conocimiento evidente de R4 cruzando varias dimensiones
+    del modelo y midiendo volumen (toneladas, hectáreas) en vez de conteo de registros. Se recomienda recorrerlos en orden.</p>
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for v in vistas %}
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-header bg-{{ v.color }} bg-opacity-10 border-0 d-flex align-items-center gap-2">
+          <i class="bi {{ v.icon }} text-{{ v.color }} fs-5"></i>
+          <span class="small fw-semibold text-body-secondary">Análisis {{ v.num }} de {{ vistas | length }}</span>
+        </div>
+        <div class="card-body small d-flex flex-column">
+          <h3 class="h5 fw-bold mb-2">{{ v.corto }}</h3>
+          <p class="fst-italic text-body-secondary mb-2">{{ v.pregunta }}</p>
+          <p class="mb-2"><span class="fw-semibold">Parte de R4:</span> {{ v.r4_punto }}</p>
+          <p class="fw-semibold mb-1">Conocimientos descubiertos</p>
+          <ul class="list-unstyled mb-3">
+            {% for c in conocimientos_por_vista[v.slug] %}
+            <li class="mb-1">{{ tag(c.n, c.color) }} {{ c.titulo }}</li>
+            {% endfor %}
+          </ul>
+          <div class="d-flex flex-wrap gap-1 mb-3">{% for d in v.dimensiones %}{{ tag(d, "secondary") }}{% endfor %}</div>
+          <a class="btn btn-sm btn-outline-{{ v.color }} mt-auto align-self-start stretched-link" href="{{ url_for('pages.r5_vista', slug=v.slug) }}">
+            Abrir análisis {{ v.num }}<i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="operaciones" class="mb-5 reveal">
+  {{ sec(4, "Operaciones multidimensionales") }}
+  <p class="small">Todas recalculan las medidas con una nueva consulta al modelo; cambiar el tipo de gráfica no cuenta como operación.</p>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th>Operación</th><th>Cómo se implementa</th><th>Ejemplo aplicado</th></tr></thead>
+    <tbody>
+      {% set como = {
+        "Drill-down": "Clic en una fila o barra: el miembro pasa a filtro y las filas bajan un nivel (GROUP BY del nivel hijo).",
+        "Roll-up": "Botón Roll-up o migas de pan: se quita el filtro del nivel y se agrupa por el nivel padre.",
+        "Slice": "Un filtro de un valor en una dimensión (WHERE dim = valor).",
+        "Dice": "Filtros sobre dos o más dimensiones a la vez (WHERE dim1 = a AND dim2 = b).",
+        "Pivot": "Botón Pivot: intercambia la dimensión de filas y la de columnas de la matriz.",
+      } %}
+      {% for e in ejemplos %}
+      <tr><td class="fw-semibold"><i class="bi {{ e.icon }} text-success me-1"></i>{{ e.op }}</td><td>{{ como[e.op] }}</td>
+          {% set ev = vistas | selectattr("slug", "equalto", e.vista) | first %}
+          <td><a href="{{ url_for('pages.r5_vista', slug=e.vista) }}?ej={{ e.id }}#explorador">{{ e.titulo }}</a>
+            <span class="text-body-secondary">· Análisis {{ ev.num }}: {{ ev.corto }}</span><br>
+            <span class="text-body-secondary">{{ e.dimensiones }} {{ e.medidas }} {{ e.nivel }}</span></td></tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</section>
+
+<section id="hallazgos" class="mb-5 reveal">
+  {{ sec(5, "Conocimientos descubiertos") }}
+  <p class="small text-body-secondary">Síntesis de los ocho conocimientos multidimensionales. Las cifras se calculan con consultas
+    al modelo estrella al cargar la página; la ficha completa (pregunta, procedimiento, evidencia, interpretación, utilidad
+    y limitación) está en cada análisis.</p>
+  <div class="row row-cols-1 row-cols-lg-2 g-3">
+    {% for v in vistas %}{% for c in conocimientos_por_vista[v.slug] %}
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover border-start border-4 border-{{ c.color }}">
+        <div class="card-body small d-flex flex-column">
+          <div class="d-flex align-items-start gap-2 mb-2">
+            {{ tag(c.n, c.color) }}<h3 class="h6 fw-bold mb-0">{{ c.titulo }}</h3>
+          </div>
+          <p class="mb-2">{{ c.hallazgo }}</p>
+          <a class="mt-auto link-{{ c.color }} stretched-link" href="{{ url_for('pages.r5_vista', slug=v.slug) }}#conocimientos">
+            Análisis {{ v.num }} · {{ v.corto }}<i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}{% endfor %}
+  </div>
+</section>
+
+<section id="conclusiones" class="mb-5 reveal">
+  {{ sec(6, "Limitaciones y conclusiones") }}
+  <div class="row g-4">
+    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-warning"><div class="card-body small">
+      <h3 class="h6 fw-bold text-warning-emphasis">Limitaciones</h3>
+      <ul class="mb-0 ps-3">
+        <li>EVA son evaluaciones municipales por consenso, no mediciones directas.</li>
+        <li>El {{ incoherentes_pct }} % de los hechos tiene área cosechada mayor que la sembrada; la tasa de cosecha es sensible a ese tratamiento.</li>
+        <li>Seis años no permiten separar tendencia de ciclos climáticos; las causas se plantean como hipótesis.</li>
+        <li>Las toneladas no miden aporte nutricional ni acceso a los alimentos: son asociaciones de oferta, no causalidad sobre la seguridad alimentaria.</li>
+      </ul>
+    </div></div></div>
+    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-success"><div class="card-body small">
+      <h3 class="h6 fw-bold text-success">Conclusiones</h3>
+      <ul class="mb-0 ps-3">
+        <li>Contar registros (R4) y medir volumen (R5) llevan a mapas distintos: la Orinoquía, la papa del altiplano y el maíz tradicional cambian de peso.</li>
+        <li>Los cambios importantes aparecen al bajar de nivel (municipio, semestre) o al cruzar el sistema productivo, no en los totales.</li>
+        <li>Para la seguridad alimentaria, los puntos frágiles son el maíz tradicional del Caribe y los choques puntuales de cosecha de arroz.</li>
+      </ul>
+    </div></div></div>
+  </div>
+</section>
+
+<div class="d-flex align-items-center gap-2 text-body-secondary small fw-semibold text-uppercase mb-3 mt-5 pt-3 border-top"><i class="bi bi-database-gear"></i>Construcción del modelo</div>
+
 <section id="unidad" class="mb-5 reveal">
-  {{ sec(2, "Unidad de análisis y granularidad") }}
+  {{ sec(7, "Unidad de análisis y granularidad") }}
   <div class="row g-3">
     <div class="col-md-6"><div class="card h-100 border-0 shadow-sm"><div class="card-body">
       <h3 class="h6 fw-bold text-success">Unidad de análisis</h3>
@@ -84,29 +237,8 @@
   </div>
 </section>
 
-<section id="relacion-r4" class="mb-5 reveal">
-  {{ sec(3, "Relación con los conocimientos evidentes de R4") }}
-  {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Conocimiento evidente (R4)</th><th>Qué requería más profundidad</th><th>Vista R5</th></tr></thead>
-    <tbody>
-      <tr><td>Andina = 59,3 % de los registros; top-5 departamentos = 41,5 %.</td>
-          <td>Se contaron registros, no volumen; ¿coincide con dónde se produce?</td>
-          <td><a href="{{ url_for('pages.r5_vista', slug='territorial') }}">1 · Territorial</a></td></tr>
-      <tr><td>Registros +28,5 % entre 2019 y 2024, salto de +19,5 % en 2021.</td>
-          <td>¿Más producción o más desagregación? ¿Qué pasa por semestre?</td>
-          <td><a href="{{ url_for('pages.r5_vista', slug='temporal') }}">2 · Temporal</a></td></tr>
-      <tr><td>Maíz = 37,8 % de los registros; arroz el menos evaluado.</td>
-          <td>¿Por qué el maíz domina en registros? ¿Qué sistema productivo hay detrás?</td>
-          <td><a href="{{ url_for('pages.r5_vista', slug='sistemas') }}">3 · Sistemas</a></td></tr>
-      <tr><td>Combinaciones cultivo × región × semestre activas (52 de 90).</td>
-          <td>Presencia no es desempeño; ¿dónde se pierde área sembrada y cuándo?</td>
-          <td><a href="{{ url_for('pages.r5_vista', slug='cosecha') }}">4 · Cosecha</a></td></tr>
-    </tbody>
-  {{ table_close() }}
-</section>
-
 <section id="modelo" class="mb-5 reveal">
-  {{ sec(4, "Modelo estrella") }}
+  {{ sec(8, "Modelo estrella") }}
   <div class="border rounded p-2 mb-3 overflow-auto">
     <svg viewBox="0 0 900 520" style="min-width:640px;width:100%;height:auto;font-family:var(--bs-font-monospace);font-size:12px;" role="img"
          aria-label="Diagrama del modelo estrella: tabla de hechos fact_produccion_agricola relacionada con cuatro dimensiones">
@@ -152,7 +284,7 @@
 </section>
 
 <section id="diccionario" class="mb-5 reveal">
-  {{ sec(5, "Dimensiones, medidas y jerarquías") }}
+  {{ sec(9, "Dimensiones, medidas y jerarquías") }}
   <h3 class="h5 fw-bold">Jerarquías</h3>
   {{ table_open(wrap=True, extra="small") }}
     <thead><tr><th>Dimensión</th><th>Jerarquía (general → detalle)</th><th>Por qué la agrupación es válida</th></tr></thead>
@@ -190,7 +322,7 @@
 </section>
 
 <section id="carga" class="mb-5 reveal">
-  {{ sec(6, "Herramientas, transformación y carga") }}
+  {{ sec(10, "Herramientas, transformación y carga") }}
   <div class="row g-3 mb-3">
     <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
       <h3 class="h6 fw-bold">Herramientas</h3>
@@ -222,7 +354,7 @@
         ("Anio (derivado)", "dim_tiempo.trienio", "2019–2021 / 2022–2024 para comparar periodos equivalentes."),
         ("DesagregacionCultivo, Cultivo, GrupoCultivo, CicloCultivo, EstadoFisico, NombreCientifico, CodigoCultivo", "dim_cultivo.*", "Una fila por desagregación."),
         ("DesagregacionCultivo (derivado)", "dim_sistema_productivo.sistema, criterio", "Diccionario de 16 desagregaciones → 7 sistemas."),
-        ("AreaSembrada, AreaCosechada, Produccion", "area_sembrada_ha, area_cosechada_ha, produccion_t", "Numéricas; un faltante se cargaría como 0 (hoy no hay)."),
+        ("AreaSembrada, AreaCosechada, Produccion", "area_sembrada_ha, area_cosechada_ha, produccion_t", "Numéricas; un faltante se carga como NULL, nunca como 0 (hoy no hay ninguno)."),
         ("Rendimiento", "rendimiento_reportado_t_ha", "Solo trazabilidad; el rendimiento del análisis se recalcula."),
         ("_flag_area_incoherente", "area_incoherente (0/1)", "Atributo degenerado de calidad, usado como filtro."),
         ("Subgrupo, _outlier_iqr_*", "—", "No cargados: redundante con Grupo / atípicos legítimos de escala ya revisados en R2."),
@@ -234,7 +366,7 @@
 </section>
 
 <section id="validaciones" class="mb-5 reveal">
-  {{ sec(7, "Validaciones del modelo") }}
+  {{ sec(11, "Validaciones del modelo") }}
   <p class="small text-body-secondary">Se ejecutan en vivo contra la base y el JSON tratado (<span class="font-monospace">SQL/R5/02_validaciones.sql</span>).</p>
   {{ table_open(wrap=True, extra="small") }}
     <thead><tr><th>Grupo</th><th>Comprobación</th><th class="text-end">Modelo</th><th class="text-end">Origen / esperado</th><th>Resultado</th><th>Nota</th></tr></thead>
@@ -247,79 +379,49 @@
       {% endfor %}
     </tbody>
   {{ table_close() }}
-</section>
 
-<section id="vistas" class="mb-5 reveal">
-  {{ sec(8, "Vistas interactivas") }}
-  <div class="row row-cols-1 row-cols-md-2 g-3">
-    {% for v in vistas %}
-    <div class="col"><a class="card h-100 border-0 shadow-sm card-hover text-decoration-none" href="{{ url_for('pages.r5_vista', slug=v.slug) }}">
-      <div class="card-body">
-        <div class="d-flex align-items-center gap-2 mb-2"><i class="bi {{ v.icon }} text-{{ v.color }} fs-4"></i>
-          <h3 class="h6 fw-bold mb-0 text-body">{{ v.num }}. {{ v.titulo }}</h3></div>
-        <p class="small text-body-secondary mb-2">{{ v.pregunta }}</p>
-        <div class="d-flex flex-wrap gap-1">{% for d in v.dimensiones %}{{ tag(d, "secondary") }}{% endfor %}</div>
-      </div></a></div>
-    {% endfor %}
+  <h3 class="h6 fw-bold mt-4">Faltantes, categorías desconocidas y respuestas negativas</h3>
+  <div class="row row-cols-1 row-cols-md-3 g-3">
+    <div class="col"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <p class="fw-semibold mb-1">Valor faltante → <span class="font-monospace">NULL</span></p>
+      No hay dato. Se carga como NULL, nunca como 0, para que SUM lo ignore y no se confunda con una cosecha nula.
+      En el EVA tratado no hay faltantes en las medidas (validación de arriba).
+    </div></div></div>
+    <div class="col"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <p class="fw-semibold mb-1">Categoría desconocida → clave <span class="font-monospace">0</span></p>
+      Hay hecho pero no se identifica su municipio, cultivo o sistema. Va al miembro «Desconocido» de cada dimensión
+      y se excluye de los filtros. Hoy ningún hecho lo usa.
+    </div></div></div>
+    <div class="col"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <p class="fw-semibold mb-1">Respuesta negativa → <span class="font-monospace">0</span></p>
+      EVA reporta que no hubo cosecha: {{ cosecha_cero | miles }} hechos con área cosechada y producción 0. Es un valor
+      real: baja la tasa de cosecha y suma área no cosechada, pero no entra en el rendimiento (su denominador es el área cosechada).
+    </div></div></div>
   </div>
 </section>
 
-<section id="operaciones" class="mb-5 reveal">
-  {{ sec(9, "Operaciones multidimensionales") }}
-  <p class="small">Todas recalculan las medidas con una nueva consulta al modelo; cambiar el tipo de gráfica no cuenta como operación.</p>
+<section id="condiciones" class="mb-5 reveal">
+  {{ sec(12, "Condiciones del análisis") }}
+  <p class="small text-body-secondary">Reglas de cálculo que se aplican en todas las consultas, indicadores, matrices y gráficas de R5.</p>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Operación</th><th>Cómo se implementa</th><th>Ejemplo aplicado</th></tr></thead>
+    <thead><tr><th scope="col">Condición</th><th scope="col">Cómo se cumple</th><th scope="col">Dónde se comprueba</th></tr></thead>
     <tbody>
-      {% set como = {
-        "Drill-down": "Clic en una fila o barra: el miembro pasa a filtro y las filas bajan un nivel (GROUP BY del nivel hijo).",
-        "Roll-up": "Botón Roll-up o migas de pan: se quita el filtro del nivel y se agrupa por el nivel padre.",
-        "Slice": "Un filtro de un valor en una dimensión (WHERE dim = valor).",
-        "Dice": "Filtros sobre dos o más dimensiones a la vez (WHERE dim1 = a AND dim2 = b).",
-        "Pivot": "Botón Pivot: intercambia la dimensión de filas y la de columnas de la matriz.",
-      } %}
-      {% for e in ejemplos %}
-      <tr><td class="fw-semibold"><i class="bi {{ e.icon }} text-success me-1"></i>{{ e.op }}</td><td>{{ como[e.op] }}</td>
-          <td><a href="{{ url_for('pages.r5_vista', slug=e.vista) }}?ej={{ e.id }}#explorador">{{ e.titulo }}</a><br>
-            <span class="text-body-secondary">{{ e.dimensiones }} {{ e.medidas }} {{ e.nivel }}</span></td></tr>
+      {% for c, como, donde in [
+        ("Granularidad consistente", "Toda fila de hechos es 1 municipio × 1 desagregación × 1 periodo; no se mezclan hechos agregados.", "Restricción UNIQUE y validación «combinaciones repetidas = 0»."),
+        ("Las relaciones no multiplican valores", "Cada hecho tiene exactamente una fila en cada dimensión (claves sustitutas únicas, relación 1 : N).", "Validación «filas tras unir hechos con las 4 dimensiones» = registros de origen."),
+        ("Registros ≠ entidades ≠ cantidades", "Registros = COUNT(*); municipios = COUNT(DISTINCT territorio_key); toneladas y hectáreas = SUM.", "Selector de medida de cada análisis; los municipios únicos no se suman entre filas."),
+        ("Denominador de cada porcentaje", "Cada % indica si es sobre el total de la selección, de la fila o de la columna.", "Notas bajo las gráficas, conmutador Valor / % de fila / % de columna de la matriz."),
+        ("Recalcular al cambiar de nivel", "Cada drill-down, roll-up, slice o dice es una consulta nueva; subtotales y total general tienen su propia consulta.", "Sección «Consulta SQL ejecutada» y prueba automática de roll-up."),
+        ("No sumar porcentajes ni promedios", "Rendimiento y tasa de cosecha son cocientes de sumas (SUM / SUM); no se promedian ni se reparten en participaciones.", "Validación «rendimiento ponderado vs. promedio simple» (diferencia explicada)."),
+        ("Periodos equivalentes", "Trienios 2019–2021 y 2022–2024 de igual duración; semestres A y B se comparan entre sí; el plátano (periodo anual) queda como miembro «Anual» y no se suma a ningún semestre.", "Análisis 2: indicadores Δ entre trienios y nivel Periodo."),
+        ("Faltantes, desconocidos y negativos", "NULL, clave 0 y valor 0 respectivamente (ver arriba).", "Validaciones del grupo «Faltantes y desconocidos»."),
+        ("Jerarquías con agrupación válida", "Cada nivel hijo pertenece a un único padre (DIVIPOLA, calendario, catálogo EVA de cultivos).", "Sección 9, tabla de jerarquías."),
+        ("Asociación ≠ causalidad", "Los conocimientos describen asociaciones observadas; las explicaciones no verificables con EVA se rotulan como hipótesis.", "Campos «Interpretación» y «Limitación» de cada conocimiento."),
+      ] %}
+      <tr><td class="fw-semibold">{{ c }}</td><td>{{ como }}</td><td class="text-body-secondary">{{ donde }}</td></tr>
       {% endfor %}
     </tbody>
   {{ table_close() }}
-</section>
-
-<section id="conocimientos" class="mb-5 reveal">
-  {{ sec(10, "Conocimientos multidimensionales descubiertos") }}
-  <div class="row row-cols-1 row-cols-md-2 g-3">
-    {% for v in vistas %}{% for c in conocimientos_por_vista[v.slug] %}
-    <div class="col"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
-      <p class="mb-1">{{ tag(c.n, c.color) }} <span class="fw-semibold">{{ c.titulo }}</span></p>
-      <p class="mb-1">{{ c.hallazgo }}</p>
-      <a href="{{ url_for('pages.r5_vista', slug=v.slug) }}#conocimientos">Ver los 8 elementos en la vista {{ v.num }} →</a>
-    </div></div></div>
-    {% endfor %}{% endfor %}
-  </div>
-</section>
-
-<section id="conclusiones" class="mb-5 reveal">
-  {{ sec(11, "Limitaciones y conclusiones") }}
-  <div class="row g-4">
-    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-warning"><div class="card-body small">
-      <h3 class="h6 fw-bold text-warning-emphasis">Limitaciones</h3>
-      <ul class="mb-0 ps-3">
-        <li>EVA son evaluaciones municipales por consenso, no mediciones directas.</li>
-        <li>El {{ incoherentes_pct }} % de los hechos tiene área cosechada mayor que la sembrada; la tasa de cosecha es sensible a ese tratamiento.</li>
-        <li>Seis años no permiten separar tendencia de ciclos climáticos; las causas se plantean como hipótesis.</li>
-        <li>Las toneladas no miden aporte nutricional ni acceso a los alimentos: son asociaciones de oferta, no causalidad sobre la seguridad alimentaria.</li>
-      </ul>
-    </div></div></div>
-    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-success"><div class="card-body small">
-      <h3 class="h6 fw-bold text-success">Conclusiones</h3>
-      <ul class="mb-0 ps-3">
-        <li>Contar registros (R4) y medir volumen (R5) llevan a mapas distintos: la Orinoquía, la papa del altiplano y el maíz tradicional cambian de peso.</li>
-        <li>Los cambios importantes aparecen al bajar de nivel (municipio, semestre) o al cruzar el sistema productivo, no en los totales.</li>
-        <li>Para la seguridad alimentaria, los puntos frágiles son el maíz tradicional del Caribe y los choques puntuales de cosecha de arroz.</li>
-      </ul>
-    </div></div></div>
-  </div>
 </section>
 
 {% endblock %}

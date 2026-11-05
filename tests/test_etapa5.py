@@ -62,6 +62,32 @@ def test_pivot_mismo_total(con):
     assert a["cells"][i][j] == b["cells"][k][m]
 
 
+def test_cero_reportado_no_es_faltante(con):
+    # El 0 (no hubo cosecha) es un valor real; el faltante sería NULL.
+    nulos = con.execute("SELECT COUNT(*) FROM fact_produccion_agricola WHERE produccion_t IS NULL").fetchone()[0]
+    ceros = con.execute("SELECT COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0").fetchone()[0]
+    assert nulos == 0 and ceros > 0
+    # El rendimiento no cambia al excluir los ceros: su denominador es el área cosechada.
+    q = "SELECT SUM(produccion_t) / SUM(area_cosechada_ha) FROM fact_produccion_agricola"
+    assert con.execute(q).fetchone()[0] == pytest.approx(
+        con.execute(q + " WHERE area_cosechada_ha > 0").fetchone()[0])
+
+
+def test_relacion_r4_cubre_las_cuatro_vistas():
+    from app.services.etapa5 import R4_RELACION, VISTAS
+    assert len(R4_RELACION) == 12
+    retomadas = {s for r in R4_RELACION if r["profundizar"] for s in r["vistas"]}
+    assert retomadas == {v["slug"] for v in VISTAS}
+    assert all(r["vistas"] == [] for r in R4_RELACION if not r["profundizar"])
+
+
+def test_menu_analisis_multidimensional(client):
+    html = client.get("/").get_data(as_text=True)
+    assert "Análisis multidimensional</a>" in html
+    for slug in ("territorial", "temporal", "sistemas", "cosecha"):
+        assert f'href="/r5/{slug}"' in html
+
+
 def test_niveles_fuera_de_lista_blanca(con):
     with pytest.raises(olap.OlapError):
         olap.query(con, "region; DROP TABLE x", "produccion")
