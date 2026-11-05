@@ -39,6 +39,10 @@ erDiagram
         text cod_departamento
         text departamento
         text region
+        text tipo_entidad
+        text capital
+        real latitud
+        real longitud
     }
     dim_tiempo {
         int tiempo_key PK
@@ -47,6 +51,8 @@ erDiagram
         text periodo
         text tipo_periodo
         text trienio
+        text meses
+        text etapa_desagregacion
     }
     dim_cultivo {
         int cultivo_key PK
@@ -54,15 +60,21 @@ erDiagram
         int codigo_cultivo
         text cultivo
         text grupo
+        text subgrupo
+        text variedad
         text ciclo
         text estado_fisico
         text nombre_cientifico
+        int anio_desde
+        int anio_hasta
     }
     dim_sistema_productivo {
         int sistema_key PK
         text sistema UK
         text criterio
         text descripcion
+        text cultivos
+        text desagregaciones
     }
 ```
 
@@ -75,12 +87,19 @@ Se distinguen tres casos: **faltante** (medida sin dato → `NULL`, ignorado por
 
 ## Dimensiones y jerarquías
 
-| Dimensión | Filas | Atributos | Jerarquía | Justificación |
-|---|---|---|---|---|
-| `dim_territorio` | 1.098 + Desconocido | cod_municipio, municipio, cod_departamento, departamento, region | Región → Departamento → Municipio | DIVIPOLA: cada municipio en un departamento; cada departamento en una región natural |
-| `dim_tiempo` | 18 | periodo_codigo, anio, periodo, tipo_periodo, trienio | Trienio → Año → Periodo | Trienios de igual duración para comparar periodos equivalentes |
-| `dim_cultivo` | 16 + Desconocido | desagregacion, cultivo, grupo, ciclo, estado_fisico, codigo_cultivo, nombre_cientifico | Grupo → Cultivo → Desagregación | Cada desagregación EVA pertenece a un cultivo y este a un grupo |
-| `dim_sistema_productivo` | 7 + Desconocido | sistema, criterio, descripcion | Criterio → Sistema | Nivel tecnológico (maíz/arroz), destino (plátano/yuca) o sin diferenciar (papa/frijol) |
+| Dimensión | Pregunta | Filas | Atributos | Jerarquía | Atributos de análisis | Justificación |
+|---|---|---|---|---|---|---|
+| `dim_territorio` | ¿Dónde? | 1.098 + Desconocido | 10: cod_municipio, municipio, cod_departamento, departamento, region, tipo_entidad, capital, latitud, longitud | Región → Departamento → Municipio | capital | DIVIPOLA: cada municipio en un departamento; cada departamento en una región natural. Tipo y coordenadas desde el CSV DIVIPOLA (`app/data/`) |
+| `dim_tiempo` | ¿Cuándo? | 18 | 8: periodo_codigo, anio, periodo, tipo_periodo, trienio, meses, etapa_desagregacion | Trienio → Año → Periodo | periodo (semestre), etapa_desagregacion | Trienios de igual duración; la etapa separa los años antes y después del cambio de desagregación de 2021 |
+| `dim_cultivo` | ¿Qué? | 16 + Desconocido | 12: desagregacion, codigo_cultivo, cultivo, grupo, subgrupo, variedad, ciclo, estado_fisico, nombre_cientifico, anio_desde, anio_hasta | Grupo → Cultivo → Desagregación | variedad, estado_fisico | Cada desagregación EVA pertenece a un cultivo y este a un grupo; la vigencia documenta las desagregaciones reemplazadas |
+| `dim_sistema_productivo` | ¿Cómo / para qué? | 7 + Desconocido | 6: sistema, criterio, descripcion, cultivos, desagregaciones | Criterio → Sistema | — | Nivel tecnológico (maíz/arroz), destino (plátano/yuca) o sin diferenciar (papa/frijol) |
+
+El detalle de cada atributo (tipo, rol, descripción, origen, valores distintos y ejemplos) está en
+[`analisis_multidimensional.md` § 3](analisis_multidimensional.md#3-diccionario-de-dimensiones) y en `/r5#diccionario`.
+
+**Hallazgo del diseño:** el atributo `estado_fisico` muestra que EVA reporta el maíz «En fresco» en 2019–2020
+(desagregaciones *Maíz tecnificado/tradicional*) y en «Grano seco» desde 2021 (*Maíz amarillo/blanco …*), por lo que las
+toneladas de maíz de ambas etapas no son del todo comparables (ver limitación de C3).
 
 Mapeo desagregación → sistema: tecnificado = maíz tecnificado (y amarillo/blanco tecnificado), arroz riego,
 arroz secano mecanizado; tradicional = maíz tradicional (y amarillo/blanco tradicional), arroz secano manual;
@@ -115,12 +134,17 @@ Las participaciones (%) indican su denominador (total de la selección, de la fi
 | AreaSembrada, AreaCosechada, Produccion | area_sembrada_ha, area_cosechada_ha, produccion_t | numéricas; faltante → NULL, nunca 0 (no hay faltantes); 0 = respuesta negativa reportada (2.298 hechos sin cosecha) |
 | Rendimiento | rendimiento_reportado_t_ha | solo trazabilidad |
 | _flag_area_incoherente | area_incoherente | 0/1; atributo degenerado usado como filtro |
-| Subgrupo, _outlier_iqr_* | — | no cargados (redundantes / ya tratados en R2) |
+| Subgrupo | dim_cultivo.subgrupo | sin cambios |
+| DIVIPOLA: Tipo, Latitud, Longitud | dim_territorio.tipo_entidad, latitud, longitud | cruce por código de municipio; coma decimal → punto |
+| CodigoMunicipioDane | dim_territorio.capital | código DDD001 → «Capital departamental» |
+| Anio, Periodo | dim_tiempo.meses, etapa_desagregacion | A → Ene–Jun, B → Jul–Dic, anual → Ene–Dic; ≤ 2020 → anterior, ≥ 2021 → actual |
+| DesagregacionCultivo, Anio | dim_cultivo.variedad, anio_desde, anio_hasta | variedad según el nombre; vigencia = primer y último año con registros |
+| _outlier_iqr_* | — | no cargados (atípicos ya tratados en R2) |
 
 ## Carga y validación
 
 ```bash
-python scripts/R5/build_star.py          # crea la base, carga y valida (21 comprobaciones)
+python scripts/R5/build_star.py          # crea la base, carga y valida (28 comprobaciones)
 python scripts/R5/export_docs.py         # regenera analisis_multidimensional.md desde el modelo
 sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql
 ```

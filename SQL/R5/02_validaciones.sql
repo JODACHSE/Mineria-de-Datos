@@ -21,6 +21,15 @@ SELECT 'huerfanos_cultivo', COUNT(*) FROM fact_produccion_agricola f
 SELECT 'huerfanos_sistema', COUNT(*) FROM fact_produccion_agricola f
   LEFT JOIN dim_sistema_productivo d ON d.sistema_key = f.sistema_key WHERE d.sistema_key IS NULL;
 
+-- 2b. Jerarquías válidas: hijos con más de un padre (esperado 0 en cada fila)
+SELECT 'municipio_varios_departamentos', COUNT(*) FROM (SELECT cod_municipio FROM dim_territorio GROUP BY cod_municipio HAVING COUNT(DISTINCT departamento) > 1);
+SELECT 'departamento_varias_regiones', COUNT(*) FROM (SELECT departamento FROM dim_territorio WHERE territorio_key <> 0 GROUP BY departamento HAVING COUNT(DISTINCT region) > 1);
+SELECT 'periodo_varios_anios', COUNT(*) FROM (SELECT periodo_codigo FROM dim_tiempo GROUP BY periodo_codigo HAVING COUNT(DISTINCT anio) > 1);
+SELECT 'anio_varios_trienios', COUNT(*) FROM (SELECT anio FROM dim_tiempo GROUP BY anio HAVING COUNT(DISTINCT trienio) > 1);
+SELECT 'desagregacion_varios_cultivos', COUNT(*) FROM (SELECT desagregacion FROM dim_cultivo GROUP BY desagregacion HAVING COUNT(DISTINCT cultivo) > 1);
+SELECT 'cultivo_varios_grupos', COUNT(*) FROM (SELECT cultivo FROM dim_cultivo WHERE cultivo_key <> 0 GROUP BY cultivo HAVING COUNT(DISTINCT grupo) > 1);
+SELECT 'sistema_varios_criterios', COUNT(*) FROM (SELECT sistema FROM dim_sistema_productivo GROUP BY sistema HAVING COUNT(DISTINCT criterio) > 1);
+
 -- 3. Duplicados en la granularidad (esperado 0) y filas tras los JOIN (esperado = hechos = 48.932)
 SELECT 'duplicados_grano', COUNT(*) FROM (
   SELECT 1 FROM fact_produccion_agricola GROUP BY territorio_key, cultivo_key, tiempo_key HAVING COUNT(*) > 1);

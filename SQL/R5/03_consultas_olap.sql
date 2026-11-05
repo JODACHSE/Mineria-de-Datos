@@ -102,3 +102,22 @@ GROUP BY t.departamento, tm.anio;
 SELECT t.region, 100.0 * SUM(f.area_cosechada_ha) / SUM(f.area_sembrada_ha) AS tasa_cosecha_pct
 FROM fact_produccion_agricola f JOIN dim_territorio t ON t.territorio_key = f.territorio_key
 WHERE f.area_incoherente = 0 GROUP BY t.region;
+
+-- ---------------------------------------------------------------------
+-- Atributos de análisis de las dimensiones ampliadas
+-- Maíz por año y estado físico reportado (cambio de «En fresco» a «Grano seco» en 2021, ver limitación de C3)
+SELECT tm.anio, c.estado_fisico, SUM(f.produccion_t) AS produccion_t, SUM(f.area_cosechada_ha) AS area_cosechada_ha,
+       ROUND(SUM(f.produccion_t) / SUM(f.area_cosechada_ha), 2) AS rendimiento_t_ha
+FROM fact_produccion_agricola f
+JOIN dim_tiempo tm ON tm.tiempo_key = f.tiempo_key
+JOIN dim_cultivo c ON c.cultivo_key = f.cultivo_key
+WHERE c.cultivo = 'Maíz'
+GROUP BY tm.anio, c.estado_fisico ORDER BY tm.anio;
+
+-- Capitales departamentales vs. resto de municipios: participación en la producción de cada cultivo
+SELECT c.cultivo, t.capital,
+       ROUND(100.0 * SUM(f.produccion_t) / SUM(SUM(f.produccion_t)) OVER (PARTITION BY c.cultivo), 1) AS pct_produccion_cultivo
+FROM fact_produccion_agricola f
+JOIN dim_territorio t ON t.territorio_key = f.territorio_key
+JOIN dim_cultivo c    ON c.cultivo_key    = f.cultivo_key
+GROUP BY c.cultivo, t.capital ORDER BY c.cultivo, t.capital;

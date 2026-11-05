@@ -73,6 +73,22 @@ def test_cero_reportado_no_es_faltante(con):
         con.execute(q + " WHERE area_cosechada_ha > 0").fetchone()[0])
 
 
+def test_diccionario_coincide_con_el_esquema(con):
+    for d in dw.dictionary(con):
+        columnas = [r[1] for r in con.execute(f"PRAGMA table_info({d['tabla']})")]
+        assert [a["col"] for a in d["atributos"]] == columnas  # todo atributo documentado, en orden
+        assert d["filas"] > 0 and all(a["distintos"] > 0 for a in d["atributos"])
+    sin_coord = con.execute("SELECT COUNT(*) FROM dim_territorio WHERE territorio_key <> 0 AND latitud IS NULL").fetchone()[0]
+    assert sin_coord == 0  # DIVIPOLA cubre todos los municipios de EVA
+
+
+def test_atributos_de_analisis_consultables(con):
+    q = olap.query(con, "anio", "produccion", "estado_fisico", {"cultivo": ["Maíz"]})
+    assert set(q["cols"]) == {"En fresco", "Grano seco"}
+    cap = olap.query(con, "capital", "produccion")
+    assert sum(cap["row_totals"]) == pytest.approx(cap["grand_total"], abs=2)
+
+
 def test_relacion_r4_cubre_las_cuatro_vistas():
     from app.services.etapa5 import R4_RELACION, VISTAS
     assert len(R4_RELACION) == 12

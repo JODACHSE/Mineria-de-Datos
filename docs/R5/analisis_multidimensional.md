@@ -29,7 +29,95 @@
 | Relacional · **La terna líder es Maíz × Andina × Primer semestre** — 5.469 registros (11,2 %). | Sí | El liderazgo es en número de registros; R4 no podía verificar si ese cruce también lidera en volumen ni con qué tecnología se produce. | Slice Cultivo = Maíz con matriz Región × Sistema y rendimiento ponderado (C5). | 3. Brecha entre sistemas productivos |
 | Relacional · **El maíz es el cultivo más transversal** — Presente en las 5 regiones; 29 de 30 pares cultivo × región activos. | Sí | Estar presente en todas partes no dice cuánto se produce ni con qué rendimiento. | Cultivo × Sistema × Región: la presencia se explica sobre todo por el maíz tradicional (C5). | 3. Brecha entre sistemas productivos |
 
-## 3. Preguntas de análisis
+## 3. Diccionario de dimensiones
+
+Rol: **Clave** · **Nivel de jerarquía** (drill-down / roll-up) · **Atributo de análisis** (columna o filtro del explorador) · **Descriptivo**. «Distintos» y «Ejemplos» se consultan en la base, sin el miembro 0.
+
+### Territorio · `dim_territorio` — ¿Dónde se produce?
+
+- **Propósito:** Ubica cada hecho en el municipio que lo reporta y permite agregarlo por departamento y región natural, comparar capitales con el resto de municipios y situarlo en el mapa.
+- **Granularidad:** 1 fila = 1 municipio con registros en EVA (+ miembro 0 «Desconocido»). Miembros: 1.098.
+- **Claves:** `territorio_key` (sustituta, PK) · `cod_municipio` (natural, UNIQUE) · FK en `fact_produccion_agricola.territorio_key`.
+- **Jerarquía:** Región → Departamento → Municipio
+- **Fuente:** EVA tratado (códigos y nombres DANE) + DIVIPOLA (tipo y coordenadas) + mapeo región de R4.
+- **Cambios en el tiempo:** Tipo 1 (se sobrescribe): los límites municipales no cambian en 2019–2024.
+
+| Atributo | Tipo | Rol | Descripción | Origen | Distintos | Ejemplos |
+|---|---|---|---|---|---|---|
+| `territorio_key` | INTEGER | Clave | Clave sustituta; 0 = Desconocido. | Generada en la carga | 1.098 | 1 · 2 · 3 |
+| `cod_municipio` | TEXT(5) | Clave | Código DIVIPOLA del municipio (clave natural, UNIQUE). | EVA · CodigoMunicipioDane | 1.098 | 05001 · 05002 · 05004 |
+| `municipio` | TEXT | Nivel de jerarquía | Nombre del municipio (nivel más detallado). | EVA · Municipio | 1.016 | Buenavista · La Unión · Villanueva |
+| `cod_departamento` | TEXT(2) | Descriptivo | Código DIVIPOLA del departamento. | EVA · CodigoDeptoDane | 32 | 05 · 15 · 25 |
+| `departamento` | TEXT | Nivel de jerarquía | Departamento al que pertenece el municipio. | EVA · Departamento | 32 | Antioquia · Boyacá · Cundinamarca |
+| `region` | TEXT | Nivel de jerarquía | Región natural (Andina, Caribe, Pacífica, Orinoquía, Amazonía). | Derivado: mapeo departamento → región (R4) | 5 | Andina · Caribe · Pacífica |
+| `tipo_entidad` | TEXT | Descriptivo | Municipio, isla o área no municipalizada. | DIVIPOLA · Tipo | 2 | Municipio · Isla |
+| `capital` | TEXT | Atributo de análisis | «Capital departamental» si el código termina en 001; si no, «Resto de municipios». | Derivado: convención DIVIPOLA | 2 | Resto de municipios · Capital departamental |
+| `latitud` | REAL | Descriptivo | Latitud de la cabecera municipal (grados). | DIVIPOLA · Latitud | 1.098 | -4.19895 · -3.779934 · -0.564984 |
+| `longitud` | REAL | Descriptivo | Longitud de la cabecera municipal (grados). | DIVIPOLA · Longitud | 1.097 | -73.308399 · -81.707181 · -81.368386 |
+
+### Tiempo · `dim_tiempo` — ¿Cuándo se produce?
+
+- **Propósito:** Ubica cada hecho en su periodo agrícola y permite comparar periodos equivalentes (semestres entre sí, trienios de igual duración) y separar los años anteriores y posteriores al cambio de desagregación de EVA.
+- **Granularidad:** 1 fila = 1 periodo agrícola: semestre A o B (transitorios) o año (plátano, permanente). Miembros: 18.
+- **Claves:** `tiempo_key` (sustituta, PK) · `periodo_codigo` (natural, UNIQUE) · FK en `fact_produccion_agricola.tiempo_key`.
+- **Jerarquía:** Trienio → Año → Periodo
+- **Fuente:** EVA tratado (Anio, Periodo) + atributos derivados del calendario agrícola.
+- **Cambios en el tiempo:** Estática: el calendario no cambia.
+
+| Atributo | Tipo | Rol | Descripción | Origen | Distintos | Ejemplos |
+|---|---|---|---|---|---|---|
+| `tiempo_key` | INTEGER | Clave | Clave inteligente AAAAP (20191 = 2019A, 20192 = 2019B, 20190 = 2019 anual). | Generada en la carga | 18 | 20190 · 20191 · 20192 |
+| `periodo_codigo` | TEXT | Nivel de jerarquía | Código EVA del periodo: 2019A, 2019B o 2019 (clave natural, UNIQUE). | EVA · Periodo | 18 | 2019 · 2019A · 2019B |
+| `anio` | INTEGER | Nivel de jerarquía | Año calendario. | EVA · Anio | 6 | 2019 · 2020 · 2021 |
+| `periodo` | TEXT | Atributo de análisis | Semestre A, Semestre B o Anual: compara semestres entre años. | Derivado del código | 3 | Anual · Semestre A · Semestre B |
+| `tipo_periodo` | TEXT | Descriptivo | Semestral o Anual. | Derivado del código | 2 | Semestral · Anual |
+| `trienio` | TEXT | Nivel de jerarquía | 2019–2021 o 2022–2024: periodos equivalentes de tres años. | Derivado del año | 2 | 2019–2021 · 2022–2024 |
+| `meses` | TEXT | Descriptivo | Meses que cubre el periodo: Ene–Jun, Jul–Dic o Ene–Dic. | Derivado: calendario EVA | 3 | Ene–Dic · Ene–Jun · Jul–Dic |
+| `etapa_desagregacion` | TEXT | Atributo de análisis | 2019–2020 (anterior) o 2021–2024 (actual): antes y después del cambio de desagregación del maíz. | Derivado del año | 2 | 2021–2024 (actual) · 2019–2020 (anterior) |
+
+### Cultivo · `dim_cultivo` — ¿Qué se produce?
+
+- **Propósito:** Identifica el producto de cada hecho al nivel más fino que reporta EVA y permite agregarlo por cultivo y grupo, distinguir variedades y el estado físico en que se mide la producción, y saber en qué años estuvo vigente cada desagregación.
+- **Granularidad:** 1 fila = 1 desagregación de cultivo de EVA (+ miembro 0 «Desconocido»). Miembros: 16.
+- **Claves:** `cultivo_key` (sustituta, PK) · `desagregacion` (natural, UNIQUE) · FK en `fact_produccion_agricola.cultivo_key`.
+- **Jerarquía:** Grupo → Cultivo → Desagregación
+- **Fuente:** EVA tratado (catálogo de cultivos) + atributos derivados del nombre y de los hechos.
+- **Cambios en el tiempo:** Tipo 1 con vigencia (anio_desde / anio_hasta): las desagregaciones que EVA reemplazó se conservan.
+
+| Atributo | Tipo | Rol | Descripción | Origen | Distintos | Ejemplos |
+|---|---|---|---|---|---|---|
+| `cultivo_key` | INTEGER | Clave | Clave sustituta; 0 = Desconocido. | Generada en la carga | 16 | 1 · 2 · 3 |
+| `desagregacion` | TEXT | Nivel de jerarquía | Desagregación EVA (clave natural, UNIQUE). | EVA · DesagregacionCultivo | 16 | Arroz riego · Arroz secano manual · Arroz secano mecanizado |
+| `codigo_cultivo` | INTEGER | Descriptivo | Código EVA del cultivo. | EVA · CodigoCultivo | 16 | 1010101 · 1010102 · 1010103 |
+| `cultivo` | TEXT | Nivel de jerarquía | Cultivo básico: maíz, arroz, papa, yuca, plátano o frijol. | EVA · Cultivo | 6 | Maíz · Arroz · Papa |
+| `grupo` | TEXT | Nivel de jerarquía | Grupo de cultivo (cereales, raíces y tubérculos, leguminosas, frutales). | EVA · GrupoCultivo | 4 | Cereales · Raíces y tubérculos · Frutales |
+| `subgrupo` | TEXT | Descriptivo | Subgrupo EVA (p. ej., «Demás frutales» para el plátano). | EVA · Subgrupo | 4 | Cereales · Raíces y tubérculos · Demás frutales |
+| `variedad` | TEXT | Atributo de análisis | Amarillo, Blanco, Criolla, Todas las variedades, Sin distinguir color o No aplica. | Derivado del nombre de la desagregación | 6 | No aplica · Amarillo · Blanco |
+| `ciclo` | TEXT | Descriptivo | Transitorio o Permanente (explica el periodo anual del plátano). | EVA · CicloCultivo | 2 | Transitorio · Permanente |
+| `estado_fisico` | TEXT | Atributo de análisis | Estado en que se pesa la producción: En fresco, Grano seco o Paddy. | EVA · EstadoFisico | 3 | En fresco · Grano seco · Paddy o cáscara verde |
+| `nombre_cientifico` | TEXT | Descriptivo | Nombre científico de la especie. | EVA · NombreCientifico | 7 | Zea mays · Oryza sativa · Manihot esculenta |
+| `anio_desde` | INTEGER | Descriptivo | Primer año con registros de la desagregación. | Derivado de los hechos | 2 | 2019 · 2021 |
+| `anio_hasta` | INTEGER | Descriptivo | Último año con registros (vigencia). | Derivado de los hechos | 2 | 2024 · 2020 |
+
+### Sistema productivo · `dim_sistema_productivo` — ¿Cómo y para qué se produce?
+
+- **Propósito:** Separa el nivel tecnológico (maíz y arroz) y el destino (plátano y yuca), que EVA codifica dentro del nombre de la desagregación, para compararlos de forma consistente antes y después del cambio de desagregación de 2021.
+- **Granularidad:** 1 fila = 1 sistema productivo (+ miembro 0 «Desconocido»). Miembros: 7.
+- **Claves:** `sistema_key` (sustituta, PK) · `sistema` (natural, UNIQUE) · FK en `fact_produccion_agricola.sistema_key`.
+- **Jerarquía:** Criterio → Sistema
+- **Fuente:** Diccionario de la carga: 16 desagregaciones EVA → 7 sistemas.
+- **Cambios en el tiempo:** Estática: catálogo definido en el ETL.
+
+| Atributo | Tipo | Rol | Descripción | Origen | Distintos | Ejemplos |
+|---|---|---|---|---|---|---|
+| `sistema_key` | INTEGER | Clave | Clave sustituta; 0 = Desconocido. | Generada en la carga | 7 | 1 · 2 · 3 |
+| `sistema` | TEXT | Nivel de jerarquía | Tecnificado, Tradicional, Consumo interno, Exportación, Consumo en fresco, Industrial o Sin diferenciar (clave natural). | Derivado de la desagregación | 7 | Consumo en fresco · Consumo interno · Exportación |
+| `criterio` | TEXT | Nivel de jerarquía | Nivel tecnológico, Destino o Sin diferenciar. | Derivado | 3 | Destino · Nivel tecnológico · Sin diferenciar |
+| `descripcion` | TEXT | Descriptivo | Qué agrupa el sistema. | Diccionario de la carga | 7 | Maíz tecnificado y arroz de riego o secano mecanizado. · Maíz tradicional y arroz secano manual. · Papa y frijol: EVA no distingue sistema ni destino. |
+| `cultivos` | TEXT | Descriptivo | Cultivos a los que aplica el sistema. | Derivado de los hechos | 4 | Arroz, Maíz · Plátano · Yuca |
+| `desagregaciones` | TEXT | Descriptivo | Desagregaciones EVA que agrupa. | Diccionario de la carga | 7 | Arroz riego, Arroz secano mecanizado, Maíz tecnificado, Maíz amarillo tecnificado, Maíz blanco tecnificado · Arroz secano manual, Maíz tradicional, Maíz amarillo tradicional, Maíz blanco tradicional · Papa todas las variedades, Papa criolla, Frijol |
+
+## 4. Preguntas de análisis
 
 ### Análisis 1 · Concentración territorial de la producción  (`/r5/territorial`)
 
@@ -111,7 +199,7 @@
 
 **Decisión sustentada en los datos.** Activar seguros agropecuarios y alertas de riesgo climático por departamento y año para arroz y maíz del Caribe, en vez de medidas nacionales uniformes.
 
-## 4. Operaciones multidimensionales (ejemplos aplicados)
+## 5. Operaciones multidimensionales (ejemplos aplicados)
 
 ### Drill-down · Papa: de región a departamento y de departamento a municipio
 
@@ -158,7 +246,7 @@
 - **Procedimiento:** Se combinan dos filtros sobre dimensiones distintas: Cultivo = Arroz y Región = Caribe (WHERE c.cultivo = 'Arroz' AND t.region = 'Caribe'); sobre ese subconjunto se agrupa por Departamento (filas) y Año (columnas) con Tasa de cosecha = 100 × SUM(cosechada) / SUM(sembrada).
 - **Interpretación:** El dice aísla justo el subconjunto donde ocurre el choque de 2021: dentro de los departamentos del Caribe, Sucre muestra la caída más fuerte de tasa de cosecha ese año (conocimiento C8), un patrón que no sería visible ni en el promedio nacional de arroz ni en el promedio del Caribe para todos los cultivos.
 
-## 5. Conocimientos multidimensionales
+## 6. Conocimientos multidimensionales
 
 ### C1 · La Orinoquía produce cuatro veces más de lo que su número de registros sugiere
 
@@ -197,7 +285,7 @@ _Análisis 2: Evolución de la producción_
 - **Hallazgo:** Registros de maíz: 2.107 (2019) → 3.507 (2024), +66,4 %; municipios: 984 → 1.031 (+4,8 %); producción: 1.922.616 t → 1.345.832 t (-30,0 %). Las desagregaciones pasan de 2 en 2020 a 4 en 2021.
 - **Interpretación:** El salto de registros de R4 es un cambio de clasificación de EVA (maíz amarillo/blanco), no una expansión del cultivo. En ese mismo periodo la producción de maíz cayó.
 - **Utilidad:** Evita usar el número de registros como indicador de oferta; el seguimiento del maíz debe hacerse con toneladas y área.
-- **Limitación:** No se puede atribuir la caída a una causa (importaciones, precios, clima) con estos datos; es una asociación temporal.
+- **Limitación:** No se puede atribuir la caída a una causa (importaciones, precios, clima) con estos datos; es una asociación temporal. Además, el atributo estado físico de la dimensión Cultivo muestra que EVA reporta el maíz «En fresco» en 2019–2020 (4.287 registros) y en «Grano seco» desde 2021 (14.203): las toneladas de ambas etapas no son del todo comparables. El área cosechada, que no depende del estado físico, también baja (540.974 ha → 462.600 ha, -14,5 %), por lo que la caída no es solo un efecto de medición (hipótesis sobre su magnitud).
 
 ### C4 · El arroz trasladó su cosecha principal del semestre A al B
 
@@ -264,7 +352,7 @@ _Análisis 4: Área sembrada no cosechada_
 - **Utilidad:** Justifica sistemas de alerta y reservas de arroz activables por año y territorio, en lugar de medidas permanentes nacionales.
 - **Limitación:** Con seis años de datos no se puede estimar la frecuencia de estos eventos ni separar el efecto climático del de mercado.
 
-## 6. Validaciones del modelo frente a los datos tratados
+## 7. Validaciones del modelo frente a los datos tratados
 
 | Grupo | Comprobación | Modelo | Origen / esperado | Resultado | Nota |
 |---|---|---|---|---|---|
@@ -276,6 +364,13 @@ _Análisis 4: Área sembrada no cosechada_
 | Integridad referencial | Hechos sin correspondencia en dim_tiempo | 0 | 0 | OK | LEFT JOIN de la FK contra la dimensión. |
 | Integridad referencial | Hechos sin correspondencia en dim_cultivo | 0 | 0 | OK | LEFT JOIN de la FK contra la dimensión. |
 | Integridad referencial | Hechos sin correspondencia en dim_sistema_productivo | 0 | 0 | OK | LEFT JOIN de la FK contra la dimensión. |
+| Jerarquías | Municipio → un solo departamento (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Departamento → una sola región (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Periodo → un solo año (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Año → un solo trienio (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Desagregación → un solo cultivo (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Cultivo → un solo grupo (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
+| Jerarquías | Sistema → un solo criterio (hijos con más de un padre) | 0 | 0 | OK | Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces. |
 | Granularidad | Combinaciones municipio × desagregación × periodo repetidas | 0 | 0 | OK | Además lo impide la restricción UNIQUE de la tabla de hechos. |
 | Granularidad | Filas tras unir hechos con las 4 dimensiones | 48932 | 48932 | OK | Si una relación multiplicara filas, el conteo tras el JOIN sería mayor. |
 | Faltantes y desconocidos | Hechos asignados al miembro 'Desconocido' (clave 0) | 0 | 0 | OK | Toda fila de origen encontró su municipio, cultivo y sistema. |

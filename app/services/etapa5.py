@@ -61,7 +61,7 @@ VISTAS = [
         "jerarquias": ["territorio", "cultivo"],
         "config": {
             "rows": "region", "cols": "cultivo", "measure": "produccion",
-            "cols_options": ["cultivo", "grupo", "desagregacion", "trienio", "anio", ""],
+            "cols_options": ["cultivo", "grupo", "desagregacion", "variedad", "capital", "trienio", "anio", ""],
             "filters": [{"level": "cultivo", "label": "Cultivo"}, {"level": "anio", "label": "Año"}],
             "chart1": "hbar", "chart2": "share_vs_records",
             "chart1_title": "Medida por miembro del nivel de filas (clic = drill-down)",
@@ -99,7 +99,7 @@ VISTAS = [
         "jerarquias": ["tiempo", "cultivo"],
         "config": {
             "rows": "anio", "cols": "cultivo", "measure": "produccion",
-            "cols_options": ["cultivo", "desagregacion", "sistema", "region", ""],
+            "cols_options": ["cultivo", "desagregacion", "estado_fisico", "variedad", "sistema", "region", "capital", ""],
             "filters": [{"level": "cultivo", "label": "Cultivo"}, {"level": "region", "label": "Región"}],
             "chart1": "lines", "chart2": "index_lines",
             "chart1_title": "Medida por periodo y serie de columnas",
@@ -134,7 +134,7 @@ VISTAS = [
         "jerarquias": ["sistema", "territorio"],
         "config": {
             "rows": "region", "cols": "sistema", "measure": "rendimiento",
-            "cols_options": ["sistema", "criterio", "cultivo", "trienio", ""],
+            "cols_options": ["sistema", "criterio", "cultivo", "variedad", "trienio", "etapa", ""],
             "filters": [{"level": "cultivo", "label": "Cultivo", "default": "Maíz"},
                         {"level": "trienio", "label": "Trienio"}],
             "chart1": "grouped", "chart2": "system_share",
@@ -168,7 +168,7 @@ VISTAS = [
         "jerarquias": ["territorio", "tiempo"],
         "config": {
             "rows": "region", "cols": "anio", "measure": "tasa_cosecha",
-            "cols_options": ["anio", "trienio", "cultivo", "sistema", ""],
+            "cols_options": ["anio", "trienio", "etapa", "cultivo", "sistema", "capital", ""],
             "filters": [{"level": "cultivo", "label": "Cultivo"}, {"level": "semestre", "label": "Periodo"}],
             "quality_toggle": True,
             "chart1": "hbar", "chart2": "harvest_trend",
@@ -573,6 +573,8 @@ def _conocimientos(con) -> dict[str, list[dict]]:
     mz_mun = Q(con, "anio", "municipios", None, m)
     mz_des = Q(con, "anio", "registros", "desagregacion", m)
     n_des = {y: sum(1 for c in row if c) for y, row in zip(mz_des["rows"], mz_des["cells"])}
+    mz_area = dict(zip(*[Q(con, "anio", "area_cosechada", None, m)[k] for k in ("rows", "row_totals")]))
+    mz_estado = {e: K(con, ["registros"], {**m, "estado_fisico": [e]})["registros"] for e in ("En fresco", "Grano seco")}
     a = {"cultivo": ["Arroz"]}
     ar_per = dict(zip(*[Q(con, "periodo", "produccion", None, a)[k] for k in ("rows", "row_totals")]))
     ar_y = dict(zip(*[Q(con, "anio", "produccion", None, a)[k] for k in ("rows", "row_totals")]))
@@ -655,7 +657,12 @@ def _conocimientos(con) -> dict[str, list[dict]]:
                 "interpretacion": "El salto de registros de R4 es un cambio de clasificación de EVA (maíz amarillo/blanco), no una expansión del cultivo. "
                                   "En ese mismo periodo la producción de maíz cayó.",
                 "utilidad": "Evita usar el número de registros como indicador de oferta; el seguimiento del maíz debe hacerse con toneladas y área.",
-                "limitacion": "No se puede atribuir la caída a una causa (importaciones, precios, clima) con estos datos; es una asociación temporal.",
+                "limitacion": "No se puede atribuir la caída a una causa (importaciones, precios, clima) con estos datos; es una asociación temporal. "
+                              f"Además, el atributo estado físico de la dimensión Cultivo muestra que EVA reporta el maíz «En fresco» en 2019–2020 "
+                              f"({fmt(mz_estado['En fresco'])} registros) y en «Grano seco» desde 2021 ({fmt(mz_estado['Grano seco'])}): las toneladas de ambas "
+                              f"etapas no son del todo comparables. El área cosechada, que no depende del estado físico, también baja "
+                              f"({fmt(mz_area['2019'])} ha → {fmt(mz_area['2024'])} ha, {_signed(_var(mz_area['2024'], mz_area['2019']))}), por lo que la caída "
+                              f"no es solo un efecto de medición (hipótesis sobre su magnitud).",
             },
             {
                 "n": "C4", "color": "info", "icon": "bi-arrow-down-up",
@@ -799,12 +806,14 @@ def build_r5_context(db_path: Path, source_json: Path, cache) -> dict:
         cosecha_cero = con.execute("SELECT COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0").fetchone()[0]
         depts = con.execute("SELECT COUNT(DISTINCT departamento) FROM dim_territorio WHERE territorio_key <> 0").fetchone()[0]
         anios = con.execute("SELECT MIN(anio), MAX(anio) FROM dim_tiempo").fetchone()
+        dimensiones = dw.dictionary(con)
     conocimientos = _cached_conocimientos(db_path, cache)
     return {
         "vistas": [_vista_meta(v) for v in VISTAS],
         "ejemplos": EJEMPLOS,
         "conocimientos_por_vista": conocimientos,
         "r4_relacion": R4_RELACION,
+        "dimensiones": dimensiones,
         "validaciones": validaciones,
         "validaciones_ok": sum(1 for x in validaciones if x["ok"]),
         "counts": counts,

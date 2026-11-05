@@ -240,34 +240,34 @@
 <section id="modelo" class="mb-5 reveal">
   {{ sec(8, "Modelo estrella") }}
   <div class="border rounded p-2 mb-3 overflow-auto">
-    <svg viewBox="0 0 900 520" style="min-width:640px;width:100%;height:auto;font-family:var(--bs-font-monospace);font-size:12px;" role="img"
+    {% set pos = {"dim_territorio": (20, 20), "dim_tiempo": (640, 20), "dim_cultivo": (20, 262), "dim_sistema_productivo": (640, 262)} %}
+    <svg viewBox="0 0 900 548" style="min-width:680px;width:100%;height:auto;font-family:var(--bs-font-monospace);font-size:12px;" role="img"
          aria-label="Diagrama del modelo estrella: tabla de hechos fact_produccion_agricola relacionada con cuatro dimensiones">
       <g stroke="var(--bs-secondary-color)" stroke-width="1.5">
-        <line x1="330" y1="230" x2="260" y2="110"/><line x1="570" y1="230" x2="640" y2="110"/>
-        <line x1="330" y1="320" x2="260" y2="410"/><line x1="570" y1="320" x2="640" y2="410"/>
+        <line x1="330" y1="185" x2="260" y2="120"/><line x1="570" y1="185" x2="640" y2="110"/>
+        <line x1="330" y1="330" x2="260" y2="380"/><line x1="570" y1="330" x2="640" y2="330"/>
       </g>
-      {% set dims = [
-        (20, 20, "dim_territorio", ["PK territorio_key", "cod_municipio (UK)", "municipio", "cod_departamento", "departamento", "region"]),
-        (640, 20, "dim_tiempo", ["PK tiempo_key", "periodo_codigo (UK)", "anio", "periodo", "tipo_periodo", "trienio"]),
-        (20, 330, "dim_cultivo", ["PK cultivo_key", "desagregacion (UK)", "cultivo · grupo", "ciclo · estado_fisico", "codigo_cultivo", "nombre_cientifico"]),
-        (640, 330, "dim_sistema_productivo", ["PK sistema_key", "sistema (UK)", "criterio", "descripcion"]),
-      ] %}
-      {% for x, y, name, attrs in dims %}
-      <rect x="{{ x }}" y="{{ y }}" width="240" height="{{ 34 + attrs|length * 20 }}" rx="8" fill="var(--bs-body-bg)" stroke="var(--bs-info)" stroke-width="1.5"/>
+      {% for d in dimensiones %}{% set x, y = pos[d.tabla] %}
+      <rect x="{{ x }}" y="{{ y }}" width="240" height="{{ 34 + d.atributos|length * 18 }}" rx="8" fill="var(--bs-body-bg)" stroke="var(--bs-info)" stroke-width="1.5"/>
       <rect x="{{ x }}" y="{{ y }}" width="240" height="28" rx="8" fill="var(--bs-info-bg-subtle)"/>
-      <text x="{{ x + 12 }}" y="{{ y + 19 }}" font-weight="700" fill="var(--bs-body-color)">{{ name }}</text>
-      {% for a in attrs %}<text x="{{ x + 12 }}" y="{{ y + 48 + loop.index0 * 20 }}" fill="var(--bs-body-color)">{{ a }}</text>{% endfor %}
+      <text x="{{ x + 12 }}" y="{{ y + 19 }}" font-weight="700" fill="var(--bs-body-color)">{{ d.tabla }}</text>
+      {% for a in d.atributos %}
+      {% set pre = "PK " if loop.first else ("UK " if loop.index == 2 else ("◆ " if a.rol == "Nivel de jerarquía" else ("◇ " if a.rol == "Atributo de análisis" else "   "))) %}
+      <text x="{{ x + 12 }}" y="{{ y + 46 + loop.index0 * 18 }}" xml:space="preserve"
+            fill="{{ 'var(--bs-info-text-emphasis)' if a.rol == 'Nivel de jerarquía' else 'var(--bs-body-color)' }}">{{ pre }}{{ a.col }}</text>
       {% endfor %}
-      <rect x="330" y="140" width="240" height="250" rx="8" fill="var(--bs-body-bg)" stroke="var(--bs-success)" stroke-width="2.5"/>
+      {% endfor %}
+      <rect x="330" y="140" width="240" height="214" rx="8" fill="var(--bs-body-bg)" stroke="var(--bs-success)" stroke-width="2.5"/>
       <rect x="330" y="140" width="240" height="28" rx="8" fill="var(--bs-success-bg-subtle)"/>
       <text x="342" y="159" font-weight="700" fill="var(--bs-body-color)">fact_produccion_agricola</text>
       {% for a in ["PK hecho_id", "FK territorio_key", "FK tiempo_key", "FK cultivo_key", "FK sistema_key", "area_sembrada_ha", "area_cosechada_ha", "produccion_t", "rendimiento_reportado_t_ha", "area_incoherente (0/1)"] %}
-      <text x="342" y="{{ 188 + loop.index0 * 20 }}" fill="{{ 'var(--bs-success-text-emphasis)' if a.startswith('FK') else 'var(--bs-body-color)' }}">{{ a }}</text>
+      <text x="342" y="{{ 186 + loop.index0 * 18 }}" fill="{{ 'var(--bs-success-text-emphasis)' if a.startswith('FK') else 'var(--bs-body-color)' }}">{{ a }}</text>
       {% endfor %}
       <g fill="var(--bs-secondary-color)" font-size="11">
-        <text x="270" y="160">1 : N</text><text x="600" y="160">1 : N</text>
-        <text x="270" y="385">1 : N</text><text x="600" y="385">1 : N</text>
+        <text x="272" y="140">1 : N</text><text x="598" y="140">1 : N</text>
+        <text x="272" y="372">1 : N</text><text x="598" y="320">1 : N</text>
       </g>
+      <text x="330" y="530" fill="var(--bs-secondary-color)" font-size="11">PK clave sustituta · UK clave natural · ◆ nivel de jerarquía · ◇ atributo de análisis</text>
     </svg>
   </div>
   <p>
@@ -295,6 +295,67 @@
       <tr><td>Sistema productivo</td><td>Criterio → Sistema</td><td>Cada sistema se define con un solo criterio: nivel tecnológico (tecnificado/tradicional), destino o sin diferenciar.</td></tr>
     </tbody>
   {{ table_close() }}
+  <p class="small text-body-secondary">Que cada hijo tenga un solo padre se comprueba en la sección 11 (grupo «Jerarquías»).</p>
+
+  <h3 class="h5 fw-bold mt-4">Diccionario de dimensiones</h3>
+  <p class="small">Cada dimensión responde a una pregunta del problema. Los <strong>niveles de jerarquía</strong> permiten
+    drill-down y roll-up; los <strong>atributos de análisis</strong> se pueden usar como columna de la matriz en el explorador;
+    los <strong>descriptivos</strong> documentan al miembro. El número de valores distintos y los ejemplos se consultan en vivo
+    en la base (sin el miembro 0 «Desconocido»).</p>
+  {% set rol_color = {"Clave": "dark", "Nivel de jerarquía": "info", "Atributo de análisis": "success", "Descriptivo": "secondary"} %}
+  <div class="accordion mb-3" id="dic-dims">
+    {% for d in dimensiones %}
+    <div class="accordion-item">
+      <h4 class="accordion-header">
+        <button class="accordion-button {{ 'collapsed' if not loop.first }}" type="button" data-bs-toggle="collapse"
+                data-bs-target="#dic-{{ d.tabla }}" aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="dic-{{ d.tabla }}">
+          <i class="bi {{ d.icon }} text-success me-2" aria-hidden="true"></i>
+          <span class="fw-semibold me-2">{{ d.nombre }}</span>
+          <span class="font-monospace small text-body-secondary me-2">{{ d.tabla }}</span>
+          <span class="small text-body-secondary d-none d-md-inline">· {{ d.pregunta }} · {{ d.filas | miles }} miembros · {{ d.atributos | length }} atributos</span>
+        </button>
+      </h4>
+      <div id="dic-{{ d.tabla }}" class="accordion-collapse collapse {{ 'show' if loop.first }}">
+        <div class="accordion-body small">
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <p class="mb-1"><span class="fw-semibold">Propósito:</span> {{ d.proposito }}</p>
+              <p class="mb-1"><span class="fw-semibold">Granularidad:</span> {{ d.grano }}</p>
+              <p class="mb-0"><span class="fw-semibold">Jerarquía:</span> {{ d.jerarquia }}</p>
+            </div>
+            <div class="col-md-6">
+              <p class="mb-1"><span class="fw-semibold">Claves:</span>
+                <span class="font-monospace">{{ d.atributos[0].col }}</span> (sustituta, PK) ·
+                <span class="font-monospace">{{ d.atributos[1].col }}</span> (natural, UNIQUE) · referenciada por
+                <span class="font-monospace">fact_produccion_agricola.{{ d.atributos[0].col }}</span> (FK).</p>
+              <p class="mb-1"><span class="fw-semibold">Fuente:</span> {{ d.fuente }}</p>
+              <p class="mb-0"><span class="fw-semibold">Cambios en el tiempo:</span> {{ d.scd }}</p>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+              <thead><tr><th scope="col">Atributo</th><th scope="col">Tipo</th><th scope="col">Rol</th><th scope="col">Descripción</th>
+                <th scope="col">Origen</th><th scope="col" class="text-end">Distintos</th><th scope="col">Ejemplos</th></tr></thead>
+              <tbody>
+                {% for a in d.atributos %}
+                <tr>
+                  <td class="font-monospace text-nowrap">{{ a.col }}</td>
+                  <td class="font-monospace text-body-secondary">{{ a.tipo }}</td>
+                  <td>{{ tag(a.rol, rol_color[a.rol]) }}</td>
+                  <td>{{ a.desc }}</td>
+                  <td class="text-body-secondary">{{ a.origen }}</td>
+                  <td class="text-end font-monospace">{{ a.distintos | miles }}</td>
+                  <td class="text-body-secondary">{{ a.ejemplos | join(" · ") | truncate(70) }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 
   <h3 class="h5 fw-bold mt-4">Medidas</h3>
   {{ table_open(wrap=True, extra="small") }}
@@ -350,14 +411,20 @@
         ("CodigoMunicipioDane, Municipio", "dim_territorio.cod_municipio, municipio", "Recorte de espacios; clave natural → territorio_key."),
         ("CodigoDeptoDane, Departamento", "dim_territorio.cod_departamento, departamento", "Sin cambios."),
         ("Departamento (derivado)", "dim_territorio.region", "Mapeo departamento → región natural (el mismo de R4)."),
+        ("DIVIPOLA: Tipo, Latitud, Longitud", "dim_territorio.tipo_entidad, latitud, longitud", "Cruce por código de municipio con el CSV DIVIPOLA (app/data/); coma decimal → punto."),
+        ("CodigoMunicipioDane (derivado)", "dim_territorio.capital", "Código terminado en 001 → «Capital departamental» (convención DIVIPOLA)."),
         ("Anio, Periodo", "dim_tiempo.anio, periodo_codigo, periodo, tiempo_key", "'2019A' → Semestre A (20191); 'B' → Semestre B; vacío → Anual (20190)."),
-        ("Anio (derivado)", "dim_tiempo.trienio", "2019–2021 / 2022–2024 para comparar periodos equivalentes."),
-        ("DesagregacionCultivo, Cultivo, GrupoCultivo, CicloCultivo, EstadoFisico, NombreCientifico, CodigoCultivo", "dim_cultivo.*", "Una fila por desagregación."),
-        ("DesagregacionCultivo (derivado)", "dim_sistema_productivo.sistema, criterio", "Diccionario de 16 desagregaciones → 7 sistemas."),
+        ("Anio (derivado)", "dim_tiempo.trienio, etapa_desagregacion", "2019–2021 / 2022–2024 para comparar periodos equivalentes; 2019–2020 / 2021–2024 para separar el cambio de desagregación."),
+        ("Periodo (derivado)", "dim_tiempo.meses", "A → Ene–Jun; B → Jul–Dic; anual → Ene–Dic."),
+        ("DesagregacionCultivo, Cultivo, GrupoCultivo, Subgrupo, CicloCultivo, EstadoFisico, NombreCientifico, CodigoCultivo", "dim_cultivo.*", "Una fila por desagregación."),
+        ("DesagregacionCultivo (derivado)", "dim_cultivo.variedad", "Amarillo / Blanco / Criolla / Todas las variedades según el nombre; Sin distinguir color (maíz) o No aplica."),
+        ("Anio por desagregación (derivado)", "dim_cultivo.anio_desde, anio_hasta", "Primer y último año con registros: vigencia de cada desagregación."),
+        ("DesagregacionCultivo (derivado)", "dim_sistema_productivo.sistema, criterio, desagregaciones", "Diccionario de 16 desagregaciones → 7 sistemas."),
+        ("Cultivo por sistema (derivado)", "dim_sistema_productivo.cultivos", "Cultivos con hechos en cada sistema."),
         ("AreaSembrada, AreaCosechada, Produccion", "area_sembrada_ha, area_cosechada_ha, produccion_t", "Numéricas; un faltante se carga como NULL, nunca como 0 (hoy no hay ninguno)."),
         ("Rendimiento", "rendimiento_reportado_t_ha", "Solo trazabilidad; el rendimiento del análisis se recalcula."),
         ("_flag_area_incoherente", "area_incoherente (0/1)", "Atributo degenerado de calidad, usado como filtro."),
-        ("Subgrupo, _outlier_iqr_*", "—", "No cargados: redundante con Grupo / atípicos legítimos de escala ya revisados en R2."),
+        ("_outlier_iqr_*", "—", "No cargados: atípicos legítimos de escala ya revisados en R2."),
       ] %}
       <tr><td>{{ o }}</td><td class="font-monospace">{{ d }}</td><td>{{ t }}</td></tr>
       {% endfor %}

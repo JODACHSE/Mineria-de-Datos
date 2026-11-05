@@ -202,7 +202,7 @@ usa solo la biblioteca estándar, así que no se agregan dependencias.
 
 ```bash
 pip install -r requirements-dev.txt      # Flask + pytest (SQLite viene con Python)
-python scripts/R5/build_star.py          # crea la base, carga dimensiones y hechos, ejecuta 21 validaciones
+python scripts/R5/build_star.py          # crea la base, carga dimensiones y hechos, ejecuta 28 validaciones
 python scripts/R5/export_docs.py         # (opcional) regenera docs/R5/analisis_multidimensional.md
 python run.py                            # http://127.0.0.1:5000/r5
 pytest tests/test_etapa5.py              # pruebas del modelo, el motor OLAP y las vistas

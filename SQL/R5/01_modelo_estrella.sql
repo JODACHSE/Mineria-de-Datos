@@ -18,44 +18,60 @@ DROP TABLE IF EXISTS dim_tiempo;
 DROP TABLE IF EXISTS dim_cultivo;
 DROP TABLE IF EXISTS dim_sistema_productivo;
 
--- Jerarquía: region → departamento → municipio
+-- Dimensión DÓNDE. 1 fila = 1 municipio (DIVIPOLA).
+-- Jerarquía: region → departamento → municipio. Atributos descriptivos de DIVIPOLA.
 CREATE TABLE dim_territorio (
-    territorio_key      INTEGER PRIMARY KEY,
-    cod_municipio       TEXT    NOT NULL UNIQUE,   -- DIVIPOLA 5 dígitos
+    territorio_key      INTEGER PRIMARY KEY,       -- clave sustituta (0 = Desconocido)
+    cod_municipio       TEXT    NOT NULL UNIQUE,   -- DIVIPOLA 5 dígitos (clave natural)
     municipio           TEXT    NOT NULL,
     cod_departamento    TEXT    NOT NULL,          -- DIVIPOLA 2 dígitos
     departamento        TEXT    NOT NULL,
-    region              TEXT    NOT NULL           -- región natural (Andina, Caribe, …)
+    region              TEXT    NOT NULL,          -- región natural (Andina, Caribe, …)
+    tipo_entidad        TEXT    NOT NULL,          -- DIVIPOLA: Municipio | Isla | Área no municipalizada
+    capital             TEXT    NOT NULL,          -- 'Capital departamental' (código DDD001) | 'Resto de municipios'
+    latitud             REAL,                      -- cabecera municipal (DIVIPOLA), NULL si no se conoce
+    longitud            REAL
 );
 
--- Jerarquía: anio → periodo (semestre A / semestre B / anual)
+-- Dimensión CUÁNDO. 1 fila = 1 periodo agrícola de EVA.
+-- Jerarquía: trienio → anio → periodo (semestre A / semestre B / anual)
 CREATE TABLE dim_tiempo (
     tiempo_key          INTEGER PRIMARY KEY,       -- AAAAP: 20191 = 2019A, 20192 = 2019B, 20190 = 2019 anual
-    periodo_codigo      TEXT    NOT NULL UNIQUE,   -- '2019A', '2019B', '2019'
+    periodo_codigo      TEXT    NOT NULL UNIQUE,   -- '2019A', '2019B', '2019' (clave natural)
     anio                INTEGER NOT NULL,
     periodo             TEXT    NOT NULL,          -- 'Semestre A' | 'Semestre B' | 'Anual'
     tipo_periodo        TEXT    NOT NULL,          -- 'Semestral' | 'Anual'
-    trienio             TEXT    NOT NULL           -- '2019–2021' | '2022–2024' (periodos equivalentes de 3 años)
+    trienio             TEXT    NOT NULL,          -- '2019–2021' | '2022–2024' (periodos equivalentes de 3 años)
+    meses               TEXT    NOT NULL,          -- 'Ene–Jun' | 'Jul–Dic' | 'Ene–Dic'
+    etapa_desagregacion TEXT    NOT NULL           -- '2019–2020 (anterior)' | '2021–2024 (actual)': cambio de desagregación EVA del maíz
 );
 
+-- Dimensión QUÉ. 1 fila = 1 desagregación de cultivo de EVA.
 -- Jerarquía: grupo → cultivo → desagregacion
 CREATE TABLE dim_cultivo (
-    cultivo_key         INTEGER PRIMARY KEY,
-    desagregacion       TEXT    NOT NULL UNIQUE,
+    cultivo_key         INTEGER PRIMARY KEY,       -- clave sustituta (0 = Desconocido)
+    desagregacion       TEXT    NOT NULL UNIQUE,   -- clave natural (nombre EVA)
     codigo_cultivo      INTEGER,
     cultivo             TEXT    NOT NULL,
     grupo               TEXT    NOT NULL,
+    subgrupo            TEXT    NOT NULL,          -- subgrupo EVA (p. ej. 'Demás frutales' para plátano)
+    variedad            TEXT    NOT NULL,          -- derivada del nombre: Amarillo | Blanco | Criolla | … | No aplica
     ciclo               TEXT    NOT NULL,          -- 'Transitorio' | 'Permanente'
-    estado_fisico       TEXT    NOT NULL,
-    nombre_cientifico   TEXT    NOT NULL
+    estado_fisico       TEXT    NOT NULL,          -- estado en que se reporta la producción (En fresco, Grano seco, Paddy)
+    nombre_cientifico   TEXT    NOT NULL,
+    anio_desde          INTEGER,                   -- primer año con registros de la desagregación
+    anio_hasta          INTEGER                    -- último año con registros (vigencia en EVA)
 );
 
+-- Dimensión CÓMO / PARA QUÉ. 1 fila = 1 sistema productivo.
 -- Jerarquía: criterio → sistema
 CREATE TABLE dim_sistema_productivo (
-    sistema_key         INTEGER PRIMARY KEY,
-    sistema             TEXT    NOT NULL UNIQUE,   -- Tecnificado, Tradicional, Exportación, …
+    sistema_key         INTEGER PRIMARY KEY,       -- clave sustituta (0 = Desconocido)
+    sistema             TEXT    NOT NULL UNIQUE,   -- Tecnificado, Tradicional, Exportación, … (clave natural)
     criterio            TEXT    NOT NULL,          -- 'Nivel tecnológico' | 'Destino' | 'Sin diferenciar'
-    descripcion         TEXT    NOT NULL
+    descripcion         TEXT    NOT NULL,
+    cultivos            TEXT    NOT NULL,          -- cultivos a los que aplica (derivado de los hechos)
+    desagregaciones     TEXT    NOT NULL           -- desagregaciones EVA que agrupa (diccionario de la carga)
 );
 
 CREATE TABLE fact_produccion_agricola (

@@ -4,8 +4,8 @@ Uso (desde la raíz del repositorio, después de build_star.py):
 
     python scripts/R5/export_docs.py
 
-Exporta al repositorio lo mismo que muestra /r5: relación con R4, las cuatro
-preguntas, los ejemplos de las operaciones OLAP, los ocho conocimientos (con
+Exporta al repositorio lo mismo que muestra /r5: relación con R4, el diccionario de
+dimensiones, las cuatro preguntas, los ejemplos de las operaciones OLAP, los ocho conocimientos (con
 cifras calculadas por consulta al modelo) y las validaciones. Así la
 documentación no se desincroniza de la aplicación.
 """
@@ -38,6 +38,7 @@ def main() -> int:
         cob = etapa5._cobertura(con)
         conocimientos = etapa5._conocimientos(con)
         validaciones = olap.validations(con, Config.R5_SOURCE_JSON)
+        dimensiones = dw.dictionary(con)
         incoh = con.execute("SELECT SUM(area_incoherente) FROM fact_produccion_agricola").fetchone()[0]
         cero = con.execute("SELECT COUNT(*) FROM fact_produccion_agricola WHERE area_cosechada_ha = 0").fetchone()[0]
 
@@ -71,7 +72,27 @@ def main() -> int:
          ", ".join(f"{vistas[s]['num']}. {vistas[s]['corto']}" for s in r["vistas"]) or "Diseño del modelo"]
         for r in etapa5.R4_RELACION])
 
-    L += ["## 3. Preguntas de análisis", ""]
+    L += ["## 3. Diccionario de dimensiones", "",
+          "Rol: **Clave** · **Nivel de jerarquía** (drill-down / roll-up) · **Atributo de análisis** (columna o filtro "
+          "del explorador) · **Descriptivo**. «Distintos» y «Ejemplos» se consultan en la base, sin el miembro 0.", ""]
+    for d in dimensiones:
+        L += [
+            f"### {d['nombre']} · `{d['tabla']}` — {d['pregunta']}",
+            "",
+            f"- **Propósito:** {d['proposito']}",
+            f"- **Granularidad:** {d['grano']} Miembros: {f(d['filas'])}.",
+            f"- **Claves:** `{d['atributos'][0]['col']}` (sustituta, PK) · `{d['atributos'][1]['col']}` (natural, UNIQUE) · "
+            f"FK en `fact_produccion_agricola.{d['atributos'][0]['col']}`.",
+            f"- **Jerarquía:** {d['jerarquia']}",
+            f"- **Fuente:** {d['fuente']}",
+            f"- **Cambios en el tiempo:** {d['scd']}",
+            "",
+        ]
+        L += table(["Atributo", "Tipo", "Rol", "Descripción", "Origen", "Distintos", "Ejemplos"], [
+            [f"`{a['col']}`", a["tipo"], a["rol"], a["desc"], a["origen"], f(a["distintos"]), " · ".join(a["ejemplos"])]
+            for a in d["atributos"]])
+
+    L += ["## 4. Preguntas de análisis", ""]
     for v in vistas.values():
         L += [
             f"### Análisis {v['num']} · {v['titulo']}  (`/r5/{v['slug']}`)",
@@ -94,7 +115,7 @@ def main() -> int:
             "",
         ]
 
-    L += ["## 4. Operaciones multidimensionales (ejemplos aplicados)", ""]
+    L += ["## 5. Operaciones multidimensionales (ejemplos aplicados)", ""]
     for e in etapa5.EJEMPLOS:
         v = vistas[e["vista"]]
         L += [
@@ -109,7 +130,7 @@ def main() -> int:
             "",
         ]
 
-    L += ["## 5. Conocimientos multidimensionales", ""]
+    L += ["## 6. Conocimientos multidimensionales", ""]
     for slug, items in conocimientos.items():
         for c in items:
             L += [f"### {c['n']} · {c['titulo']}", "", f"_Análisis {vistas[slug]['num']}: {vistas[slug]['corto']}_", ""]
@@ -119,7 +140,7 @@ def main() -> int:
                 ("Utilidad", "utilidad"), ("Limitación", "limitacion"))]
             L.append("")
 
-    L += ["## 6. Validaciones del modelo frente a los datos tratados", ""]
+    L += ["## 7. Validaciones del modelo frente a los datos tratados", ""]
     L += table(["Grupo", "Comprobación", "Modelo", "Origen / esperado", "Resultado", "Nota"], [
         [x["grupo"], x["nombre"], x["modelo"], x["origen"],
          ("Diferencia explicada" if x["modelo"] != x["origen"] else "OK") if x["ok"] else "FALLA", x["nota"]]

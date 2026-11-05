@@ -32,6 +32,11 @@ LEVELS: dict[str, tuple[str, str, str]] = {
     "desagregacion": ("c.desagregacion", "Desagregación", "cultivo"),
     "criterio": ("s.criterio", "Criterio", "sistema"),
     "sistema": ("s.sistema", "Sistema productivo", "sistema"),
+    # Atributos de análisis (no son niveles de jerarquía): sirven como columna o filtro.
+    "capital": ("t.capital", "Capital / resto", "territorio"),
+    "etapa": ("tm.etapa_desagregacion", "Etapa de desagregación EVA", "tiempo"),
+    "variedad": ("c.variedad", "Variedad", "cultivo"),
+    "estado_fisico": ("c.estado_fisico", "Estado físico", "cultivo"),
     # Atributo degenerado de la tabla de hechos (bandera de calidad de R2).
     "coherencia": ("CASE f.area_incoherente WHEN 1 THEN 'Cosechada > sembrada' ELSE 'Coherente' END",
                    "Coherencia del área", "calidad"),
@@ -242,6 +247,21 @@ def validations(con: sqlite3.Connection, r2_json: Path) -> list[dict]:
                         f"ON d.{fk} = f.{fk} WHERE d.{fk} IS NULL")
         add("Integridad referencial", f"Hechos sin correspondencia en {tabla}", huerfanos, 0,
             "LEFT JOIN de la FK contra la dimensión.")
+
+    # 2b. Jerarquías válidas: cada miembro hijo tiene un único padre
+    for tabla, hijo, padre, nombre in [
+        ("dim_territorio", "cod_municipio", "departamento", "Municipio → un solo departamento"),
+        ("dim_territorio", "departamento", "region", "Departamento → una sola región"),
+        ("dim_tiempo", "periodo_codigo", "anio", "Periodo → un solo año"),
+        ("dim_tiempo", "anio", "trienio", "Año → un solo trienio"),
+        ("dim_cultivo", "desagregacion", "cultivo", "Desagregación → un solo cultivo"),
+        ("dim_cultivo", "cultivo", "grupo", "Cultivo → un solo grupo"),
+        ("dim_sistema_productivo", "sistema", "criterio", "Sistema → un solo criterio"),
+    ]:
+        add("Jerarquías", f"{nombre} (hijos con más de un padre)",
+            one(f"SELECT COUNT(*) FROM (SELECT {hijo} FROM {tabla} WHERE {hijo} <> 'Desconocido' "
+                f"GROUP BY {hijo} HAVING COUNT(DISTINCT {padre}) > 1)"), 0,
+            "Si un hijo tuviera dos padres, el roll-up contaría su valor dos veces.")
 
     # 3. Duplicados en la granularidad
     dup = one("SELECT COUNT(*) FROM (SELECT 1 FROM fact_produccion_agricola "
