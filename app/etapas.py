@@ -8,6 +8,8 @@ pueda inyectarla como global de plantilla y esté disponible en TODAS las
 páginas, no solo en la de entregables.
 """
 
+from app.services.etapa5 import VISTAS as R5_VISTAS
+
 ETAPAS = [
     {
         "codigo": "R1",
@@ -41,6 +43,24 @@ ETAPAS = [
                    "completo disponible en Power BI.",
         "estado": "completado",
         "url_endpoint": "pages.r4",
+        "subpaginas": [
+            {"label": "Poblacional", "endpoint": "pages.r4", "args": {}},
+            {"label": "Territorial", "endpoint": "pages.r4_territorial", "args": {}},
+            {"label": "Temporal", "endpoint": "pages.r4_temporal", "args": {}},
+            {"label": "Relacional", "endpoint": "pages.r4_relacional", "args": {}},
+        ],
+    },
+    {
+        "codigo": "R5",
+        "titulo": "Análisis multidimensional",
+        "resumen": "Modelo estrella (SQLite) con 4 dimensiones, 8 medidas y 4 jerarquías sobre el EVA "
+                   "tratado; cuatro vistas interactivas con drill-down, roll-up, slice, dice y pivot, "
+                   "validaciones del modelo y ocho conocimientos multidimensionales.",
+        "estado": "completado",
+        "url_endpoint": "pages.r5",
+        "subpaginas": [
+            {"label": v["corto"], "endpoint": "pages.r5_vista", "args": {"slug": v["slug"]}} for v in R5_VISTAS
+        ],
     },
 ] + [
     {
@@ -50,7 +70,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(5, 9)
+    for n in range(6, 9)
 ]
 
 R4_DIMENSIONES = [

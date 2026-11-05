@@ -3,8 +3,8 @@
 Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
 Sitio web en **Flask** que publica los entregables **R1 · Del problema a los
 datos**, **R2 · Diagnóstico y calidad de los datos**, **R3 · Tratamiento ETL
-con SSIS** y **R4 · Conocimiento evidente** (análisis exploratorio con
-Power BI), con un explorador de datos y métricas de calidad servidas por una
+con SSIS**, **R4 · Conocimiento evidente** (análisis exploratorio con
+Power BI) y **R5 · Análisis multidimensional** (modelo estrella + OLAP), con un explorador de datos y métricas de calidad servidas por una
 API propia.
 
 **Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
@@ -113,11 +113,13 @@ python run.py
 | `/` | Landing |
 | `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
 | `/r4` · `/r4/territorial` · `/r4/temporal` · `/r4/relacional` | R4 · Conocimiento evidente: las 4 preguntas de análisis (poblacional, territorial, temporal, multivariada) y el acceso al informe de Power BI |
+| `/r5` · `/r5/territorial` · `/r5/temporal` · `/r5/sistemas` · `/r5/cosecha` | R5 · Análisis multidimensional: modelo estrella, validaciones y las 4 vistas OLAP (`?ej=<id>` abre un ejemplo guiado) |
 | `/entregables` | Hoja de ruta (8 etapas) |
 | `/sobre-nosotros` | Equipo |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
 | `/api/quality/<nombre>` | Diagnóstico R1 |
 | `/api/profile/<nombre>?version=` | Perfilamiento + 6 dimensiones (R2) |
+| `/api/r5/<vista>` | Consulta OLAP (`rows`, `cols`, `measure`, `f_<nivel>` repetible): matriz, 3 indicadores y datos de la 2.ª gráfica |
 
 ## Reproducir los datos
 
@@ -166,3 +168,46 @@ Our World in Data (CC BY 4.0). Uso estrictamente académico.
   botón "Abrir informe" en `/r4` quede activo.
 - Archivo `.pbix`, medidas DAX documentadas e instrucciones para abrirlo/actualizarlo:
   pendiente — se publicará en una carpeta `powerbi/` en la raíz del repositorio.
+
+## Etapa 5 · Análisis multidimensional
+
+**Aplicación publicada:** `PENDIENTE: URL de Render`/r5
+(menú **Análisis multidimensional**: resumen y modelo estrella + 4 análisis interactivos).
+
+### Qué contiene el repositorio
+
+| Entregable | Dónde |
+|---|---|
+| Diagrama y diccionario del modelo | [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md) (Mermaid) y `/r5#modelo` |
+| Preguntas, operaciones OLAP, conocimientos y validaciones | [`docs/R5/analisis_multidimensional.md`](docs/R5/analisis_multidimensional.md) (generado desde el modelo) |
+| Creación de tablas y relaciones | [`SQL/R5/01_modelo_estrella.sql`](SQL/R5/01_modelo_estrella.sql) |
+| Transformación y carga (ETL) | [`app/services/dw.py`](app/services/dw.py), ejecutado por [`scripts/R5/build_star.py`](scripts/R5/build_star.py) |
+| Consultas de análisis y de validación | [`SQL/R5/03_consultas_olap.sql`](SQL/R5/03_consultas_olap.sql) · [`SQL/R5/02_validaciones.sql`](SQL/R5/02_validaciones.sql) |
+| Motor OLAP (drill-down, roll-up, slice, dice, pivot) | [`app/services/olap.py`](app/services/olap.py) |
+| Vistas Flask | [`app/services/etapa5.py`](app/services/etapa5.py), [`templates/pages/r5*.html`](app/templates/pages/), [`static/js/modules/olap.js`](app/static/js/modules/olap.js) |
+| Pruebas | [`tests/test_etapa5.py`](tests/test_etapa5.py) |
+
+**Datos utilizados:** el EVA tratado en R2/R3, versionado en `app/static/data/R2/eva_basicos.json`
+(48.932 registros, 2019–2024, 1.098 municipios). Para regenerarlo desde la fuente:
+`python scripts/process_eva.py` y `python scripts/clean_datasets.py`. La base SQLite
+`app/data/R5/wololo_dw.sqlite` **no se versiona**: se construye a partir de ese JSON.
+
+**Modelo:** `fact_produccion_agricola` (grano: municipio × desagregación × periodo) +
+`dim_territorio`, `dim_tiempo`, `dim_cultivo`, `dim_sistema_productivo`; 8 medidas (aditivas y
+derivadas) y 4 jerarquías. Se eligió **SQLite** porque viene incluido en Python, es un solo archivo
+consultable desde Flask y funciona en Render (el SQL Server de R3 no está disponible allí); el ETL
+usa solo la biblioteca estándar, así que no se agregan dependencias.
+
+### Configurar, cargar y ejecutar
+
+```bash
+pip install -r requirements-dev.txt      # Flask + pytest (SQLite viene con Python)
+python scripts/R5/build_star.py          # crea la base, carga dimensiones y hechos, ejecuta 28 validaciones
+python scripts/R5/export_docs.py         # (opcional) regenera docs/R5/analisis_multidimensional.md
+python run.py                            # http://127.0.0.1:5000/r5
+pytest tests/test_etapa5.py              # pruebas del modelo, el motor OLAP y las vistas
+```
+
+La app también construye la base al arrancar si no existe o si el JSON tratado es más reciente
+(`dw.ensure`), así que en Render no hace falta un paso adicional. Para revisar las validaciones
+directamente en SQL: `sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql`.

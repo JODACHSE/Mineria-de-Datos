@@ -1,7 +1,7 @@
 """Blueprint `pages`: todas las vistas HTML del sitio."""
 from __future__ import annotations
 
-from flask import Blueprint, current_app, render_template, send_from_directory
+from flask import Blueprint, abort, current_app, render_template, send_from_directory, url_for
 
 from app.etapas import ETAPAS, FASES_CRISP
 from app.routes import _dirs
@@ -13,6 +13,7 @@ from app.services.etapa4 import (
     build_r4_dim_temporal_context,
     build_r4_dim_relacional_context,
 )
+from app.services.etapa5 import VISTAS, VISTAS_BY_SLUG, build_r5_context, build_r5_vista_context
 from app.services.reports import build_r1_context, build_r2_context
 
 pages_bp = Blueprint("pages", __name__)
@@ -92,6 +93,36 @@ def r4_relacional():
         ctx = build_r4_dim_relacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_relacional", ctx)
     return render_template("pages/r4_relacional.html", **ctx)
+
+
+def _r5_nav(active=None):
+    """Navegación lateral compartida por la visión general de R5 y sus 4 vistas."""
+    return [(url_for("pages.r5"), "Resumen y modelo estrella", active is None, True)] + [
+        (url_for("pages.r5_vista", slug=v["slug"]), f"{v['num']}. {v['corto']}", v["slug"] == active, True)
+        for v in VISTAS
+    ]
+
+
+@pages_bp.route("/r5")
+def r5():
+    cfg = current_app.config
+    ctx = ds.cache_get("ctx:r5")
+    if ctx is None:
+        ctx = build_r5_context(cfg["R5_DB_PATH"], cfg["R5_SOURCE_JSON"], ds)
+        ds.cache_set("ctx:r5", ctx)
+    return render_template("pages/r5.html", toc_nav=_r5_nav(), **ctx)
+
+
+@pages_bp.route("/r5/<slug>")
+def r5_vista(slug):
+    if slug not in VISTAS_BY_SLUG:
+        abort(404)
+    key = f"ctx:r5:{slug}"
+    ctx = ds.cache_get(key)
+    if ctx is None:
+        ctx = build_r5_vista_context(current_app.config["R5_DB_PATH"], slug, ds)
+        ds.cache_set(key, ctx)
+    return render_template("pages/r5_vista.html", toc_nav=_r5_nav(slug), **ctx)
 
 
 @pages_bp.route("/entregables")

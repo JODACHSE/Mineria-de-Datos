@@ -65,6 +65,10 @@ class Config:
     R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
     R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
+    # R5 · Modelo estrella (SQLite). Se reconstruye desde el EVA tratado de R2
+    # con scripts/R5/build_star.py o automáticamente al arrancar si no existe.
+    R5_SOURCE_JSON = R2_JSON_DIR / "eva_basicos.json"
+    R5_DB_PATH = Path(os.environ.get("R5_DB_PATH", BASE_DIR / "app" / "data" / "R5" / "wololo_dw.sqlite"))
     VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
 
         # Informe de Power BI (Publicar en la web). URL pública del "Publish to web".

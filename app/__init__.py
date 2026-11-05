@@ -12,6 +12,11 @@ def create_app(config_class: type = Config) -> Flask:
     app.config.from_object(config_class)
     csrf.init_app(app)
 
+    # R5: el modelo estrella se construye desde el EVA tratado si aún no existe.
+    from .services import dw
+
+    dw.ensure(app.config["R5_SOURCE_JSON"], app.config["R5_DB_PATH"])
+
     from .routes.api import api_bp
     from .routes.pages import pages_bp
 

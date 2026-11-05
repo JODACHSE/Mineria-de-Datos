@@ -7,9 +7,11 @@ import { initTheme } from "./modules/theme.js";
 import { initMotion } from "./modules/motion.js";
 import { initExplorer } from "./modules/explorer.js";
 import { initCharts } from "./modules/charts.js";
+import { initOlap } from "./modules/olap.js";
 
 initSound();
 initTheme();
 initMotion();
 initExplorer();
 initCharts();
+initOlap();
