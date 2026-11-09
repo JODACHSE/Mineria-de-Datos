@@ -1,0 +1,89 @@
+{
+  "fuente": "app/static/data/R2/eva_basicos.json",
+  "registros_fuente": 48932,
+  "supervisado": {
+    "registros": 39934,
+    "clase": {
+      "Bajo": 21048,
+      "Alto": 18886
+    },
+    "pct_alto": 47.29,
+    "umbral_t_ha_por_cultivo_2019_2023": {
+      "Arroz": 4.8,
+      "Frijol": 1.3,
+      "Maíz": 1.8,
+      "Papa": 17.0,
+      "Plátano": 7.0,
+      "Yuca": 10.0
+    },
+    "registros_2019_2023": 34242,
+    "registros_2024": 5692,
+    "predictoras": [
+      "Cultivo",
+      "DesagregacionCultivo",
+      "Region",
+      "Departamento",
+      "Semestre",
+      "Log10_AreaSembrada"
+    ],
+    "excluidas_por_fuga": [
+      "Produccion",
+      "AreaCosechada",
+      "Rendimiento",
+      "_flag_*",
+      "_outlier_iqr_*"
+    ]
+  },
+  "clustering": {
+    "municipios": 1098,
+    "variables_clustering": [
+      "Log10_AreaSembradaAnual",
+      "NumCultivos",
+      "Diversificacion",
+      "PctArea_Arroz",
+      "PctArea_Frijol",
+      "PctArea_Maíz",
+      "PctArea_Papa",
+      "PctArea_Plátano",
+      "PctArea_Yuca",
+      "TasaCosecha"
+    ],
+    "metas_posteriori": [
+      "Municipio",
+      "Departamento",
+      "Region",
+      "NumRegistros",
+      "RendRelMediano_posteriori"
+    ]
+  },
+  "pasos": [
+    {
+      "paso": "Excluir registros sin cosecha",
+      "antes": 48932,
+      "despues": 46634,
+      "descartados": 2298,
+      "motivo": "AreaCosechada, Produccion y Rendimiento son 0 (respuesta negativa): el rendimiento no está definido."
+    },
+    {
+      "paso": "Excluir área incoherente",
+      "antes": 46634,
+      "despues": 39934,
+      "descartados": 6700,
+      "motivo": "AreaCosechada > AreaSembrada (bandera de R2): AreaSembrada, usada como predictor, no es confiable."
+    },
+    {
+      "paso": "Municipios con área sembrada > 0",
+      "antes": 1098,
+      "despues": 1098,
+      "descartados": 0,
+      "motivo": "Para medir tamaño y mezcla de cultivos se necesita área sembrada positiva."
+    },
+    {
+      "paso": "Municipios con tasa de cosecha calculable",
+      "antes": 1098,
+      "despues": 1098,
+      "descartados": 0,
+      "motivo": "Sin registros de área coherente no se puede estimar cosechada/sembrada."
+    }
+  ]
+}
