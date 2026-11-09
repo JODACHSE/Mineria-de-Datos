@@ -189,14 +189,14 @@
       <div class="card h-100 border-0 shadow-sm"><div class="card-body">
         <h4 class="h6 fw-bold mb-1">Gráfica 1 · {{ vista.config.chart1_title }}</h4>
         <p class="small text-body-secondary mb-2" id="olap-c1-note"></p>
-        <div class="chart-frame"><canvas id="olap-chart1" role="img" aria-label="{{ vista.config.chart1_title }}"></canvas></div>
+        <div class="chart-frame" role="img" aria-label="{{ vista.config.chart1_title }}"><canvas id="olap-chart1"></canvas></div>
       </div></div>
     </div>
     <div class="col-xl-6">
       <div class="card h-100 border-0 shadow-sm"><div class="card-body">
         <h4 class="h6 fw-bold mb-1">Gráfica 2 · {{ vista.config.chart2_title }}</h4>
         <p class="small text-body-secondary mb-2" id="olap-c2-note"></p>
-        <div class="chart-frame"><canvas id="olap-chart2" role="img" aria-label="{{ vista.config.chart2_title }}"></canvas></div>
+        <div class="chart-frame" role="img" aria-label="{{ vista.config.chart2_title }}"><canvas id="olap-chart2"></canvas></div>
       </div></div>
     </div>
   </div>
@@ -218,6 +218,8 @@
   <div class="table-responsive rounded border mb-2" style="max-height:32rem;">
     <table class="table table-sm table-hover align-middle mb-0 small text-nowrap" id="olap-matrix">
       <caption class="visually-hidden">Matriz que cruza las dimensiones seleccionadas</caption>
+      {# Marcador inicial: olap.js reemplaza todo el contenido de la tabla al recibir los datos. #}
+      <thead><tr><th scope="col">Cargando…</th></tr></thead>
     </table>
   </div>
   <p class="small text-body-secondary">Clic en el nombre de una fila = drill-down en ese miembro. Los totales y subtotales se
