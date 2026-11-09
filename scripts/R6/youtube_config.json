@@ -1,0 +1,18 @@
+{
+  "proposito": "Identificar qué factores asocian los comentaristas con producir y acceder a alimentos básicos en Colombia (costos de insumos, precios al productor, clima, intermediarios) y contrastarlos con los resultados de los datos EVA: rendimiento y grupos de municipios.",
+  "consultas": [
+    "precio de la papa Colombia campesinos",
+    "paro arrocero Colombia",
+    "costo de los insumos agrícolas Colombia",
+    "crisis del maíz Colombia importaciones",
+    "seguridad alimentaria Colombia"
+  ],
+  "videos_manuales": [],
+  "max_videos_por_consulta": 5,
+  "min_comentarios_video": 30,
+  "max_comentarios_por_video": 500,
+  "orden_comentarios": "relevance",
+  "region": "CO",
+  "idioma": "es",
+  "publicados_desde": "2022-01-01"
+}

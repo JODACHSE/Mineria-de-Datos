@@ -1,0 +1,116 @@
+{
+  "comentarios": 195,
+  "por_video": {
+    "V01": 67,
+    "V02": 47,
+    "V03": 81
+  },
+  "diccionarios": {
+    "Intermediarios y acaparadores": [
+      "intermediari",
+      "revended",
+      "acaparad",
+      "mayorista",
+      "molino",
+      "oligopolio",
+      "usurer",
+      "usuran"
+    ],
+    "Gobierno y política": [
+      "gobierno",
+      "president",
+      "ministr",
+      "petro",
+      "congres",
+      "senador",
+      "politic",
+      "uribe",
+      "duque",
+      "santos"
+    ],
+    "Importaciones y tratados comerciales": [
+      "tlc",
+      "libre comercio",
+      "importa",
+      "importad",
+      "arancel",
+      "contrabando",
+      "extranjer",
+      "dumping"
+    ],
+    "Costo de insumos y logística": [
+      "insumo",
+      "abono",
+      "fertiliz",
+      "agroquimic",
+      "monomero",
+      "combustible",
+      "gasolina",
+      "transporte",
+      "peaje",
+      "mano de obra",
+      "flete"
+    ],
+    "Precio al productor vs. al consumidor": [
+      "precio",
+      "pagan",
+      "pagar",
+      "cobran",
+      "cobrar",
+      "barato",
+      "caro",
+      "carisim"
+    ],
+    "Subsidios, crédito y apoyo estatal": [
+      "subsid",
+      "credito",
+      "ayuda",
+      "apoyo",
+      "apoyar",
+      "apoyemos"
+    ],
+    "Clima y plagas": [
+      "climatic",
+      "clima este",
+      "clima fue",
+      "buen clima",
+      "mal clima",
+      "lluvia",
+      "sequia",
+      "plaga",
+      "sogata",
+      "hoja blanca",
+      "fenomeno",
+      "invierno",
+      "verano"
+    ],
+    "Productividad, calidad y tecnología": [
+      "productiv",
+      "tecnolog",
+      "tecnific",
+      "competitiv",
+      "calidad",
+      "semilla",
+      "modernizar",
+      "modernizacion"
+    ],
+    "Sobreproducción, oferta y demanda": [
+      "sobreproduc",
+      "oferta",
+      "demanda",
+      "mucha papa",
+      "demasiada",
+      "sobra"
+    ],
+    "Venta directa y mercados campesinos": [
+      "mercado campesino",
+      "mercados campesinos",
+      "venta directa",
+      "vender directamente",
+      "vendan directamente",
+      "directamente al consumidor",
+      "sin intermediari"
+    ]
+  },
+  "limite": "Coincidencia de expresiones: no detecta ironía, negación ni sinónimos fuera del diccionario."
+}

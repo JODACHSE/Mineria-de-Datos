@@ -1,0 +1,76 @@
+{
+  "fecha_extraccion_utc": "2026-11-09T03:20:04+00:00",
+  "proposito": "Identificar qué factores asocian los comentaristas con producir y acceder a alimentos básicos en Colombia (costos de insumos, precios al productor, clima, intermediarios) y contrastarlos con los resultados de los datos EVA: rendimiento y grupos de municipios.",
+  "parametros": {
+    "consultas": [
+      "precio de la papa Colombia campesinos",
+      "paro arrocero Colombia",
+      "costo de los insumos agrícolas Colombia",
+      "crisis del maíz Colombia importaciones",
+      "seguridad alimentaria Colombia"
+    ],
+    "videos_manuales": [],
+    "max_videos_por_consulta": 5,
+    "min_comentarios_video": 30,
+    "max_comentarios_por_video": 500,
+    "orden_comentarios": "relevance",
+    "region": "CO",
+    "idioma": "es",
+    "publicados_desde": "2022-01-01"
+  },
+  "consultas": [
+    {
+      "consulta": "precio de la papa Colombia campesinos",
+      "resultados": 5,
+      "videos_nuevos": 5
+    },
+    {
+      "consulta": "paro arrocero Colombia",
+      "resultados": 5,
+      "videos_nuevos": 5
+    },
+    {
+      "consulta": "costo de los insumos agrícolas Colombia",
+      "resultados": 5,
+      "videos_nuevos": 5
+    },
+    {
+      "consulta": "crisis del maíz Colombia importaciones",
+      "resultados": 5,
+      "videos_nuevos": 5
+    },
+    {
+      "consulta": "seguridad alimentaria Colombia",
+      "resultados": 5,
+      "videos_nuevos": 5
+    }
+  ],
+  "restricciones": [
+    "Video CeOzXc1bE_A: 0 comentarios (< 30), descartado",
+    "Video eAebTN7-DJI: 0 comentarios (< 30), descartado",
+    "Video ZrUtri3UCWA: 0 comentarios (< 30), descartado",
+    "Video BeHjz8bWb0s: 0 comentarios (< 30), descartado",
+    "Video Ymm7l9FB03c: 15 comentarios (< 30), descartado",
+    "Video xWVwoMgXhr0: 5 comentarios (< 30), descartado",
+    "Video O7iavf6j5R8: 1 comentarios (< 30), descartado",
+    "Video rzoIst8mkNE: 23 comentarios (< 30), descartado",
+    "Video olD1B7UcC6k: 0 comentarios (< 30), descartado",
+    "Video ex4mo9e32iI: 0 comentarios (< 30), descartado",
+    "Video zDDE2up4sD0: 0 comentarios (< 30), descartado",
+    "Video E_DCFy6e9Pg: 0 comentarios (< 30), descartado",
+    "Video fCUgu_LhJtI: 4 comentarios (< 30), descartado",
+    "Video cnQ-UzQ96Fw: 0 comentarios (< 30), descartado",
+    "Video f_uUqpaer2E: 6 comentarios (< 30), descartado",
+    "Video kReNli2_TLU: 0 comentarios (< 30), descartado",
+    "Video _YVdytFVCjg: 0 comentarios (< 30), descartado",
+    "Video BJvarJVGxeg: 0 comentarios (< 30), descartado",
+    "Video quuXtQ4DteM: 2 comentarios (< 30), descartado",
+    "Video tMoalpsEIu8: 3 comentarios (< 30), descartado",
+    "Video xngfnuUQa50: 0 comentarios (< 30), descartado",
+    "Video 7IlxTCNtgqY: 22 comentarios (< 30), descartado"
+  ],
+  "videos_consultados": 3,
+  "comentarios_obtenidos": 212,
+  "cuota_estimada_unidades": 504,
+  "cuota_diaria": 10000
+}

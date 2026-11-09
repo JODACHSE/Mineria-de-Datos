@@ -1,0 +1,63 @@
+{
+  "entrada": 212,
+  "salida": 195,
+  "pasos": [
+    {
+      "paso": "Registros vacíos",
+      "antes": 212,
+      "despues": 211,
+      "descartados": 1,
+      "motivo": "Comentario sin texto o solo espacios."
+    },
+    {
+      "paso": "Enmascarado de datos personales",
+      "enmascarados": {
+        "enlaces": 0,
+        "correos": 0,
+        "menciones": 0,
+        "telefonos": 0,
+        "marcas_de_tiempo": 0
+      },
+      "motivo": "URL, correos, @menciones y teléfonos se sustituyen por marcas para no publicar datos de terceros; las marcas de tiempo del video (1:23) se eliminan porque no son opinión."
+    },
+    {
+      "paso": "Contenido irrelevante",
+      "antes": 211,
+      "despues": 202,
+      "descartados": 9,
+      "motivo": "Menos de 3 palabras con letras (solo emojis, números, saludos o marcas)."
+    },
+    {
+      "paso": "Duplicados",
+      "antes": 202,
+      "despues": 202,
+      "descartados": 0,
+      "motivo": "Mismo texto (sin mayúsculas, tildes ni signos) repetido, dentro o entre videos; se conserva el primero. Suele ser spam o copia."
+    },
+    {
+      "paso": "Idioma distinto del español",
+      "antes": 202,
+      "despues": 195,
+      "descartados": 7,
+      "motivo": "El análisis es en español: se descartan los comentarios detectados como otro idioma. {\"es\": 195, \"en\": 3, \"otro\": 4}"
+    }
+  ],
+  "videos": {
+    "V01": {
+      "video_id": "3Qw6pcizxCs",
+      "titulo": "Campesinos en Boyacá enfrentan crisis por caída en el precio de la papa"
+    },
+    "V02": {
+      "video_id": "SDR0xsgBQrg",
+      "titulo": "Paro arrocero paraliza 9 departamentos: bloqueos, pérdidas y tensión con el Gobierno"
+    },
+    "V03": {
+      "video_id": "jd2Oth7H6Ss",
+      "titulo": "¿Qué está pasando con el arroz en Colombia? | Economía Pipol"
+    }
+  },
+  "limites": [
+    "La detección de idioma usa palabras funcionales: puede fallar con comentarios muy cortos o mezclados.",
+    "El enmascarado es por patrones: no garantiza eliminar todo nombre propio escrito en el texto."
+  ]
+}
