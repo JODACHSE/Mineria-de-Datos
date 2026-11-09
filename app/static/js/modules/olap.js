@@ -114,7 +114,7 @@ function drillDown(member) {
     record("Drill-down", `${label(state.rows)} → ${label(c)} (todos los miembros)`);
   }
   state.rows = c;
-  run();
+  void run();
 }
 
 function rollUp() {
@@ -124,7 +124,7 @@ function rollUp() {
   if (last && last.level === p) state.drill.pop();
   record("Roll-up", `${label(state.rows)} → ${label(p)}`);
   state.rows = p;
-  run();
+  void run();
 }
 
 function jumpTo(level) {
@@ -135,14 +135,14 @@ function jumpTo(level) {
   if (to < from) state.drill = state.drill.filter((d) => dimOf(d.level) !== dimOf(level) || h.indexOf(d.level) < to);
   record(to < from ? "Roll-up" : "Drill-down", `${label(state.rows)} → ${label(level)}`);
   state.rows = level;
-  run();
+  void run();
 }
 
 function pivot() {
   if (!state.cols) return;
   record("Pivot", `Filas ${label(state.rows)} ⇄ Columnas ${label(state.cols)}`);
   [state.rows, state.cols] = [state.cols, state.rows];
-  run();
+  void run();
 }
 
 // ------------------------------------------------------------------ render
@@ -158,7 +158,7 @@ function renderControls() {
   if ($("olap-coherente")) $("olap-coherente").checked = state.coherente;
 
   const ol = $("olap-levels");
-  ol.innerHTML = "";
+  ol.replaceChildren();
   const h = hierarchyOf(state.rows);
   for (const lv of (h.length ? h : [state.rows])) {
     const li = document.createElement("li");
@@ -179,22 +179,25 @@ function renderControls() {
 
 function renderChips(operation) {
   const box = $("olap-chips");
-  box.innerHTML = "";
+  box.replaceChildren();
   const eff = effectiveFilters();
   if (!Object.keys(eff).length) { box.textContent = "sin filtros (todo el cubo)"; }
   for (const [k, v] of Object.entries(eff)) {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "badge rounded-pill text-success-emphasis bg-success-subtle border border-success-subtle me-1 mb-1";
-    chip.innerHTML = `${label(k)} = <strong></strong> <i class="bi bi-x"></i>`;
-    chip.querySelector("strong").textContent = v;
+    const strong = document.createElement("strong");
+    strong.textContent = v;
+    const icon = document.createElement("i");
+    icon.className = "bi bi-x";
+    chip.append(`${label(k)} = `, strong, " ", icon);
     chip.title = "Quitar filtro";
     chip.addEventListener("click", () => {
       const di = state.drill.findIndex((d) => d.level === k);
       if (di >= 0) { state.drill = state.drill.slice(0, di); state.rows = k; record("Roll-up", `Quitar ${label(k)} = ${v}`); }
       else if (k === "coherencia") state.coherente = false;
       else state.filters[k] = "";
-      run();
+      void run();
     });
     box.appendChild(chip);
   }
@@ -328,32 +331,58 @@ function renderMatrix(m) {
   const heat = (v) => (v === null ? "" : `background: color-mix(in srgb, var(--bs-success) ${Math.round(6 + 44 * Math.max(0, v - min) / span)}%, transparent);`);
 
   const canDrill = !!child(m.rows_level);
-  const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]));
-  let html = `<thead class="table-light" style="position:sticky;top:0;z-index:1;"><tr><th scope="col">${esc(m.rows_label)}${m.cols.length ? ` \\ ${esc(m.cols_label)}` : ""}</th>`;
-  for (const c of m.cols) html += `<th scope="col" class="text-end">${esc(c)}</th>`;
-  html += `<th scope="col" class="text-end">Total</th>${m.share_pct ? '<th scope="col" class="text-end">% del total</th>' : ""}</tr></thead><tbody>`;
+  // La tabla se arma con nodos DOM y textContent: ningún dato del servidor se interpreta como HTML.
+  const el = (tag, cls, text, attrs) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+    return n;
+  };
+  const td = (text, cls, style) => el("td", `text-end font-monospace ${cls || ""}`.trim(), text, style ? { style } : undefined);
+  const append = (parent, ...kids) => { for (const k of kids) parent.appendChild(k); return parent; };
+
+  const caption = el("caption", "visually-hidden", `Matriz ${m.rows_label} por ${m.cols_label || "total"}`);
+
+  const headRow = append(el("tr"),
+    el("th", "", m.rows_label + (m.cols.length ? ` \\ ${m.cols_label}` : ""), { scope: "col" }),
+    ...m.cols.map((c) => el("th", "text-end", c, { scope: "col" })),
+    el("th", "text-end", "Total", { scope: "col" }));
+  if (m.share_pct) headRow.appendChild(el("th", "text-end", "% del total", { scope: "col" }));
+  const thead = append(el("thead", "table-light", undefined, { style: "position:sticky;top:0;z-index:1;" }), headRow);
+
+  const tbody = el("tbody");
   m.rows.forEach((r, i) => {
-    const name = canDrill
-      ? `<button type="button" class="btn btn-link btn-sm p-0 text-start text-decoration-none" data-drill="${i}"><i class="bi bi-plus-square me-1"></i>${esc(r)}</button>`
-      : esc(r);
-    html += `<tr><th scope="row" class="fw-normal">${name}</th>`;
+    const th = el("th", "fw-normal", undefined, { scope: "row" });
+    if (canDrill) {
+      const btn = el("button", "btn btn-link btn-sm p-0 text-start text-decoration-none", undefined, { type: "button" });
+      btn.appendChild(el("i", "bi bi-plus-square me-1"));
+      btn.appendChild(document.createTextNode(String(r)));
+      btn.addEventListener("click", () => drillDown(m.rows[i]));
+      th.appendChild(btn);
+    } else {
+      th.textContent = String(r);
+    }
+    const tr = append(el("tr"), th);
     m.cols.forEach((_c, j) => {
       const v = m.cells[i][j];
-      html += `<td class="text-end font-monospace" style="${heat(v)}">${fmt(show(v, m.row_totals[i], m.col_totals[j]), dec)}${v === null ? "" : suffix}</td>`;
+      tr.appendChild(td(`${fmt(show(v, m.row_totals[i], m.col_totals[j]), dec)}${v === null ? "" : suffix}`, "", heat(v)));
     });
     const rt = mode === "fila" ? 100 : mode === "col" ? pct(m.row_totals[i], m.grand_total) : m.row_totals[i];
-    html += `<td class="text-end font-monospace fw-semibold" ${m.cols.length ? "" : `style="${heat(m.row_totals[i])}"`}>${fmt(rt, dec)}${suffix}</td>`;
-    if (m.share_pct) html += `<td class="text-end font-monospace">${fmt(m.share_pct[i], 1)} %</td>`;
-    html += "</tr>";
+    tr.appendChild(td(`${fmt(rt, dec)}${suffix}`, "fw-semibold", m.cols.length ? "" : heat(m.row_totals[i])));
+    if (m.share_pct) tr.appendChild(td(`${fmt(m.share_pct[i], 1)} %`));
+    tbody.appendChild(tr);
   });
-  html += `</tbody><tfoot><tr class="fw-semibold"><th scope="row">Total de la selección</th>`;
+
+  const footRow = append(el("tr", "fw-semibold"), el("th", "", "Total de la selección", { scope: "row" }));
   m.cols.forEach((_c, j) => {
     const v = mode === "col" ? 100 : mode === "fila" ? pct(m.col_totals[j], m.grand_total) : m.col_totals[j];
-    html += `<td class="text-end font-monospace">${fmt(v, dec)}${suffix}</td>`;
+    footRow.appendChild(td(`${fmt(v, dec)}${suffix}`));
   });
-  html += `<td class="text-end font-monospace">${mode === "valor" ? fmt(m.grand_total, nd) : "100,0 %"}</td>${m.share_pct ? '<td class="text-end font-monospace">100,0 %</td>' : ""}</tr></tfoot>`;
-  $("olap-matrix").innerHTML = `<caption class="visually-hidden">Matriz ${esc(m.rows_label)} por ${esc(m.cols_label || "total")}</caption>` + html;
-  $("olap-matrix").querySelectorAll("[data-drill]").forEach((b) => b.addEventListener("click", () => drillDown(m.rows[+b.dataset.drill])));
+  footRow.appendChild(td(mode === "valor" ? fmt(m.grand_total, nd) : "100,0 %"));
+  if (m.share_pct) footRow.appendChild(td("100,0 %"));
+
+  $("olap-matrix").replaceChildren(caption, thead, tbody, append(el("tfoot"), footRow));
 
   const notes = [`${m.measure_label} en ${m.unit} · agregación: ${m.aggregation}`];
   if (mode === "fila") notes.push("denominador: total de cada fila");
@@ -364,7 +393,14 @@ function renderMatrix(m) {
   $("olap-matrix-note").textContent = notes.join(" · ");
 
   $("olap-sql").textContent = `${m.sql}\n\n-- parámetros: ${JSON.stringify(m.params)}`;
-  $("olap-log").innerHTML = log.map((l) => `<li><strong>${esc(l.op)}</strong> · ${esc(l.detail)} <span class="text-body-secondary">(${l.at})</span></li>`).join("") || "<li>Sin operaciones todavía.</li>";
+  const items = log.map((l) => {
+    const li = document.createElement("li");
+    li.appendChild(el("strong", "", l.op));
+    li.appendChild(document.createTextNode(` · ${l.detail} `));
+    li.appendChild(el("span", "text-body-secondary", `(${l.at})`));
+    return li;
+  });
+  $("olap-log").replaceChildren(...(items.length ? items : [el("li", "", "Sin operaciones todavía.")]));
 }
 
 function renderAll() {
@@ -408,24 +444,24 @@ export function initOlap() {
       state.filters[sel.dataset.olapFilter] = sel.value;
       const dims = new Set(Object.keys(effectiveFilters()).map(dimOf));
       record(dims.size >= 2 ? "Dice" : "Slice", `${label(sel.dataset.olapFilter)} = ${sel.value || "Todos"}`);
-      run();
+      void run();
     });
   }
-  $("olap-measure").addEventListener("change", (e) => { state.measure = e.target.value; record("Medida", meta.measures[e.target.value].label); run(); });
-  $("olap-cols").addEventListener("change", (e) => { state.cols = e.target.value; record("Columnas", e.target.value ? label(e.target.value) : "sin columnas"); run(); });
+  $("olap-measure").addEventListener("change", (e) => { state.measure = e.target.value; record("Medida", meta.measures[e.target.value].label); void run(); });
+  $("olap-cols").addEventListener("change", (e) => { state.cols = e.target.value; record("Columnas", e.target.value ? label(e.target.value) : "sin columnas"); void run(); });
   $("olap-rollup").addEventListener("click", rollUp);
   $("olap-drill").addEventListener("click", () => drillDown());
   $("olap-pivot").addEventListener("click", pivot);
-  $("olap-reset").addEventListener("click", () => { state = defaultState(); log.length = 0; record("Restablecer", "consulta base de la vista"); run(); });
-  $("olap-coherente")?.addEventListener("change", (e) => { state.coherente = e.target.checked; record("Dice", e.target.checked ? "solo filas coherentes" : "todas las filas"); run(); });
+  $("olap-reset").addEventListener("click", () => { state = defaultState(); log.length = 0; record("Restablecer", "consulta base de la vista"); void run(); });
+  $("olap-coherente")?.addEventListener("change", (e) => { state.coherente = e.target.checked; record("Dice", e.target.checked ? "solo filas coherentes" : "todas las filas"); void run(); });
   document.querySelectorAll("input[name=olap-display]").forEach((r) => r.addEventListener("change", () => lastData && renderMatrix(lastData.matrix)));
   document.querySelectorAll("[data-olap-example]").forEach((b) => b.addEventListener("click", () => {
     const i = cfg.ejemplo_ids.indexOf(b.dataset.olapExample);
     state = exampleState(i);
     record(cfg.ejemplo_ops[i], `ejemplo guiado: ${b.textContent.trim()}`);
-    run();
+    void run();
     $("explorador").scrollIntoView({ behavior: "smooth" });
   }));
   document.addEventListener("themechange", renderAll);
-  run();
+  void run();
 }

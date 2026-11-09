@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import sqlite3
 from pathlib import Path
 
@@ -115,6 +116,30 @@ def load_source(r2_json: Path) -> list[dict]:
     return [dict(zip(cols, row)) for row in data["rows"]]
 
 
+# Sentencias que puede contener el DDL del modelo estrella (SQL/R5/01_modelo_estrella.sql).
+_DDL_PERMITIDO = re.compile(
+    r"^(PRAGMA\s+foreign_keys\s*=\s*ON"
+    r"|DROP\s+TABLE\s+IF\s+EXISTS\s+\w+"
+    r"|CREATE\s+(UNIQUE\s+)?(TABLE|INDEX)\s+\w+[\s\S]*)$",
+    re.IGNORECASE,
+)
+
+
+def _ddl_statements(path: Path) -> list[str]:
+    """Lee el DDL y devuelve sus sentencias, rechazando cualquier otra cosa.
+
+    El archivo se ejecuta sentencia por sentencia y solo si es PRAGMA
+    foreign_keys, DROP TABLE IF EXISTS, CREATE TABLE o CREATE INDEX: así un
+    archivo alterado no puede inyectar DML ni otras instrucciones.
+    """
+    sin_comentarios = re.sub(r"--[^\n]*", "", path.read_text(encoding="utf-8"))
+    sentencias = [s.strip() for s in sin_comentarios.split(";") if s.strip()]
+    for s in sentencias:
+        if not _DDL_PERMITIDO.match(s):
+            raise ValueError(f"Sentencia no permitida en {path.name}: {s[:60]!r}")
+    return sentencias
+
+
 def build(r2_json: Path, db_path: Path) -> dict:
     """Reconstruye la base estrella y devuelve un resumen de la carga."""
     rows = load_source(r2_json)
@@ -125,7 +150,8 @@ def build(r2_json: Path, db_path: Path) -> dict:
 
     con = sqlite3.connect(tmp)
     try:
-        con.executescript(DDL_PATH.read_text(encoding="utf-8"))
+        for sentencia in _ddl_statements(DDL_PATH):
+            con.execute(sentencia)
 
         # ---- dimensiones (miembro 0 = Desconocido) ---------------------
         divipola = load_divipola()

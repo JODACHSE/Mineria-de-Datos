@@ -151,7 +151,7 @@
   {{ sec(4, "Operaciones multidimensionales") }}
   <p class="small">Todas recalculan las medidas con una nueva consulta al modelo; cambiar el tipo de gráfica no cuenta como operación.</p>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Operación</th><th>Cómo se implementa</th><th>Ejemplo aplicado</th></tr></thead>
+    <thead><tr><th scope="col">Operación</th><th scope="col">Cómo se implementa</th><th scope="col">Ejemplo aplicado</th></tr></thead>
     <tbody>
       {% set como = {
         "Drill-down": "Clic en una fila o barra: el miembro pasa a filtro y las filas bajan un nivel (GROUP BY del nivel hijo).",
@@ -287,7 +287,7 @@
   {{ sec(9, "Dimensiones, medidas y jerarquías") }}
   <h3 class="h5 fw-bold">Jerarquías</h3>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Dimensión</th><th>Jerarquía (general → detalle)</th><th>Por qué la agrupación es válida</th></tr></thead>
+    <thead><tr><th scope="col">Dimensión</th><th scope="col">Jerarquía (general → detalle)</th><th scope="col">Por qué la agrupación es válida</th></tr></thead>
     <tbody>
       <tr><td>Territorio</td><td>Región → Departamento → Municipio</td><td>Cada municipio pertenece a un único departamento (código DIVIPOLA) y cada departamento a una única región natural.</td></tr>
       <tr><td>Tiempo</td><td>Trienio → Año → Periodo (A, B o anual)</td><td>Cada periodo cae en un año y cada año en un trienio; los trienios 2019–2021 y 2022–2024 tienen igual duración.</td></tr>
@@ -359,7 +359,7 @@
 
   <h3 class="h5 fw-bold mt-4">Medidas</h3>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Medida</th><th>Unidad</th><th>Fórmula / agregación</th><th>¿Aditiva?</th><th>Significado</th></tr></thead>
+    <thead><tr><th scope="col">Medida</th><th scope="col">Unidad</th><th scope="col">Fórmula / agregación</th><th scope="col">¿Aditiva?</th><th scope="col">Significado</th></tr></thead>
     <tbody>
       {% set signif = {
         "produccion": "Toneladas producidas. Se suma en cualquier dimensión.",
@@ -405,7 +405,7 @@
     </div></div></div>
   </div>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Variable original (EVA tratado)</th><th>Campo del modelo</th><th>Transformación</th></tr></thead>
+    <thead><tr><th scope="col">Variable original (EVA tratado)</th><th scope="col">Campo del modelo</th><th scope="col">Transformación</th></tr></thead>
     <tbody>
       {% for o, d, t in [
         ("CodigoMunicipioDane, Municipio", "dim_territorio.cod_municipio, municipio", "Recorte de espacios; clave natural → territorio_key."),
@@ -436,7 +436,7 @@
   {{ sec(11, "Validaciones del modelo") }}
   <p class="small text-body-secondary">Se ejecutan en vivo contra la base y el JSON tratado (<span class="font-monospace">SQL/R5/02_validaciones.sql</span>).</p>
   {{ table_open(wrap=True, extra="small") }}
-    <thead><tr><th>Grupo</th><th>Comprobación</th><th class="text-end">Modelo</th><th class="text-end">Origen / esperado</th><th>Resultado</th><th>Nota</th></tr></thead>
+    <thead><tr><th scope="col">Grupo</th><th scope="col">Comprobación</th><th scope="col" class="text-end">Modelo</th><th scope="col" class="text-end">Origen / esperado</th><th scope="col">Resultado</th><th scope="col">Nota</th></tr></thead>
     <tbody>
       {% for v in validaciones %}
       <tr><td>{{ v.grupo }}</td><td>{{ v.nombre }}</td>
