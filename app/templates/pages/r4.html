@@ -1,4 +1,5 @@
 {% extends "layouts/report.html" %}
+{% from "macros/r4.html" import informe, sec_head, ind_card, powerbi, interp_item, limite_decision %}
 {% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close, enfoque_cards, conocimientos_cards %}
 
 {% set report_code = "R4 · Análisis Multidimensional" %}
@@ -24,45 +25,11 @@
 {% block report_body %}
 
 {# ──────────────────────────────────── INFORME (propósito de la etapa) ─── #}
-<section id="conocimiento-evidente" class="mb-5 reveal">
-  <div class="card border-0 shadow-sm bg-body-tertiary">
-    <div class="card-body p-4">
-      <div class="d-flex align-items-center gap-2 mb-2">
-        <i class="bi bi-lightbulb-fill text-success fs-5"></i>
-        <h2 class="h5 fw-bold mb-0">Informe</h2>
-      </div>
-      <p class="small text-body-secondary mb-3" style="max-width:70ch;">
-        Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
-        {{ proyecto_periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
-        indicadores, comparaciones y visualizaciones. Cada una de las cuatro dimensiones (Poblacional,
-        Territorial, Temporal y Relacional — navegación lateral) se desarrolla en su propia página,
-        con su propio tablero embebido del informe de Power BI.
-      </p>
-
-      <div class="pt-2 border-top">
-        <div class="d-flex flex-wrap align-items-center gap-2">
-          <i class="bi bi-file-earmark-word-fill text-success"></i>
-          <span class="small fw-semibold">Informe técnico de la etapa:</span>
-          <a class="btn btn-success btn-sm"
-             href="https://mailunicundiedu-my.sharepoint.com/:w:/g/personal/afrodriguezcorrea_ucundinamarca_edu_co/cQr_CkcSDq53T7NqFK_EWRxnEgUCkSyOSqD90EMQYWTciLjKPA"
-             target="_blank" rel="noopener">
-            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
-        </div>
-        <p class="small text-body-secondary mt-2 mb-0">
-          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
-          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
+{{ informe(proyecto_periodo) }}
 
 {# ──────────────────────────────────── DESCRIPCIÓN ─── #}
 <section id="descripcion" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">1</span>
-    <h2 class="h3 fw-bold mb-0">Descripción y pregunta de análisis</h2>
-  </div>
+  {{ sec_head(1, "Descripción y pregunta de análisis") }}
 
   <blockquote class="border-start border-4 border-success ps-4 py-2 my-3 bg-body-tertiary rounded-end">
     <p class="fw-semibold mb-1">Pregunta analítica</p>
@@ -88,10 +55,7 @@
 
 {# ──────────────────────────────────── VARIABLES ─── #}
 <section id="variables" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">2</span>
-    <h2 class="h3 fw-bold mb-0">Variables utilizadas</h2>
-  </div>
+  {{ sec_head(2, "Variables utilizadas") }}
 
   {{ table_open(extra="small") }}
     <thead>
@@ -125,138 +89,52 @@
 
 {# ──────────────────────────────────── INDICADORES ─── #}
 <section id="indicadores" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">3</span>
-    <h2 class="h3 fw-bold mb-0">Indicadores</h2>
-  </div>
+  {{ sec_head(3, "Indicadores") }}
   <p class="text-body-secondary small mb-4">Tres métricas clave que caracterizan la composición del dataset a nivel poblacional.</p>
 
   <div class="row row-cols-1 row-cols-md-3 g-4">
 
-    <div class="col">
-      <div class="card h-100 border-0 shadow-sm card-hover">
-        <div class="card-body pb-2">
-          <div class="d-flex align-items-start justify-content-between mb-3">
-            <div class="p-2 rounded-3 bg-success bg-opacity-10">
-              <i class="bi bi-trophy-fill text-success fs-4"></i>
-            </div>
-            {{ tag("IND-1", "success") }}
-          </div>
-          <p class="small text-body-secondary mb-1">Cultivo predominante</p>
+    {% call ind_card("bi-trophy-fill", "success", "IND-1", "Cultivo predominante", top_cultivo_pct) %}
           <div class="fs-2 fw-bold text-success lh-1">{{ top_cultivo }}</div>
           <p class="small text-body-secondary mt-2 mb-0">
             <strong>{{ top_cultivo_n | miles }}</strong> registros —
             <strong>{{ top_cultivo_pct }} %</strong> del total
           </p>
-        </div>
-        <div class="card-footer border-0 bg-transparent">
-          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ top_cultivo_pct }}" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar bg-success" style="width:{{ top_cultivo_pct }}%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
-    <div class="col">
-      <div class="card h-100 border-0 shadow-sm card-hover">
-        <div class="card-body pb-2">
-          <div class="d-flex align-items-start justify-content-between mb-3">
-            <div class="p-2 rounded-3 bg-info bg-opacity-10">
-              <i class="bi bi-chevron-bar-down text-info fs-4"></i>
-            </div>
-            {{ tag("IND-2", "info") }}
-          </div>
-          <p class="small text-body-secondary mb-1">Cultivo minoritario</p>
+    {% call ind_card("bi-chevron-bar-down", "info", "IND-2", "Cultivo minoritario", minoritario_pct) %}
           <div class="fs-2 fw-bold text-info lh-1">{{ minoritario_cultivo }}</div>
           <p class="small text-body-secondary mt-2 mb-0">
             <strong>{{ minoritario_n | miles }}</strong> registros —
             <strong>{{ minoritario_pct }} %</strong> del total
           </p>
-        </div>
-        <div class="card-footer border-0 bg-transparent">
-          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ minoritario_pct }}" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar bg-info" style="width:{{ minoritario_pct }}%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
-    <div class="col">
-      <div class="card h-100 border-0 shadow-sm card-hover">
-        <div class="card-body pb-2">
-          <div class="d-flex align-items-start justify-content-between mb-3">
-            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
-              <i class="bi bi-check-circle-fill text-warning fs-4"></i>
-            </div>
-            {{ tag("IND-3", "warning") }}
-          </div>
-          <p class="small text-body-secondary mb-1">Completitud numérica</p>
+    {% call ind_card("bi-check-circle-fill", "warning", "IND-3", "Completitud numérica", completitud_pct) %}
           <div class="fs-2 fw-bold text-warning-emphasis lh-1">{{ completitud_pct }} %</div>
           <p class="small text-body-secondary mt-2 mb-0">
             <strong>{{ completos_n | miles }}</strong> de {{ total_registros | miles }} registros
             con las 4 variables numéricas presentes
           </p>
-        </div>
-        <div class="card-footer border-0 bg-transparent">
-          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ completitud_pct }}" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar bg-warning" style="width:{{ completitud_pct }}%"></div>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
   </div>
 </section>
 
 {# ──────────────────────────────────── VISUALIZACIONES ─── #}
 <section id="visualizaciones" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">4</span>
-    <h2 class="h3 fw-bold mb-0">Visualizaciones</h2>
-  </div>
+  {{ sec_head(4, "Visualizaciones") }}
   <p class="text-body-secondary small mb-4">
     Tablero interactivo de Power BI para la Dimensión Poblacional (3 visualizaciones: VIZ-1, VIZ-2 y VIZ-3).
     Filtra por cultivo, ciclo de cultivo o grupo de cultivo directamente sobre el informe.
   </p>
 
-  <div class="card border-0 shadow-sm">
-    <div class="card-body">
-      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-        <i class="bi bi-bar-chart-line-fill text-success"></i>
-        <span class="small fw-semibold">Informe interactivo de Power BI · Dimensión Poblacional</span>
-        <span class="ms-auto d-flex gap-2">
-          {% if powerbi_report_url %}
-          <a href="{{ powerbi_report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
-            Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
-          </a>
-          {% endif %}
-          {% if powerbi_pbix_url %}
-          <a href="{{ powerbi_pbix_url }}" class="btn btn-outline-success btn-sm">
-            <i class="bi bi-download me-1"></i>Descargar .pbix
-          </a>
-          {% endif %}
-        </span>
-      </div>
-      {% if powerbi_poblacional_embed_url %}
-      <div class="rounded border shadow-sm overflow-hidden mx-auto" style="aspect-ratio:600/373.5;max-width:900px;">
-        <iframe title="Informe Power BI · Dimensión Poblacional (EVA)" src="{{ powerbi_poblacional_embed_url }}"
-                width="100%" height="100%" frameborder="0" allowfullscreen loading="lazy"
-                referrerpolicy="no-referrer-when-downgrade"></iframe>
-      </div>
-      {% else %}
-      <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
-      <span class="small text-body-secondary">Publica la página en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
-      {% endif %}
-    </div>
-  </div>
+  {{ powerbi("Poblacional", powerbi_poblacional_embed_url, powerbi_report_url, powerbi_pbix_url) }}
 </section>
 
 {# ──────────────────────────────────── FILTROS ─── #}
 <section id="filtros" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">5</span>
-    <h2 class="h3 fw-bold mb-0">Filtros interactivos</h2>
-  </div>
+  {{ sec_head(5, "Filtros interactivos") }}
   <p class="text-body-secondary small mb-4">
     Filtra la tabla por cultivo o ciclo de cultivo. También puedes hacer clic directamente en una barra
     del gráfico VIZ-1 para activar el filtro de cultivo.
@@ -333,21 +211,11 @@
 
 {# ──────────────────────────────────── INTERPRETACIONES ─── #}
 <section id="interpretaciones" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">6</span>
-    <h2 class="h3 fw-bold mb-0">Interpretación de cada visualización</h2>
-  </div>
+  {{ sec_head(6, "Interpretación de cada visualización") }}
 
   <div class="accordion accordion-flush" id="acc-interp">
 
-    <div class="accordion-item border rounded mb-2">
-      <h3 class="accordion-header">
-        <button class="accordion-button rounded fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#interp-1">
-          <span class="me-2">{{ tag("VIZ-1", "success") }}</span> Maíz domina la población evaluada
-        </button>
-      </h3>
-      <div id="interp-1" class="accordion-collapse collapse show" data-bs-parent="#acc-interp">
-        <div class="accordion-body small">
+    {% call interp_item(1, "VIZ-1", "success", "Maíz domina la población evaluada") %}
           <p>
             El <strong>Maíz</strong> es el cultivo básico más evaluado en el dataset EVA: concentra el
             <strong>37.8 %</strong> de los registros (18.490 de 48.932), muy por encima del resto de
@@ -359,18 +227,9 @@
             para priorizar el seguimiento de abastecimiento. Sin embargo, más evaluaciones no implican
             necesariamente más producción ni más área sembrada.
           </p>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
-    <div class="accordion-item border rounded mb-2">
-      <h3 class="accordion-header">
-        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-2">
-          <span class="me-2">{{ tag("VIZ-2", "info") }}</span> La canasta es casi toda de ciclo transitorio
-        </button>
-      </h3>
-      <div id="interp-2" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
-        <div class="accordion-body small">
+    {% call interp_item(2, "VIZ-2", "info", "La canasta es casi toda de ciclo transitorio") %}
           <p>
             Agrupando los registros por <strong>CicloCultivo</strong>, el <strong>90.1 %</strong>
             (44.108 registros) corresponde a cultivos <strong>transitorios</strong> y solo el
@@ -382,18 +241,9 @@
             seguimiento semestral para el 90 % de los casos. El conteo mezcla distintas desagregaciones
             de un mismo cultivo, por lo que no debe leerse como número de cultivos distintos.
           </p>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
-    <div class="accordion-item border rounded mb-2">
-      <h3 class="accordion-header">
-        <button class="accordion-button rounded fw-semibold collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interp-3">
-          <span class="me-2">{{ tag("VIZ-3", "warning") }}</span> El arroz es el cultivo menos evaluado
-        </button>
-      </h3>
-      <div id="interp-3" class="accordion-collapse collapse" data-bs-parent="#acc-interp">
-        <div class="accordion-body small">
+    {% call interp_item(3, "VIZ-3", "warning", "El arroz es el cultivo menos evaluado") %}
           <p>
             En el extremo opuesto al Maíz, el <strong>Arroz</strong> es el cultivo con menor número de
             registros: apenas el <strong>8.5 %</strong> del total (4.138 registros), según el conteo
@@ -404,19 +254,14 @@
             baja cobertura de evaluación para un cultivo estratégico en la seguridad alimentaria del
             país. Esta baja frecuencia de registro no implica baja importancia productiva o social.
           </p>
-        </div>
-      </div>
-    </div>
+    {% endcall %}
 
   </div>
 </section>
 
 {# ──────────────────────────────────── CONOCIMIENTOS ─── #}
 <section id="conocimientos" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">7</span>
-    <h2 class="h3 fw-bold mb-0">Conocimientos evidentes</h2>
-  </div>
+  {{ sec_head(7, "Conocimientos evidentes") }}
   <p class="text-body-secondary small mb-4">
     Tres hallazgos documentados bajo la estructura completa: pregunta, variables, procedimiento,
     evidencia, hallazgo, interpretación, utilidad y limitación.
@@ -466,22 +311,9 @@
 
 {# ──────────────────────────────────── LIMITACIÓN Y DECISIÓN ─── #}
 <section id="limite-decision" class="mb-5 reveal">
-  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
-    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">8</span>
-    <h2 class="h3 fw-bold mb-0">Limitación y decisión</h2>
-  </div>
+  {{ sec_head(8, "Limitación y decisión") }}
 
-  <div class="row g-4">
-    <div class="col-md-6">
-      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
-              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
-            </div>
-            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
-          </div>
-          <p class="small mb-0">
+  {% set limitacion %}
             La Dimensión Poblacional analiza la <em>distribución de registros</em>, no la
             distribución de producción real ni la cobertura geográfica efectiva. Un cultivo con
             muchos registros no necesariamente produce más toneladas; simplemente es reportado por
@@ -489,20 +321,8 @@
             <strong>estructura del dataset</strong>, no directamente la estructura productiva del país.
             Para inferencias sobre producción real se requiere ponderar por las variables numéricas
             (AreaSembrada, Produccion), lo cual corresponde a la Dimensión Relacional.
-          </p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-6">
-      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
-        <div class="card-body">
-          <div class="d-flex align-items-center gap-2 mb-3">
-            <div class="p-2 rounded-3 bg-success bg-opacity-10">
-              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
-            </div>
-            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
-          </div>
-          <p class="small mb-0">
+          {% endset %}
+  {% set decision %}
             Dado que el <strong>{{ top_cultivo }}</strong> representa el
             <strong>{{ top_cultivo_pct }} %</strong> de los registros y que el dataset alcanzó
             un <strong>{{ completitud_pct }} %</strong> de completitud numérica post-ETL, se
@@ -512,11 +332,8 @@
             completos para análisis robustos. Los cultivos minoritarios deben tratarse con mayor
             cautela en modelos predictivos hasta validar la representatividad geográfica de sus
             registros.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
+          {% endset %}
+  {{ limite_decision(limitacion, decision) }}
 </section>
 
 {% call callout("bi-flag-fill") %}
