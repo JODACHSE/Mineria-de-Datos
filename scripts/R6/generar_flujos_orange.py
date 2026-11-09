@@ -1,112 +1,38 @@
 """Genera los flujos .ows de R6 con la API de Orange (valida widgets y canales contra el registro real).
 
-Uso:  QT_QPA_PLATFORM=offscreen python3 build_ows.py <carpeta_salida>
+Uso:  QT_QPA_PLATFORM=offscreen python3 generar_flujos_orange.py <carpeta_salida>
 """
-import io, os, sys, unittest
-from pathlib import Path
+import sys
 
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from AnyQt.QtWidgets import QApplication  # noqa
+from _orange_base import BaseFlow, W, clean_file_paths, helper, ruta, stored_settings
 
-from orangecanvas.registry import WidgetRegistry, WidgetDiscovery
-from orangecanvas.scheme import Scheme, SchemeNode, SchemeLink, readwrite
-from Orange.canvas.config import Config
-from Orange.widgets.tests.base import WidgetTest
-from Orange.widgets.utils.filedialogs import RecentPath
-
-OUT = Path(sys.argv[1])
-OUT.mkdir(parents=True, exist_ok=True)
-
-reg = WidgetRegistry()
-import importlib, pkgutil
-import Orange.widgets as _ow
-_disc = WidgetDiscovery(reg)
-_ep = next(iter(Config().widgets_entry_points()))
-for _m in pkgutil.iter_modules(_ow.__path__):
-    if _m.ispkg and _m.name not in ("tests", "utils", "report", "settings"):
-        _pkg = importlib.import_module("Orange.widgets." + _m.name)
-        if hasattr(_pkg, "NAME"):
-            _disc.process_category_package(_pkg, distribution=_ep.dist)
-from orangewidget.workflow.discovery import WidgetDiscovery as _WD
-_DISC = _WD(WidgetRegistry())
-_NOMBRE = {}
+OUT = sys.argv[1]
 
 
-class _H(WidgetTest):
-    def runTest(self):  # noqa
-        pass
-
-
-_H.setUpClass()
-helper = _H()
-helper.setUp()
-
-
-def fqn(name):
-    return name
-
-
-class Flow:
+class Flow(BaseFlow):
     def __init__(self, title, description):
-        self.scheme = Scheme(title=title, description=description)
-        self.nodes = {}
+        super().__init__(title, description, OUT)
 
     def add(self, key, qname, title, pos, **settings):
-        import importlib as _il
-        desc = _DISC.widget_description(_il.import_module(qname.rpartition('.')[0]), widget_name=qname.rpartition('.')[2])
-        desc.name = _NOMBRE.get(qname, desc.name)
-        cls = desc.widget_class if hasattr(desc, "widget_class") else None
+        desc, wcls, cname = self.describe(qname)
         # Instancia el widget real para validar los nombres de ajustes y empaquetar valores
-        import importlib
-        mod, _, cname = qname.rpartition(".")
-        wcls = getattr(importlib.import_module(mod), cname)
         pedido = dict(settings)                     # copia: la migración de Orange puede mutar el dict original
-        stored = dict(settings)
-        stored["__version__"] = getattr(wcls, "settings_version", 1)   # evita migraciones de ajustes antiguos
-        w = helper.create_widget(wcls, stored_settings=stored)
+        w = helper.create_widget(wcls, stored_settings=stored_settings(wcls, settings))
         for k, v in pedido.items():
             if not hasattr(w, k):
                 raise AttributeError(f"{cname} no tiene el ajuste '{k}'")
             if k != "recent_paths" and getattr(w, k) != v:
                 raise ValueError(f"{cname}.{k}: pedí {v!r} pero quedó {getattr(w, k)!r}")
-        props = w.settingsHandler.pack_data(w)
-        props.pop("savedWidgetGeometry", None)
-        if qname.endswith("OWFile"):
-            # Orange añade datasets de ejemplo con rutas absolutas de ESTE equipo: se descartan.
-            # Queda solo la ruta relativa al .ows (resuelta en cualquier equipo que clone el repo).
-            props["recent_paths"] = [p for p in props.get("recent_paths", []) if getattr(p, "prefix", None) == "basedir"]
-            props.pop("active_path", None)
-        node = SchemeNode(desc, title=title, position=pos, properties=props)
-        self.scheme.add_node(node)
-        self.nodes[key] = node
-        return node
-
-    def link(self, a, out, b, inp):
-        na, nb = self.nodes[a], self.nodes[b]
-        outs = [c.name for c in na.description.outputs]
-        ins = [c.name for c in nb.description.inputs]
-        if out not in outs:
-            raise ValueError(f"{a}: salida '{out}' no existe; hay {outs}")
-        if inp not in ins:
-            raise ValueError(f"{b}: entrada '{inp}' no existe; hay {ins}")
-        self.scheme.add_link(SchemeLink(na, out, nb, inp))
-
-    def save(self, fname):
-        buf = io.BytesIO()
-        readwrite.scheme_to_ows_stream(self.scheme, buf, pretty=True, pickle_fallback=True)
-        p = OUT / fname
-        p.write_bytes(buf.getvalue())
-        print("escrito", p, len(buf.getvalue()), "bytes |", len(self.scheme.nodes), "nodos,", len(self.scheme.links), "enlaces")
+        props = self.pack(w)
+        if cname == "OWFile":
+            clean_file_paths(props)
+        return self.place(key, desc, title, pos, props)
 
 
 def archivo(rel):
-    # Ruta relativa al .ows (prefix 'basedir'): el flujo abre en cualquier equipo que clone el repo.
-    # abspath es solo un marcador neutro (sin rutas personales); Orange resuelve con prefix+relpath
-    return [RecentPath("orange/data/" + rel.rsplit("/", 1)[-1], "basedir", rel)]
-
+    return [ruta(rel)]
 
 from params_flujo import LR, TREE, RF
-W = "Orange.widgets."
 
 # ======================================================================
 # Flujo 1 · Supervisado: tres modelos, mismas condiciones de evaluación

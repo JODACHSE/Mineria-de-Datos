@@ -6,60 +6,23 @@ Crea orange/flujos/03_comentarios_youtube.ows. Crea cada widget real, comprueba 
 aplicados, ejecuta Preprocess -> Bag of Words y fija en Select Rows la condición "video = Vxx" con datos reales.
 Las rutas del flujo (corpus.csv, stopwords_es.txt) son relativas al .ows: abre en cualquier equipo que clone el repo.
 """
-import io, os, sys, unittest
+import copy
+import sys
 from pathlib import Path
 
-os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-from AnyQt.QtWidgets import QApplication  # noqa
+from _orange_base import BaseFlow, W, clean_file_paths, helper, ruta, stored_settings
 
-from orangecanvas.registry import WidgetRegistry, WidgetDiscovery
-from orangecanvas.scheme import Scheme, SchemeNode, SchemeLink, readwrite
-from Orange.canvas.config import Config
-from Orange.widgets.tests.base import WidgetTest
-from Orange.widgets.utils.filedialogs import RecentPath
-
-OUT = Path(sys.argv[1])
-OUT.mkdir(parents=True, exist_ok=True)
-
-reg = WidgetRegistry()
-import importlib, pkgutil
-import Orange.widgets as _ow
-_disc = WidgetDiscovery(reg)
-_ep = next(iter(Config().widgets_entry_points()))
-for _m in pkgutil.iter_modules(_ow.__path__):
-    if _m.ispkg and _m.name not in ("tests", "utils", "report", "settings"):
-        _pkg = importlib.import_module("Orange.widgets." + _m.name)
-        if hasattr(_pkg, "NAME"):
-            _disc.process_category_package(_pkg, distribution=_ep.dist)
-from orangewidget.workflow.discovery import WidgetDiscovery as _WD
-_DISC = _WD(WidgetRegistry())
-_NOMBRE = {}
+OUT = sys.argv[1]
 
 
-class _H(WidgetTest):
-    def runTest(self):  # noqa
-        pass
-
-
-_H.setUpClass()
-
-helper = _H()
-helper.setUp()
-
-
-
-class Flow:
+class Flow(BaseFlow):
     def __init__(self, title, description):
-        self.scheme = Scheme(title=title, description=description)
-        self.nodes, self.w = {}, {}
+        super().__init__(title, description, OUT)
+        self.w = {}
 
     def add(self, key, qname, title, pos, feed=None, **settings):
-        mod, _, cname = qname.rpartition(".")
-        desc = _DISC.widget_description(importlib.import_module(mod), widget_name=cname)
-        wcls = getattr(importlib.import_module(mod), cname)
-        import copy
-        stored = copy.deepcopy(settings)           # Orange modifica estos objetos al resolver rutas
-        stored["__version__"] = getattr(wcls, "settings_version", 1)   # evita migraciones de ajustes antiguos
+        desc, wcls, cname = self.describe(qname)
+        stored = stored_settings(wcls, copy.deepcopy(settings))   # Orange modifica estos objetos al resolver rutas
         env = {"basedir": str(DATOS.parent.parent / "flujos")} if cname == "OWPreprocess" else {}   # solo Preprocess necesita resolver su lista de palabras vacías
         w = helper.create_widget(wcls, stored_settings=stored, env=env)
         for k, v in settings.items():           # compara contra la copia: la migración de Orange puede mutar el dict
@@ -75,43 +38,16 @@ class Flow:
                 raise ValueError(f"{cname}.{k}: pedí {v!r} pero quedó {getattr(w, k)!r}")
         if feed:
             feed(w)
-        props = w.settingsHandler.pack_data(w)
-        props.pop("savedWidgetGeometry", None)
+        props = self.pack(w)
         if cname == "OWPreprocess":
             # Se guarda lo pedido (rutas relativas al .ows), no lo que Orange resolvió con el entorno de este equipo
             props["storedsettings"] = settings["storedsettings"]
         if cname == "OWFile":
-            props["recent_paths"] = [p for p in props.get("recent_paths", []) if getattr(p, "prefix", None) == "basedir"]
-            props.pop("active_path", None)
-        node = SchemeNode(desc, title=title, position=pos, properties=props)
-        self.scheme.add_node(node)
-        self.nodes[key], self.w[key] = node, w
+            clean_file_paths(props)
+        self.place(key, desc, title, pos, props)
+        self.w[key] = w
         return w
 
-    def link(self, a, out, b, inp):
-        na, nb = self.nodes[a], self.nodes[b]
-        outs = [c.name for c in na.description.outputs]
-        ins = [c.name for c in nb.description.inputs]
-        if out not in outs:
-            raise ValueError(f"{a}: salida '{out}' no existe; hay {outs}")
-        if inp not in ins:
-            raise ValueError(f"{b}: entrada '{inp}' no existe; hay {ins}")
-        self.scheme.add_link(SchemeLink(na, out, nb, inp))
-
-    def save(self, fname):
-        buf = io.BytesIO()
-        readwrite.scheme_to_ows_stream(self.scheme, buf, pretty=True, pickle_fallback=True)
-        p = OUT / fname
-        p.write_bytes(buf.getvalue())
-        print("escrito", p, len(buf.getvalue()), "bytes |", len(self.scheme.nodes), "nodos,", len(self.scheme.links), "enlaces")
-
-
-def ruta(rel):
-    # Ruta relativa al .ows (prefix 'basedir'); abspath es solo un marcador neutro, sin rutas personales
-    return RecentPath("orange/data/" + rel.rsplit("/", 1)[-1], "basedir", rel)
-
-
-W = "Orange.widgets."
 T = "orangecontrib.text.widgets."
 DATOS = Path(sys.argv[2]).resolve()                    # carpeta orange/data/youtube con corpus.csv
 RUTA_SW = ruta("../data/youtube/stopwords_es.txt")
