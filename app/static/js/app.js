@@ -8,6 +8,7 @@ import { initMotion } from "./modules/motion.js";
 import { initExplorer } from "./modules/explorer.js";
 import { initCharts } from "./modules/charts.js";
 import { initOlap } from "./modules/olap.js";
+import { initR6Charts } from "./modules/r6charts.js";
 
 initSound();
 initTheme();
@@ -15,3 +16,4 @@ initMotion();
 initExplorer();
 initCharts();
 initOlap();
+initR6Charts();
