@@ -114,6 +114,7 @@ python run.py
 | `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
 | `/r4` · `/r4/territorial` · `/r4/temporal` · `/r4/relacional` | R4 · Conocimiento evidente: las 4 preguntas de análisis (poblacional, territorial, temporal, multivariada) y el acceso al informe de Power BI |
 | `/r5` · `/r5/territorial` · `/r5/temporal` · `/r5/sistemas` · `/r5/cosecha` | R5 · Análisis multidimensional: modelo estrella, validaciones y las 4 vistas OLAP (`?ej=<id>` abre un ejemplo guiado) |
+| `/r6` | R6 · Conocimiento oculto: modelos supervisados, clustering, comentarios de YouTube, conclusiones integradas, informe y video |
 | `/entregables` | Hoja de ruta (8 etapas) |
 | `/sobre-nosotros` | Equipo |
 | `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
@@ -211,3 +212,15 @@ pytest tests/test_etapa5.py              # pruebas del modelo, el motor OLAP y l
 La app también construye la base al arrancar si no existe o si el JSON tratado es más reciente
 (`dw.ensure`), así que en Render no hace falta un paso adicional. Para revisar las validaciones
 directamente en SQL: `sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql`.
+
+## Etapa 6 · Conocimiento oculto (Orange Data Mining)
+
+- **Flujos de Orange 3.40:** [`orange/flujos/`](orange/flujos/) — `01_supervisado.ows` (regresión logística, árbol y
+  Random Forest), `02_clustering.ows` (k-Means de municipios) y `03_comentarios_youtube.ows` (texto). Guía completa de
+  reproducción y parámetros: [`orange/README.md`](orange/README.md).
+- **Scripts:** [`scripts/R6/`](scripts/R6/) — preparación de datos, generación de flujos, extracción de comentarios
+  (YouTube Data API v3; clave en `.env` como `YOUTUBE_API_KEY`, nunca en el repo), limpieza y conteo de factores.
+- **Resultados para la app:** `"%LOCALAPPDATA%/Programs/Orange/python.exe" scripts/R6/resultados_orange.py` reproduce
+  sin interfaz las métricas, matrices de confusión y grupos de los flujos y escribe `app/static/data/R6/resultados.json`.
+- **Sección Flask:** `/r6`. El informe en PDF se sirve si existe `app/static/etapa6/Informe_Etapa6_Conocimiento_Oculto.pdf`
+  (o con `INFORME_ETAPA6_URL`); el video se enlaza con `VIDEO_ETAPA6_URL`.
