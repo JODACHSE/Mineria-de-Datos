@@ -7,6 +7,7 @@
 
 {% set toc_title = "Contenido" %}
 {% set toc_items = [
+  ("productos", "Video e informe"),
   ("sintesis", "Síntesis de hallazgos"),
   ("preguntas", "Objetivo y preguntas"),
   ("datos", "Datos y transformaciones"),
@@ -14,7 +15,6 @@
   ("clustering", "2 · Clustering"),
   ("youtube", "3 · Comentarios de YouTube"),
   ("conclusiones", "4 · Conclusiones integradas"),
-  ("productos", "Informe, video y repositorio"),
 ] %}
 
 {% block title %}R6 · Conocimiento oculto — {{ proyecto_tema | capitalize }}{% endblock %}
@@ -55,6 +55,41 @@
 {% endmacro %}
 
 {% block report_body %}
+
+<section id="productos" class="mb-5 reveal">
+  {{ sec("★", "Video de sustentación e informe técnico") }}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="card h-100 border-0 shadow-sm"><div class="card-body">
+        <h3 class="h6 fw-bold"><i class="bi bi-camera-video text-danger me-1"></i>Video de sustentación</h3>
+        {% if video_url %}
+          {% if video_embed %}<div class="ratio ratio-16x9 rounded overflow-hidden border mb-2">
+            <iframe src="{{ video_embed }}" title="Video de sustentación de la etapa 6" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          </div>
+          <p class="small text-body-secondary mb-2">¿No carga? Usa el botón de abajo para verlo directamente en YouTube.</p>{% endif %}
+          <a class="btn btn-success btn-sm" href="{{ video_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Abrir en YouTube</a>
+        {% else %}<p class="small text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se enlazará aquí.</p>{% endif %}
+      </div></div>
+    </div>
+    <div class="col-lg-4 d-flex flex-column gap-3">
+      <div class="card border-0 shadow-sm"><div class="card-body small">
+        <h3 class="h6 fw-bold"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Informe técnico</h3>
+        {% if informe_pdf_url or informe_url %}
+          {% if informe_pdf_url %}<a class="btn btn-success btn-sm me-1 mb-1" href="{{ informe_pdf_url }}" download><i class="bi bi-download me-1"></i>Descargar PDF</a>{% endif %}
+          {% if informe_url %}<a class="btn btn-outline-success btn-sm mb-1" href="{{ informe_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Consultar en línea</a>{% endif %}
+        {% else %}<p class="text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se publicará aquí.</p>{% endif %}
+      </div></div>
+      <div class="card border-0 shadow-sm"><div class="card-body small">
+        <h3 class="h6 fw-bold"><i class="bi bi-github me-1"></i>Repositorio</h3>
+        <ul class="ps-3 mb-0">
+          <li><a href="{{ github_repo_url }}/tree/main/orange/flujos" target="_blank" rel="noopener">Flujos de Orange (.ows)</a></li>
+          <li><a href="{{ github_repo_url }}/tree/main/scripts/R6" target="_blank" rel="noopener">Scripts de preparación y extracción</a></li>
+          <li><a href="{{ github_repo_url }}/blob/main/orange/README.md" target="_blank" rel="noopener">Guía de reproducción</a></li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+</section>
 
 <section id="sintesis" class="mb-5 reveal">
   {{ sec(0, "Síntesis de los principales hallazgos") }}
@@ -327,32 +362,6 @@
       <li>Acompañar las medidas de productividad con instrumentos de <strong>comercialización</strong> (compras públicas, mercados campesinos), que es lo que reclaman los comentarios.</li>
     </ol>
   </div></div>
-</section>
-
-<section id="productos" class="mb-5 reveal">
-  {{ sec(7, "Informe técnico, video y repositorio") }}
-  <div class="row row-cols-1 row-cols-md-3 g-3">
-    <div class="col"><div class="card h-100 border-0 shadow-sm"><div class="card-body small">
-      <h3 class="h6 fw-bold"><i class="bi bi-file-earmark-pdf text-danger me-1"></i>Informe técnico</h3>
-      {% if informe_pdf_url or informe_url %}
-        {% if informe_pdf_url %}<a class="btn btn-success btn-sm me-1 mb-1" href="{{ informe_pdf_url }}" download><i class="bi bi-download me-1"></i>Descargar PDF</a>{% endif %}
-        {% if informe_url %}<a class="btn btn-outline-success btn-sm mb-1" href="{{ informe_url }}" target="_blank" rel="noopener"><i class="bi bi-box-arrow-up-right me-1"></i>Consultar en línea</a>{% endif %}
-      {% else %}<p class="text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se publicará aquí.</p>{% endif %}
-    </div></div></div>
-    <div class="col"><div class="card h-100 border-0 shadow-sm"><div class="card-body small">
-      <h3 class="h6 fw-bold"><i class="bi bi-camera-video text-danger me-1"></i>Video de sustentación</h3>
-      {% if video_url %}<a class="btn btn-success btn-sm" href="{{ video_url }}" target="_blank" rel="noopener"><i class="bi bi-play-circle me-1"></i>Ver video (máx. 10 min)</a>
-      {% else %}<p class="text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se enlazará aquí.</p>{% endif %}
-    </div></div></div>
-    <div class="col"><div class="card h-100 border-0 shadow-sm"><div class="card-body small">
-      <h3 class="h6 fw-bold"><i class="bi bi-github me-1"></i>Repositorio</h3>
-      <ul class="ps-3 mb-0">
-        <li><a href="{{ github_repo_url }}/tree/main/orange/flujos" target="_blank" rel="noopener">Flujos de Orange (.ows)</a></li>
-        <li><a href="{{ github_repo_url }}/tree/main/scripts/R6" target="_blank" rel="noopener">Scripts de preparación y extracción</a></li>
-        <li><a href="{{ github_repo_url }}/blob/main/orange/README.md" target="_blank" rel="noopener">Guía de reproducción</a></li>
-      </ul>
-    </div></div></div>
-  </div>
 </section>
 
 {% endblock %}

@@ -73,7 +73,7 @@ class Config:
     R6_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R6"
     ORANGE_DIR = BASE_DIR / "orange"
     YOUTUBE_DIR = ORANGE_DIR / "data" / "youtube"
-    VIDEO_ETAPA6_URL = os.environ.get("VIDEO_ETAPA6_URL", "")
+    VIDEO_ETAPA6_URL = os.environ.get("VIDEO_ETAPA6_URL", "https://youtu.be/kvMEUs-LW4k")
     INFORME_ETAPA6_URL = os.environ.get("INFORME_ETAPA6_URL", "")
     INFORME_ETAPA6_PDF = "etapa6/Informe_Etapa6_Conocimiento_Oculto.pdf"   # dentro de app/static/
     VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
