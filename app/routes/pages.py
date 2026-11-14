@@ -1,4 +1,4 @@
-"""Blueprint `pages`: todas las vistas HTML del sitio."""
+"""Blueprint `pages`: vistas HTML."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -34,7 +34,7 @@ def r1():
     if ctx is None:
         ctx = build_r1_context(r1_dir)
         ds.cache_set("ctx:r1", ctx)
-    return render_template("pages/r1.html", **ctx)
+    return render_template("etapas/r1/index.html", **ctx)
 
 
 @pages_bp.route("/r2")
@@ -44,7 +44,7 @@ def r2():
     if ctx is None:
         ctx = build_r2_context(r1_dir, r2_dir)
         ds.cache_set("ctx:r2", ctx)
-    return render_template("pages/r2.html", **ctx)
+    return render_template("etapas/r2/index.html", **ctx)
 
 
 @pages_bp.route("/r3")
@@ -54,7 +54,7 @@ def r3():
     if ctx is None:
         ctx = build_r3_context(cfg["R3_JSON_DIR"], cfg.get("VIDEO_ETAPA3_URL", ""))
         ds.cache_set("ctx:r3", ctx)
-    return render_template("pages/r3.html", **ctx)
+    return render_template("etapas/r3/index.html", **ctx)
 
 
 @pages_bp.route("/r4")
@@ -65,7 +65,7 @@ def r4():
         ctx = build_r4_dim_poblacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_poblacional", ctx)
     ctx = {**ctx, "powerbi_report_url": current_app.config.get("POWERBI_REPORT_URL", "")}
-    return render_template("pages/r4.html", **ctx)
+    return render_template("etapas/r4/poblacional.html", **ctx)
 
 
 @pages_bp.route("/r4/temporal")
@@ -75,7 +75,7 @@ def r4_temporal():
     if ctx is None:
         ctx = build_r4_dim_temporal_context(r2_dir)
         ds.cache_set("ctx:r4:dim_temporal", ctx)
-    return render_template("pages/r4_temporal.html", **ctx)
+    return render_template("etapas/r4/temporal.html", **ctx)
 
 
 @pages_bp.route("/r4/territorial")
@@ -85,7 +85,7 @@ def r4_territorial():
     if ctx is None:
         ctx = build_r4_dim_territorial_context(r2_dir)
         ds.cache_set("ctx:r4:dim_territorial", ctx)
-    return render_template("pages/r4_territorial.html", **ctx)
+    return render_template("etapas/r4/territorial.html", **ctx)
 
 
 @pages_bp.route("/r4/relacional")
@@ -95,11 +95,11 @@ def r4_relacional():
     if ctx is None:
         ctx = build_r4_dim_relacional_context(r2_dir)
         ds.cache_set("ctx:r4:dim_relacional", ctx)
-    return render_template("pages/r4_relacional.html", **ctx)
+    return render_template("etapas/r4/relacional.html", **ctx)
 
 
 def _r5_nav(active=None):
-    """Navegación lateral compartida por la visión general de R5 y sus 4 vistas."""
+    """Navegación entre el resumen de R5 y sus 4 vistas."""
     return [(url_for("pages.r5"), "Resumen y modelo estrella", active is None, True)] + [
         (url_for("pages.r5_vista", slug=v["slug"]), f"{v['num']}. {v['corto']}", v["slug"] == active, True)
         for v in VISTAS
@@ -113,7 +113,7 @@ def r5():
     if ctx is None:
         ctx = build_r5_context(cfg["R5_DB_PATH"], cfg["R5_SOURCE_JSON"], ds)
         ds.cache_set("ctx:r5", ctx)
-    return render_template("pages/r5.html", toc_nav=_r5_nav(), **ctx)
+    return render_template("etapas/r5/index.html", toc_nav=_r5_nav(), **ctx)
 
 
 @pages_bp.route("/r5/<slug>")
@@ -125,7 +125,7 @@ def r5_vista(slug):
     if ctx is None:
         ctx = build_r5_vista_context(current_app.config["R5_DB_PATH"], slug, ds)
         ds.cache_set(key, ctx)
-    return render_template("pages/r5_vista.html", toc_nav=_r5_nav(slug), **ctx)
+    return render_template("etapas/r5/vista.html", toc_nav=_r5_nav(slug), **ctx)
 
 
 @pages_bp.route("/r6")
@@ -137,7 +137,7 @@ def r6():
         ds.cache_set("ctx:r6", ctx)
     pdf = cfg["INFORME_ETAPA6_PDF"]
     informe_pdf_url = url_for("static", filename=pdf) if (Path(current_app.static_folder) / pdf).exists() else ""
-    return render_template("pages/r6.html", informe_pdf_url=informe_pdf_url,
+    return render_template("etapas/r6/index.html", informe_pdf_url=informe_pdf_url,
                            informe_url=cfg["INFORME_ETAPA6_URL"], video_url=cfg["VIDEO_ETAPA6_URL"],
                            video_embed=_embed(cfg["VIDEO_ETAPA6_URL"]), **ctx)
 
@@ -153,5 +153,7 @@ def about():
 
 @pages_bp.route("/docs/<path:filename>")
 def descargar_doc(filename):
-    """Sirve archivos descargables (p. ej. el .pbix) desde la carpeta docs/ del proyecto."""
+    """Descarga del .pbix de R4. Ningún otro archivo de docs/ es público."""
+    if filename != current_app.config["POWERBI_PBIX_FILE"]:
+        abort(404)
     return send_from_directory(current_app.config["DOCS_DIR"], filename, as_attachment=True)

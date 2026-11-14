@@ -1,24 +1,12 @@
-"""Etapa 3 · Réplica en Python de las reglas de los paquetes SSIS (EVA.dtsx y FAOSTAT.dtsx).
+"""R3 · Réplica en Python de las reglas de los paquetes SSIS, iteración por iteración.
 
-Aplica sobre los CSV originales de `app/data/` exactamente las mismas reglas que
-los Data Flow de limpieza de SSIS, iteración por iteración, y guarda los conteos,
-indicadores y ejemplos en `app/static/data/R3/iteraciones.json`.
+Uso: python scripts/etapa3_iteraciones.py
+Entrada: app/data/*.csv · Salida: app/static/data/R3/iteraciones.json
+Sus conteos deben coincidir con las tablas *_Limpios y *_Revision de cada lote SSIS.
 
-Sirve para dos cosas:
-  1. Publicar en la app los resultados de las tres iteraciones (sección Etapa 3).
-  2. Contrastar contra la ejecución real de SSIS: los conteos de las tablas
-     *_Limpios y *_Revision de cada lote deben coincidir con los de este script.
-
-Uso:
-    python scripts/etapa3_iteraciones.py
-
-Reglas por iteración (acumulativas):
-  I1  EVA: duplicados (EVA-DUP), conversión numérica (EVA-CONV), municipio DIVIPOLA (EVA-MUN)
-      FAO: duplicados (FAO-DUP), conversión del valor (FAO-CNV)
-  I2  + dominio negativo (EVA-DOM / FAO-DOM), área cosechada > sembrada (EVA-CONS),
-        conversión final de textos/códigos (EVA-CONV / FAO-CNVF)
-  I3  + banderas de atípicos IQR (por cultivo en EVA; por dataset + producto|elemento en FAOSTAT)
-        + bandera de unidad distinta a la modal (FAOSTAT)
+I1  duplicados, conversión numérica y municipio DIVIPOLA (EVA); duplicados y valor (FAOSTAT)
+I2  + dominio negativo, área cosechada > sembrada y conversión final de textos/códigos
+I3  + banderas de atípicos IQR y de unidad distinta a la modal (FAOSTAT)
 """
 from __future__ import annotations
 
@@ -47,7 +35,7 @@ EVA_METRICAS = ["AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento"]
 FAO_COLS = ["CodigoAmbito", "Ambito", "CodigoArea", "Area", "CodigoElemento", "Elemento",
             "CodigoProducto", "Producto", "CodigoAnio", "Anio", "Unidad", "Valor"]
 
-# Longitudes de CONV_Tipos_STR_CORTO (EVA) y CONV_CodigosCortos (FAOSTAT)
+# Longitudes de CONV_Tipos_STR_CORTO (EVA) y CONV_CodigosCortos (FAOSTAT).
 EVA_LONG_FINAL = {"CodigoMunicipioDane": 5, "Periodo": 5, "CodigoCultivo": 20, "GrupoCultivo": 100,
                   "Subgrupo": 100, "Cultivo": 60, "DesagregacionCultivo": 150, "CicloCultivo": 30,
                   "EstadoFisico": 50, "NombreCientifico": 150, "Municipio": 150}
@@ -55,7 +43,7 @@ FAO_LONG_FINAL = {"CodigoAmbito": 10, "CodigoArea": 10, "CodigoElemento": 10, "C
                   "CodigoAnio": 20}
 
 
-# ------------------------------------------------------------------ utilidades
+# --- Utilidades ---
 def dec(text: str | None) -> Decimal | None:
     if text is None or text == "":
         return None
@@ -71,7 +59,7 @@ def eva_num(text: str) -> Decimal | None:
 
 
 def percentile_cont(values: list[Decimal], p: float) -> float:
-    """Igual a PERCENTILE_CONT de SQL Server (interpolación lineal)."""
+    """Igual que PERCENTILE_CONT de SQL Server (interpolación lineal)."""
     v = sorted(float(x) for x in values)
     if not v:
         return None
@@ -101,7 +89,7 @@ def fits_1252(text: str) -> bool:
         return False
 
 
-# ------------------------------------------------------------------ EVA
+# --- EVA ---
 def load_eva():
     with open(EVA_CSV, encoding="utf-8") as fh:
         rd = csv.reader(fh)
@@ -116,7 +104,7 @@ def load_eva():
 
 def run_eva(rows, iteracion: int) -> dict:
     n = len(rows)
-    # límites IQR por cultivo (SQL_CalcularLimitesIQR, sobre todo el staging del lote)
+    # Límites IQR por cultivo (SQL_CalcularLimitesIQR).
     limites = {}
     if iteracion >= 3:
         por_cultivo = defaultdict(lambda: defaultdict(list))
@@ -127,7 +115,7 @@ def run_eva(rows, iteracion: int) -> dict:
                     por_cultivo[r["Cultivo"].strip()][m].append(v)
         limites = {(c, m): iqr_limits(vals) for c, ms in por_cultivo.items() for m, vals in ms.items()}
 
-    # duplicados (SRC_stg_EVA + CSPL_Duplicados)
+    # Duplicados (SRC_stg_EVA + CSPL_Duplicados).
     key = lambda r: (r["CodigoMunicipioDane"].strip(), r["CodigoCultivo"].strip(),
                      r["DesagregacionCultivo"].strip(), r["Anio"].strip(), r["Periodo"].strip())
     visto = Counter()
@@ -211,7 +199,7 @@ def eva_original(rows):
 
 
 def eva_ejemplos(rows):
-    """Un dato corregido real (formato numérico) y uno enviado a revisión (EVA-CONS)."""
+    """Un dato corregido (formato numérico) y uno enviado a revisión (EVA-CONS)."""
     corregido = next(r for r in rows if "." in r["Produccion"] and "," in r["Produccion"])
     return dict(
         corregido=dict(IdStg=corregido["IdStg"], campo="Produccion", original=corregido["Produccion"],
@@ -220,7 +208,7 @@ def eva_ejemplos(rows):
     )
 
 
-# ------------------------------------------------------------------ FAOSTAT
+# --- FAOSTAT ---
 def load_fao():
     rows = []
     i = 0
@@ -264,7 +252,7 @@ def run_fao(rows, iteracion: int) -> dict:
         if visto[k] > 1:
             revision["FAO-DUP"] += 1
             continue
-        texto = r["Valor"] or None                      # NULLIF(LTRIM(RTRIM(Valor)), '')
+        texto = r["Valor"] or None  # NULLIF(LTRIM(RTRIM(Valor)), '')
         valor = dec(texto) if texto is not None else None
         if texto is not None and valor is None:
             revision["FAO-CNV"] += 1
@@ -330,7 +318,7 @@ def fao_original(rows):
     )
 
 
-# ------------------------------------------------------------------ main
+# --- Main ---
 def main():
     eva = load_eva()
     fao = load_fao()

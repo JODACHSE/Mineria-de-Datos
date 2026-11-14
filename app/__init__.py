@@ -1,8 +1,9 @@
-"""Application factory de la app Flask."""
+"""Application factory de Flask."""
 from flask import Flask, render_template, url_for
 from flask_wtf import CSRFProtect
 
 from .config import Config
+from .security import init_security
 
 csrf = CSRFProtect()
 
@@ -11,8 +12,9 @@ def create_app(config_class: type = Config) -> Flask:
     app = Flask(__name__)
     app.config.from_object(config_class)
     csrf.init_app(app)
+    init_security(app)
 
-    # R5: el modelo estrella se construye desde el EVA tratado si aún no existe.
+    # R5: construye el modelo estrella si falta o está desactualizado.
     from .services import dw
 
     dw.ensure(app.config["R5_SOURCE_JSON"], app.config["R5_DB_PATH"])
@@ -29,7 +31,7 @@ def create_app(config_class: type = Config) -> Flask:
 
         cfg = app.config
 
-        # Enlace de descarga del .pbix si existe en docs/ (para la sección R4).
+        # Enlace al .pbix de R4 solo si el archivo existe.
         pbix_file = cfg["POWERBI_PBIX_FILE"]
         try:
             pbix_url = (
@@ -65,7 +67,7 @@ def create_app(config_class: type = Config) -> Flask:
 
     @app.template_filter("miles")
     def miles(value):
-        """12345 -> '12.345' (separador de miles colombiano)."""
+        """12345 -> '12.345'."""
         try:
             return f"{int(value):,}".replace(",", ".")
         except (TypeError, ValueError):

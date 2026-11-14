@@ -1,57 +1,52 @@
-<footer class="bg-body-tertiary border-top mt-5 py-5">
+{# Pie de página (las etapas salen de app/etapas.py). #}
+<footer class="site-footer mt-5 pt-5 pb-4">
   <div class="container">
-    <div class="row g-4">
+    <div class="row g-4 g-lg-5">
       <div class="col-lg-4">
-        <a class="d-inline-flex align-items-center gap-2 text-decoration-none text-body mb-2" href="{{ url_for('pages.index') }}">
+        <a class="brand d-inline-flex align-items-center text-decoration-none text-body mb-3" href="{{ url_for('pages.index') }}">
           <img src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="" width="30" height="30" class="rounded-circle">
-          <span class="fw-bold">{{ brand_name | upper }}</span>
+          <span class="brand-name">{{ brand_name | upper }}</span>
         </a>
-        <p class="small text-body-secondary mb-0" style="max-width:36ch;">
+        <p class="text-body-secondary mb-0" style="max-width:38ch;">
           Proyecto académico del curso de Minería de Datos en la {{ universidad_nombre }}.
           Caracteriza la oferta de producción agrícola en Colombia y su relación con la
           disponibilidad de alimentos, a partir de fuentes oficiales abiertas.
         </p>
       </div>
-      <div class="col-6 col-md-4 col-lg-2">
-        <h2 class="h6 fw-bold">Proyecto</h2>
-        <ul class="list-unstyled small">
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.index') }}">Inicio</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.entregables') }}">Entregables</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r1') }}">Reporte R1</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r2') }}">Reporte R2</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r3') }}">Reporte R3</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r4') }}">R4 · Poblacional</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r4_territorial') }}">R4 · Territorial</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r4_temporal') }}">R4 · Temporal</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r4_relacional') }}">R4 · Relacional</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.r1') }}#limitaciones">Limitaciones</a></li>
+      <div class="col-6 col-md-4 col-lg-3">
+        <h2>Entregables</h2>
+        <ul class="footer-links">
+          {% for e in etapas if e.url_endpoint %}
+          <li><a href="{{ url_for(e.url_endpoint) }}"><span class="font-monospace small me-1">{{ e.codigo }}</span> {{ e.titulo }}</a></li>
+          {% endfor %}
+          <li><a href="{{ url_for('pages.entregables') }}">Todas las etapas</a></li>
         </ul>
       </div>
-      <div class="col-6 col-md-4 col-lg-3">
-        <h2 class="h6 fw-bold">Equipo</h2>
-        <ul class="list-unstyled small">
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ url_for('pages.about') }}">Sobre nosotros</a></li>
+      <div class="col-6 col-md-4 col-lg-2">
+        <h2>Equipo</h2>
+        <ul class="footer-links">
+          <li><a href="{{ url_for('pages.about') }}">Sobre nosotros</a></li>
           {% for dev in developers %}
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ dev.github_url }}" target="_blank" rel="noopener">{{ dev.nombre.split(' ')[0] }} {{ dev.nombre.split(' ')[1] }}</a></li>
+          <li><a href="{{ dev.github_url }}" target="_blank" rel="noopener noreferrer">{{ dev.nombre.split(' ')[0] }} {{ dev.nombre.split(' ')[1] }}</a></li>
           {% endfor %}
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ universidad_url }}" target="_blank" rel="noopener">{{ universidad_nombre }}</a></li>
+          <li><a href="{{ universidad_url }}" target="_blank" rel="noopener noreferrer">{{ universidad_nombre }}</a></li>
         </ul>
       </div>
       <div class="col-md-4 col-lg-3">
-        <h2 class="h6 fw-bold">Fuentes &amp; API</h2>
-        <ul class="list-unstyled small">
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="{{ github_repo_url }}" target="_blank" rel="noopener">Repositorio en GitHub</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener">EVA · MinAgricultura/UPRA</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover" href="https://www.fao.org/faostat/" target="_blank" rel="noopener">FAOSTAT · FAO</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover font-monospace" href="{{ url_for('api.dataset', name='qcl_basicos') }}">/api/dataset/qcl_basicos</a></li>
-          <li><a class="link-body-emphasis link-underline-opacity-0 link-underline-opacity-100-hover font-monospace" href="{{ url_for('api.quality', name='fs') }}">/api/quality/fs</a></li>
+        <h2>Fuentes &amp; API</h2>
+        <ul class="footer-links">
+          <li><a href="{{ github_repo_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-github me-1" aria-hidden="true"></i>Repositorio en GitHub</a></li>
+          <li><a href="https://www.datos.gov.co/Agricultura-y-Desarrollo-Rural/Evaluaciones-Agropecuarias-Municipales-EVA-2019-20/uejq-wxrr" target="_blank" rel="noopener noreferrer">EVA · MinAgricultura/UPRA</a></li>
+          <li><a href="https://www.fao.org/faostat/" target="_blank" rel="noopener noreferrer">FAOSTAT · FAO</a></li>
+          <li><a class="font-monospace small" href="{{ url_for('api.dataset', name='qcl_basicos') }}">/api/dataset/qcl_basicos</a></li>
+          <li><a class="font-monospace small" href="{{ url_for('api.quality', name='fs') }}">/api/quality/fs</a></li>
         </ul>
       </div>
     </div>
-    <hr>
+    <hr class="my-4 opacity-50">
     <div class="d-flex flex-column flex-md-row justify-content-between gap-2 small text-body-secondary">
       <span>© <span id="current-year">2026</span> {{ brand_name }} — {{ proyecto_tema | capitalize }}. Datos: FAO / MinAgricultura, uso académico.</span>
-      <span>Construido con Flask · Bootstrap 5.3 · Chart.js</span>
+      <span>Flask · Bootstrap 5.3 · Chart.js</span>
     </div>
   </div>
 </footer>

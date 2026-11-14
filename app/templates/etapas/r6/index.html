@@ -1,0 +1,416 @@
+{% extends "layouts/report.html" %}
+{% from "macros/ui.html" import stat, tag, callout, table_open, table_close %}
+
+{% set report_code = "R6 · Conocimiento oculto" %}
+{% set report_title = 'Conocimiento oculto<br><span class="text-success">Modelos, grupos y voces sobre la producción</span>' %}
+{% set report_lead = "Tres modelos supervisados, un agrupamiento de municipios y el análisis de comentarios de YouTube en Orange Data Mining, sobre el EVA tratado (2019–2024), para encontrar patrones que los análisis descriptivo y multidimensional no mostraban." %}
+
+{% set toc_title = "Contenido" %}
+{% set toc_items = [
+  ("productos", "Video e informe"),
+  ("sintesis", "Síntesis de hallazgos"),
+  ("preguntas", "Objetivo y preguntas"),
+  ("datos", "Datos y transformaciones"),
+  ("supervisado", "1 · Modelos supervisados"),
+  ("clustering", "2 · Clustering"),
+  ("youtube", "3 · Comentarios de YouTube"),
+  ("conclusiones", "4 · Conclusiones integradas"),
+] %}
+
+{% block title %}R6 · Conocimiento oculto — {{ proyecto_tema | capitalize }}{% endblock %}
+
+{% block report_stats %}
+<div class="col">{{ stat(sup.registros, "Registros para clasificar (rendimiento alto/bajo)") }}</div>
+<div class="col">{{ stat(clu.municipios, "Municipios agrupados en " ~ clu.k_elegido ~ " tipos") }}</div>
+<div class="col">{{ stat(limpieza.salida, "Comentarios de YouTube analizados") }}</div>
+<div class="col">{{ stat(elegido.temporal.auc | string | replace(".", ","), "AUC del modelo elegido en 2024", countup=False) }}</div>
+{% endblock %}
+
+{% macro sec(num, title) %}
+<div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+  <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">{{ num }}</span>
+  <h2 class="h3 fw-bold mb-0">{{ title }}</h2>
+</div>
+{% endmacro %}
+
+{% macro dec(v, n=3) %}{{ ("%." ~ n ~ "f") | format(v) | replace(".", ",") }}{% endmacro %}
+
+{% macro matriz(m, titulo) %}
+<div class="col-md-6">
+  <h4 class="h6 fw-bold">{{ titulo }}</h4>
+  {{ table_open(extra="small text-center") }}
+    <caption class="visually-hidden">{{ titulo }}</caption>
+    <thead><tr><th scope="col" class="text-start">Real \ Predicho</th>{% for e in m.etiquetas %}<th scope="col">{{ e }}</th>{% endfor %}<th scope="col">Total</th></tr></thead>
+    <tbody>
+      {% for f in m.filas %}
+      <tr><th scope="row" class="text-start">{{ f.real }}</th>
+        {% for v in f.valores %}
+        <td class="font-monospace {{ 'table-success' if m.etiquetas[loop.index0] == f.real else 'table-warning' }}">{{ v | miles }}<br><small class="text-body-secondary">{{ dec(f.pct[loop.index0], 1) }} %</small></td>
+        {% endfor %}
+        <td class="font-monospace">{{ f.total | miles }}</td></tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+</div>
+{% endmacro %}
+
+{# Captura de un flujo de Orange con enlace a su .ows. #}
+{% macro flujo(archivo, ows, titulo, descripcion) %}
+<figure class="card border-0 shadow-sm overflow-hidden mb-3">
+  <a class="d-block bg-white p-3 text-center" href="{{ url_for('static', filename='etapas/r6/img/' ~ archivo) }}" target="_blank" rel="noopener"
+     title="Abrir la imagen a tamaño completo">
+    <img src="{{ url_for('static', filename='etapas/r6/img/' ~ archivo) }}" alt="Flujo de Orange: {{ titulo }}" loading="lazy"
+         class="img-fluid" style="max-height:520px;object-fit:contain;">
+  </a>
+  <figcaption class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2 py-2">
+    <span class="small"><i class="bi bi-diagram-3 text-success me-1" aria-hidden="true"></i><strong>Flujo en Orange · {{ titulo }}.</strong>
+      <span class="text-body-secondary">{{ descripcion }}</span></span>
+    <a class="btn btn-outline-success btn-sm" href="{{ github_repo_url }}/blob/main/orange/flujos/{{ ows }}" target="_blank" rel="noopener noreferrer">
+      <i class="bi bi-github me-1" aria-hidden="true"></i>{{ ows }}</a>
+  </figcaption>
+</figure>
+{% endmacro %}
+
+{% block report_body %}
+
+<section id="productos" class="mb-5 reveal">
+  {{ sec("★", "Video de sustentación e informe técnico") }}
+
+  {# --- Video --- #}
+  <div class="card border-0 shadow-sm overflow-hidden mb-3">
+    {% if video_embed %}
+    <div class="ratio ratio-16x9 bg-black">
+      <iframe src="{{ video_embed }}" title="Video de sustentación de la etapa 6" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    </div>
+    {% endif %}
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <h3 class="h6 fw-bold mb-0"><i class="bi bi-camera-video text-danger me-1" aria-hidden="true"></i>Video de sustentación</h3>
+        {% if video_url %}<p class="small text-body-secondary mb-0">¿No carga? Ábrelo directamente en YouTube.</p>
+        {% else %}<p class="small text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se enlazará aquí.</p>{% endif %}
+      </div>
+      {% if video_url %}<a class="btn btn-outline-success btn-sm" href="{{ video_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-youtube me-1" aria-hidden="true"></i>Abrir en YouTube</a>{% endif %}
+    </div>
+  </div>
+
+  {# --- Informe y descargables --- #}
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    <div class="col"><div class="card h-100 border-0 shadow-sm card-hover"><div class="card-body">
+      <h3 class="h6 fw-bold"><i class="bi bi-file-earmark-pdf text-danger me-1" aria-hidden="true"></i>Informe técnico</h3>
+      <p class="small text-body-secondary">Documento completo de la etapa: modelos, métricas, grupos, comentarios y conclusiones.</p>
+      {% if informe_pdf_url or informe_url %}
+      <div class="d-flex flex-wrap gap-2">
+        {% if informe_pdf_url %}
+        <a class="btn btn-success btn-sm" href="{{ informe_pdf_url }}" download><i class="bi bi-download me-1" aria-hidden="true"></i>Descargar PDF</a>
+        <a class="btn btn-outline-success btn-sm" href="{{ informe_pdf_url }}" target="_blank" rel="noopener"><i class="bi bi-eye me-1" aria-hidden="true"></i>Ver en el navegador</a>
+        {% endif %}
+        {% if informe_url %}<a class="btn btn-outline-success btn-sm" href="{{ informe_url }}" target="_blank" rel="noopener noreferrer"><i class="bi bi-box-arrow-up-right me-1" aria-hidden="true"></i>Consultar en línea</a>{% endif %}
+      </div>
+      {% else %}<p class="small text-body-secondary mb-0">{{ tag("Pendiente", "warning") }} Se publicará aquí.</p>{% endif %}
+    </div></div></div>
+    <div class="col"><div class="card h-100 border-0 shadow-sm card-hover"><div class="card-body">
+      <h3 class="h6 fw-bold"><i class="bi bi-github me-1" aria-hidden="true"></i>Repositorio y reproducción</h3>
+      <ul class="list-unstyled small mb-0 d-grid gap-2">
+        <li><a href="{{ github_repo_url }}/tree/main/orange/flujos" target="_blank" rel="noopener noreferrer"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Flujos de Orange (.ows)</a></li>
+        <li><a href="{{ github_repo_url }}/tree/main/scripts/R6" target="_blank" rel="noopener noreferrer"><i class="bi bi-filetype-py me-2" aria-hidden="true"></i>Scripts de preparación y extracción</a></li>
+        <li><a href="{{ github_repo_url }}/blob/main/orange/README.md" target="_blank" rel="noopener noreferrer"><i class="bi bi-journal-text me-2" aria-hidden="true"></i>Guía de reproducción</a></li>
+      </ul>
+    </div></div></div>
+  </div>
+</section>
+
+<section id="sintesis" class="mb-5 reveal">
+  {{ sec(0, "Síntesis de los principales hallazgos") }}
+  <div class="row row-cols-1 row-cols-md-2 g-3">
+    {% for icon, color, titulo, texto in [
+      ("bi-cpu", "success", "Anticipar el rendimiento es posible para municipios ya conocidos",
+       "Random Forest predice si un registro de 2024 rendirá por encima de la mediana de su cultivo con AUC " ~ dec(elegido.temporal.auc) ~ " y F1 " ~ dec(elegido.temporal.f1) ~ ", entrenado solo con 2019–2023 y sin usar producción ni área cosechada."),
+      ("bi-exclamation-diamond", "warning", "Pero no generaliza a municipios nuevos",
+       "Si se dejan municipios completos fuera del entrenamiento, el AUC de Random Forest cae a " ~ dec(elegido.municipio.auc) ~ " y la regresión logística pasa al primer lugar: el modelo aprende la historia de cada municipio."),
+      ("bi-diagram-3", "info", clu.k_elegido ~ " tipos de municipio agrícola",
+       "Arroceros de gran escala, paperos del altiplano, plataneros, andinos pequeños de frijol y maíz, y mixtos campesinos de maíz y yuca. Los arroceros siembran " ~ escala_arroz ~ " veces más área que el grupo más pequeño."),
+      ("bi-chat-quote", "danger", "Los comentarios hablan de precio, no de rendimiento",
+       "En " ~ limpieza.salida ~ " comentarios de 3 videos, gobierno (27 %), precio al productor (20 %) e importaciones (14 %) dominan; clima y plagas apenas aparecen (2 %). El problema percibido está en la comercialización, que el EVA no mide."),
+    ] %}
+    <div class="col"><div class="card h-100 border-0 shadow-sm"><div class="card-body">
+      <h3 class="h6 fw-bold"><i class="bi {{ icon }} text-{{ color }} me-1"></i>{{ titulo }}</h3>
+      <p class="small mb-0">{{ texto }}</p>
+    </div></div></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section id="preguntas" class="mb-5 reveal">
+  {{ sec(1, "Objetivo y preguntas de análisis") }}
+  <p>Descubrir patrones que expliquen <strong>dónde y por qué el rendimiento agrícola de los cultivos básicos queda por debajo de su referente</strong>,
+    un componente de la disponibilidad de alimentos, más allá de los totales y cruces de R4 y R5.</p>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th scope="col">Análisis</th><th scope="col">Pregunta</th><th scope="col">Tipo</th></tr></thead>
+    <tbody>
+      <tr><td>Supervisado</td><td>¿Un registro (municipio × desagregación × semestre) tendrá un rendimiento por encima de la mediana de su cultivo, conociendo solo lo que se sabe antes de cosechar?</td><td>Clasificación binaria</td></tr>
+      <tr><td>Clustering</td><td>¿Qué tipos de municipio agrícola existen según su tamaño, su mezcla de cultivos y la parte de lo sembrado que cosechan?</td><td>k-Means</td></tr>
+      <tr><td>Comentarios</td><td>¿Qué factores asocian quienes comentan con producir y acceder a alimentos básicos, y cómo se relacionan con lo que muestran los datos EVA?</td><td>Minería de texto</td></tr>
+    </tbody>
+  {{ table_close() }}
+</section>
+
+<section id="datos" class="mb-5 reveal">
+  {{ sec(2, "Datos y transformaciones adicionales") }}
+  <p class="small">Fuente: EVA tratado en R2/R3 ({{ prep.registros_fuente | miles }} registros, <span class="font-monospace">{{ prep.fuente }}</span>).
+    Las transformaciones las hace <span class="font-monospace">scripts/R6/preparar_datos_orange.py</span> y quedan en <span class="font-monospace">orange/data/log_preparacion.json</span>.</p>
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th scope="col">Paso</th><th scope="col" class="text-end">Antes</th><th scope="col" class="text-end">Después</th><th scope="col" class="text-end">Descartados</th><th scope="col">Motivo</th></tr></thead>
+    <tbody>
+      {% for p in prep.pasos %}
+      <tr><td>{{ p.paso }}</td><td class="text-end font-monospace">{{ p.antes | miles }}</td><td class="text-end font-monospace">{{ p.despues | miles }}</td>
+          <td class="text-end font-monospace">{{ p.descartados | miles }}</td><td class="text-body-secondary">{{ p.motivo }}</td></tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+  <p class="small text-body-secondary mb-0">Variables nuevas: <span class="font-monospace">RendimientoAlto</span> (clase), <span class="font-monospace">Log10_AreaSembrada</span>,
+    <span class="font-monospace">Semestre</span>, <span class="font-monospace">GrupoCV</span> (municipio, para validar por grupos) y, por municipio,
+    tamaño, número de cultivos, diversificación (1 − Herfindahl), % de área por cultivo y tasa de cosecha.</p>
+</section>
+
+<section id="supervisado" class="mb-5 reveal">
+  {{ sec(3, "Modelos supervisados") }}
+  <div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Problema</h3>
+      <p class="mb-1"><strong>Objetivo:</strong> <span class="font-monospace">RendimientoAlto</span> = Alto si el rendimiento supera la mediana 2019–2023 de su cultivo
+        ({% for c, v in prep.supervisado.umbral_t_ha_por_cultivo_2019_2023.items() %}{{ c }} {{ dec(v, 1) }}{{ ", " if not loop.last }}{% endfor %} t/ha).</p>
+      <p class="mb-1"><strong>Por qué clasificación:</strong> el rendimiento depende sobre todo del cultivo (papa 17 t/ha, frijol 1,3 t/ha); comparar con el referente de cada cultivo
+        permite un umbral común y responde a la decisión que interesa: ¿este registro estará por debajo de lo normal?</p>
+      <p class="mb-1"><strong>Predictoras:</strong> {{ sup.predictoras | join(", ") }}.</p>
+      <p class="mb-0"><strong>Excluidas por fuga de información:</strong> {{ prep.supervisado.excluidas_por_fuga | join(", ") }}: solo se conocen después de cosechar.</p>
+    </div></div></div>
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Modelos y evaluación (Orange {{ orange_version }})</h3>
+      <ul class="ps-3 mb-2">
+        <li><strong>Regresión logística:</strong> Ridge (L2), C = 1.</li>
+        <li><strong>Árbol:</strong> sin binarización, profundidad ≤ 12, ≥ 20 por hoja, ≥ 50 para dividir.</li>
+        <li><strong>Random Forest:</strong> 100 árboles, ≥ 5 para dividir, semilla fija.</li>
+      </ul>
+      <p class="mb-1">Los tres con los mismos datos y tres esquemas: validación cruzada estratificada de 10 pliegues, validación cruzada <em>por municipio</em>
+        y entrenamiento 2019–2023 → prueba 2024 ({{ sup.entrenamiento | miles }} / {{ sup.prueba | miles }} registros).</p>
+      <p class="mb-0"><strong>Balance de clases:</strong> {{ dec(sup.pct_alto, 1) }} % Alto. Casi balanceado: la exactitud es interpretable, pero se informa F1, precisión y recall de la clase Alto.</p>
+    </div></div></div>
+  </div>
+
+  {{ flujo("flujo_01_supervisado.png", "01_supervisado.ows", "clasificación supervisada",
+           "Balance de clases y relevancia de variables, selección sin fuga, tres modelos evaluados con validación cruzada (estratificada y por municipio) y con la prueba temporal 2024.") }}
+
+  {{ table_open(extra="small") }}
+    <caption class="visually-hidden">Métricas de los tres modelos en las tres evaluaciones (clase objetivo Alto)</caption>
+    <thead><tr><th scope="col">Evaluación</th><th scope="col">Modelo</th><th scope="col" class="text-end">AUC</th><th scope="col" class="text-end">Exactitud</th><th scope="col" class="text-end">F1</th><th scope="col" class="text-end">Precisión</th><th scope="col" class="text-end">Recall</th></tr></thead>
+    <tbody>
+      {% for key, e in evaluaciones.items() %}
+      {% for m in e.modelos %}
+      <tr class="{{ 'table-success' if m.modelo == mejor_por_evaluacion[key] }}">
+        {% if loop.first %}<th scope="rowgroup" rowspan="3" class="fw-semibold">{{ e.nombre }}</th>{% endif %}
+        <td>{{ m.modelo }}{% if m.modelo == mejor_por_evaluacion[key] %} {{ tag("mejor AUC", "success") }}{% endif %}</td>
+        {% for k in ["auc", "ca", "f1", "precision", "recall"] %}<td class="text-end font-monospace">{{ dec(m[k]) }}</td>{% endfor %}
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+
+  <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+    <h3 class="h6 fw-bold mb-1">AUC por modelo y esquema de evaluación</h3>
+    <p class="small text-body-secondary mb-2">El orden de los modelos cambia según cómo se evalúan.</p>
+    <div class="chart-frame" role="img" aria-label="AUC de los tres modelos en las tres evaluaciones"><canvas id="r6-auc"></canvas></div>
+  </div></div>
+
+  <h3 class="h5 fw-bold mt-4">Matrices de confusión del modelo elegido ({{ modelo_elegido }})</h3>
+  <div class="row g-3">
+    {{ matriz(matriz_temporal, "Prueba 2024 (entrenado con 2019–2023)") }}
+    {{ matriz(matriz_municipio, "Validación cruzada por municipio") }}
+  </div>
+  <p class="small">En 2024 el modelo acierta {{ dec(matriz_temporal.filas[0].pct[0], 1) }} % de los registros realmente Altos y {{ dec(matriz_temporal.filas[1].pct[1], 1) }} % de los Bajos.
+    El error más frecuente es predecir Bajo cuando fue Alto ({{ matriz_temporal.filas[0].valores[1] | miles }} registros): el modelo es conservador, lo que
+    para alertas tempranas es preferible a dejar pasar registros de bajo rendimiento ({{ matriz_temporal.filas[1].valores[0] | miles }} falsos Alto).</p>
+
+  {% call callout("bi-check2-circle") %}
+    <strong>Modelo seleccionado: {{ modelo_elegido }}.</strong> El uso realista es anticipar, al inicio de la temporada, qué registros de municipios que ya
+    reportan al EVA quedarán por debajo de lo normal; los 1.098 municipios aparecen todos los años, así que la evaluación temporal (2024) es la que reproduce
+    ese uso. Ahí {{ modelo_elegido }} es el mejor en todas las métricas (AUC {{ dec(elegido.temporal.auc) }}, F1 {{ dec(elegido.temporal.f1) }}, frente a
+    {{ dec(evaluaciones.temporal.modelos[0].auc) }} de la regresión logística y {{ dec(evaluaciones.temporal.modelos[1].auc) }} del árbol).
+    <br><strong>Qué aporta:</strong> el rendimiento relativo tiene memoria territorial: el municipio, el departamento y el sistema productivo
+    (desagregación) anticipan buena parte del resultado antes de cosechar.
+    <br><strong>Limitaciones:</strong> con municipios no vistos baja a AUC {{ dec(elegido.municipio.auc) }}; ahí conviene la regresión logística, que además es más interpretable.
+    No incluye clima, suelos, precios ni insumos, y es una asociación, no una explicación causal.
+  {% endcall %}
+</section>
+
+<section id="clustering" class="mb-5 reveal">
+  {{ sec(4, "Clustering de municipios") }}
+  <div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Variables y tratamiento</h3>
+      <p class="mb-1">{{ clu.variables | length }} variables por municipio: {{ clu.variables | join(", ") }}.</p>
+      <p class="mb-1"><strong>Normalización:</strong> estandarización (μ = 0, σ = 1), porque el área (log), los porcentajes (0–100) y la tasa (0–1) tienen escalas muy distintas y sin ella dominarían la distancia.</p>
+      <p class="mb-0"><strong>Sin la variable objetivo:</strong> ninguna variable de rendimiento entra; el rendimiento relativo se usa solo después, para describir los grupos.</p>
+    </div></div></div>
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Algoritmo y número de grupos</h3>
+      <p class="mb-1"><strong>k-Means</strong>, inicialización k-means++, 10 reinicios, 300 iteraciones como máximo, k de 2 a 10.</p>
+      <p class="mb-0">Se elige <strong>k = {{ clu.k_elegido }}</strong>, el de mayor silueta ({{ dec(clu.silueta_global) }}). La silueta es baja para todo k (&lt; 0,3):
+        los grupos se solapan y deben leerse como tendencias, no como segmentos nítidos.</p>
+    </div></div></div>
+  </div>
+
+  {{ flujo("flujo_02_clustering.png", "02_clustering.ows", "clustering de municipios",
+           "k-Means con estandarización (k de 2 a 10), silueta, perfil de cada grupo y su relación con la región.") }}
+
+  <div class="card border-0 shadow-sm mb-3"><div class="card-body">
+    <h3 class="h6 fw-bold mb-1">Silueta media según el número de grupos</h3>
+    <div class="chart-frame" style="height:240px;" role="img" aria-label="Silueta media de k-Means para k entre 2 y 10"><canvas id="r6-silueta"></canvas></div>
+  </div></div>
+
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th scope="col">Grupo</th><th scope="col" class="text-end">Municipios</th><th scope="col">Cultivo dominante (% del área)</th><th scope="col" class="text-end">Área anual (ha)*</th>
+      <th scope="col" class="text-end">Tasa de cosecha</th><th scope="col" class="text-end">Rend. relativo**</th><th scope="col">Regiones principales</th><th scope="col" class="text-end">Silueta</th></tr></thead>
+    <tbody>
+      {% for g in grupos %}
+      <tr><td><strong>{{ g.grupo }} · {{ g.titulo }}</strong><br><span class="text-body-secondary">{{ g.descripcion }}</span></td>
+        <td class="text-end font-monospace">{{ g.municipios }}</td>
+        <td>{% for c, v in g.pct_area | dictsort(by="value", reverse=True) %}{% if loop.index <= 2 %}{{ c }} {{ dec(v, 0) }} %{{ ", " if loop.index < 2 }}{% endif %}{% endfor %}</td>
+        <td class="text-end font-monospace">{{ g.area_anual_ha_geo | miles }}</td>
+        <td class="text-end font-monospace">{{ dec(g.tasa_cosecha, 2) }}</td>
+        <td class="text-end font-monospace">{{ dec(g.rend_rel_mediana, 2) }}</td>
+        <td>{% for r, p in g.regiones.items() %}{{ r }} {{ p }} %{{ ", " if not loop.last }}{% endfor %}</td>
+        <td class="text-end font-monospace">{{ dec(g.silueta) }}{% if g.pct_silueta_negativa %}<br><small class="text-body-secondary">{{ g.pct_silueta_negativa }} % &lt; 0</small>{% endif %}</td></tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+  <p class="small text-body-secondary">* Media geométrica del área sembrada anual. ** Mediana del rendimiento dividido por la mediana de su cultivo (1 = típico); no entró al agrupamiento.</p>
+
+  {% call callout("bi-lightbulb") %}
+    <strong>Patrones ocultos.</strong> Los grupos se separan por el cultivo dominante, pero lo que aportan es la combinación de escala, especialización y región:
+    los municipios especializados (arroz, papa) rinden por encima de la mediana, mientras los diversificados de pequeña escala (frijol-maíz andino y
+    maíz-yuca del Caribe) rinden por debajo y cosechan menos de lo que siembran. El grupo mixto es además el más heterogéneo (17 % de sus municipios
+    estaría mejor en otro grupo).
+    <br><strong>Decisión que apoya:</strong> diseñar la asistencia técnica por tipo de municipio y no por departamento: prioridad a los grupos mixtos de
+    pequeña escala, donde coinciden menor rendimiento y menor tasa de cosecha.
+  {% endcall %}
+</section>
+
+<section id="youtube" class="mb-5 reveal">
+  {{ sec(5, "Comentarios de YouTube") }}
+  <p class="small"><strong>Propósito:</strong> {{ extraccion.proposito }}</p>
+  <div class="row g-3 mb-3">
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Criterios de búsqueda y extracción</h3>
+      <p class="mb-1">YouTube Data API v3 · extracción del {{ extraccion.fecha_extraccion_utc[:10] }} · región {{ extraccion.parametros.region }},
+        idioma {{ extraccion.parametros.idioma }}, publicados desde {{ extraccion.parametros.publicados_desde }}, mínimo {{ extraccion.parametros.min_comentarios_video }} comentarios por video.</p>
+      <p class="mb-1"><strong>Consultas:</strong> {{ extraccion.parametros.consultas | join(" · ") }}.</p>
+      <p class="mb-0"><strong>Restricciones:</strong> de 25 videos candidatos, {{ descartados_youtube }} tenían menos de 30 comentarios (muchos con los comentarios desactivados).
+        Cuota usada: {{ extraccion.cuota_estimada_unidades }} de {{ extraccion.cuota_diaria | miles }} unidades diarias. La clave de la API va en <span class="font-monospace">.env</span> y no se publica.</p>
+    </div></div></div>
+    <div class="col-md-6"><div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+      <h3 class="h6 fw-bold">Preparación ({{ limpieza.entrada }} → {{ limpieza.salida }} comentarios)</h3>
+      <ul class="ps-3 mb-1">
+        {% for p in limpieza.pasos %}<li>{{ p.paso }}{% if p.descartados is defined %}: {{ p.descartados }} descartados{% endif %}.</li>{% endfor %}
+      </ul>
+      <p class="mb-0">No se guarda nombre, canal ni identificador de los autores; los comentarios crudos no se suben al repositorio.</p>
+    </div></div></div>
+  </div>
+
+  {{ flujo("flujo_03_comentarios_youtube.png", "03_comentarios_youtube.ows", "minería de texto",
+           "Corpus en español, preprocesamiento, nube de palabras, colocaciones, temas LDA, bolsa de palabras y palabras que distinguen a cada video.") }}
+
+  {{ table_open(wrap=True, extra="small") }}
+    <thead><tr><th scope="col">Video</th><th scope="col">Canal</th><th scope="col">Publicado</th><th scope="col" class="text-end">Extraídos</th><th scope="col" class="text-end">Analizados</th></tr></thead>
+    <tbody>
+      {% for v in videos %}
+      <tr><td>{{ v.codigo }} · <a href="{{ v.enlace }}" target="_blank" rel="noopener">{{ v.titulo }}</a></td><td>{{ v.canal }}</td>
+        <td>{{ v.fecha_publicacion }}</td><td class="text-end font-monospace">{{ v.comentarios_extraidos }}</td><td class="text-end font-monospace">{{ v.limpios }}</td></tr>
+      {% endfor %}
+    </tbody>
+  {{ table_close() }}
+
+  <h3 class="h5 fw-bold mt-4">Flujo de texto en Orange</h3>
+  <p class="small">Corpus → Preprocesar texto (minúsculas, tokenización, lista de 755 palabras vacías en español, Snowball) → Bolsa de palabras, Temas (LDA, 4),
+    Colocaciones y Word Enrichment por video (FDR ≤ 0,2). Además, un diccionario de términos cuenta qué factores menciona cada comentario.</p>
+  <div class="row g-3">
+    <div class="col-lg-7">
+      {{ table_open(extra="small") }}
+        <caption class="visually-hidden">Porcentaje de comentarios que mencionan cada factor, por video</caption>
+        <thead><tr><th scope="col">Factor</th><th scope="col" class="text-end">Total</th>{% for v in videos %}<th scope="col" class="text-end">{{ v.codigo }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for f in factores %}
+          <tr><td>{{ f.factor }}</td><td class="text-end font-monospace fw-semibold">{{ f.pct_total | replace(".", ",") }} %</td>
+            <td class="text-end font-monospace">{{ f.V01_pct | replace(".", ",") }}</td><td class="text-end font-monospace">{{ f.V02_pct | replace(".", ",") }}</td>
+            <td class="text-end font-monospace">{{ f.V03_pct | replace(".", ",") }}</td></tr>
+          {% endfor %}
+        </tbody>
+      {{ table_close() }}
+      <p class="small text-body-secondary">% de comentarios de cada video; un comentario puede mencionar varios factores. Es conteo de expresiones: no detecta ironía ni negación.</p>
+    </div>
+    <div class="col-lg-5">
+      <div class="card h-100 border-0 bg-body-tertiary"><div class="card-body small">
+        <h4 class="h6 fw-bold">Términos y temas</h4>
+        <ul class="ps-3 mb-0">
+          <li><strong>Más frecuentes (raíces):</strong> arroz, gobierno, campesino, precio, paro, producto, papa.</li>
+          <li><strong>Distinguen a V01 (papa):</strong> campesino, intermediario, bulto, pesos, cobrar, ganar.</li>
+          <li><strong>Distinguen a V02 (paro):</strong> paro, cumplir, gobierno, pueblo, ministro.</li>
+          <li><strong>V03 (arroz):</strong> TLC, barato, arancel y competitividad aparecen como tendencia (no superan FDR ≤ 0,2).</li>
+          <li><strong>LDA (4 temas):</strong> papa-intermediarios, paro y precio, precio del arroz y un tema mixto; coherencia baja (0,37), se usa solo para explorar.</li>
+        </ul>
+      </div></div>
+    </div>
+  </div>
+
+  {% call callout("bi-chat-dots", "info") %}
+    <strong>Qué aportan frente al EVA.</strong> Los comentarios ubican el problema en la <em>comercialización</em> (precio al productor, intermediarios,
+    importaciones) y en la relación con el gobierno, una parte de la cadena que el EVA no mide. Complementan los resultados: en el video del arroz se discute
+    competir con el grano importado, mientras el EVA muestra que los municipios arroceros rinden por encima de la mediana; el reclamo es de precio,
+    no de productividad. <strong>Límite:</strong> son {{ limpieza.salida }} comentarios de 3 videos (papa y arroz) y no representan a los productores ni a la población.
+  {% endcall %}
+</section>
+
+<section id="conclusiones" class="mb-5 reveal">
+  {{ sec(6, "Conclusiones integradas") }}
+  <div class="row g-4">
+    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-success"><div class="card-body small">
+      <h3 class="h6 fw-bold text-success">Respaldado por evidencia</h3>
+      <ul class="ps-3 mb-0">
+        <li>El rendimiento relativo es persistente por territorio: un modelo que conoce el municipio anticipa el año siguiente (AUC {{ dec(elegido.temporal.auc) }}), pero no transfiere bien a municipios nuevos.</li>
+        <li>Supervisado y clustering coinciden: especialización y escala (arroz, papa) van con rendimiento sobre la mediana; los municipios mixtos de pequeña escala, con rendimiento y tasa de cosecha menores.</li>
+        <li>Coincide con R5: maíz tradicional del Caribe y frijol andino concentran la baja productividad.</li>
+        <li>En los comentarios analizados predominan precio, intermediarios, gobierno e importaciones sobre clima o rendimiento.</li>
+      </ul>
+    </div></div></div>
+    <div class="col-md-6"><div class="card h-100 border-0 shadow-sm border-start border-4 border-warning"><div class="card-body small">
+      <h3 class="h6 fw-bold text-warning-emphasis">Hipótesis que requieren validación</h3>
+      <ul class="ps-3 mb-0">
+        <li>Que el bajo rendimiento de los grupos mixtos se deba a tecnología o acceso a insumos (el EVA no tiene esas variables).</li>
+        <li>Que el ingreso del productor dependa más del precio y la intermediación que del rendimiento (se necesitarían precios SIPSA).</li>
+        <li>Que las opiniones de los comentarios representen a los productores: el corpus es pequeño, de 3 videos y con sesgo político.</li>
+      </ul>
+    </div></div></div>
+  </div>
+  <div class="card border-0 bg-body-tertiary mt-3"><div class="card-body small">
+    <h3 class="h6 fw-bold"><i class="bi bi-signpost-split text-success me-1"></i>Decisiones que pueden apoyarse en los resultados</h3>
+    <ol class="ps-3 mb-0">
+      <li>Usar el modelo como <strong>alerta temprana</strong> por municipio al inicio de cada semestre, para priorizar visitas de asistencia técnica.</li>
+      <li>Focalizar programas de productividad en los <strong>grupos mixtos de pequeña escala</strong> y no por departamento.</li>
+      <li>Acompañar las medidas de productividad con instrumentos de <strong>comercialización</strong> (compras públicas, mercados campesinos), que es lo que reclaman los comentarios.</li>
+    </ol>
+  </div></div>
+</section>
+
+{% endblock %}
+
+{% block vendor_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" integrity="sha384-NrKB+u6Ts6AtkIhwPixiKTzgSKNblyhlk0Sohlgar9UHUBzai/sgnNNWWd291xqt" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block page_data %}
+<script id="r6-data" type="application/json">{{ {
+  "evaluaciones": evaluaciones,
+  "silueta": clu.silueta_por_k,
+  "k": clu.k_elegido,
+} | tojson }}</script>
+{% endblock %}

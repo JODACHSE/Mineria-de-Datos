@@ -1,24 +1,40 @@
-{# Layout de reporte: cabecera con cifras, índice lateral con scrollspy y columna de contenido.
-   Las páginas hijas definen: report_code, report_title (html), report_lead, block report_stats,
-   toc_title, toc_items, toc_extra y block report_body. #}
+{# Layout de reporte: cabecera con cifras + índice lateral (offcanvas en móvil) + contenido.
+   La página define report_code, report_title, report_lead, report_stats, toc_* y report_body. #}
 {% extends "layouts/base.html" %}
 
-{% block body_attrs %}data-bs-spy="scroll" data-bs-target="#toc" data-bs-offset="120" data-bs-smooth-scroll="true"{% endblock %}
-
 {% block content %}
-<section class="container pt-5 pb-4">
-  <p class="text-success fw-semibold small mb-1 reveal">Entregable · {{ report_code }}</p>
-  <h1 class="display-5 fw-bold lh-1 reveal">{{ report_title | safe }}</h1>
-  <p class="text-body-secondary mt-3 reveal" style="max-width:64ch;">{{ report_lead | safe }}</p>
-  <div class="row row-cols-2 row-cols-lg-4 g-3 mt-2">
-    {% block report_stats %}{% endblock %}
+<section class="page-hero">
+  <div class="container">
+    <p class="eyebrow mb-3 reveal">Entregable · {{ report_code }}</p>
+    <h1 class="fw-bold lh-1 mb-0 reveal">{{ report_title | safe }}</h1>
+    <p class="lead mt-3 mb-0 reveal">{{ report_lead | safe }}</p>
+    <div class="row row-cols-2 row-cols-xl-4 g-2 g-sm-3 mt-3">
+      {% block report_stats %}{% endblock %}
+    </div>
   </div>
 </section>
 
 <div class="container pb-5">
-  <div class="row g-4 g-lg-5">
+  <div class="page-subnav d-lg-none" id="page-subnav">
+    <button class="page-subnav-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+      <i class="bi bi-list-nested text-success" aria-hidden="true"></i>
+      <span class="fw-semibold">En esta página</span>
+      <span class="current" data-toc-current aria-live="polite"></span>
+      <i class="bi bi-chevron-down small text-body-secondary" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="row g-4 g-xl-5">
     <aside class="col-lg-3">
-      {% include "components/toc.html" %}
+      <div class="offcanvas-lg offcanvas-start sidebar" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+        <div class="offcanvas-header">
+          <h2 class="offcanvas-title h6 fw-bold mb-0" id="sidebarLabel">{{ report_code }}</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Cerrar índice"></button>
+        </div>
+        <div class="offcanvas-body">
+          {% include "components/sidebar.html" %}
+        </div>
+      </div>
     </aside>
     <div class="col-lg-9 report-body">
       {% block report_body %}{% endblock %}

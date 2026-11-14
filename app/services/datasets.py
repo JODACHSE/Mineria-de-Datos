@@ -1,9 +1,4 @@
-"""Acceso a los datasets curados (JSON estáticos de R1 y R2).
-
-Capa de servicio sin Flask: recibe el directorio base y devuelve dicts ya
-parseados. Cachea en memoria porque los JSON son inmutables mientras el
-proceso vive (los scripts de `scripts/` son generadores offline).
-"""
+"""Carga y caché en memoria de los JSON de R1 (crudo) y R2 (tratado)."""
 from __future__ import annotations
 
 import json
@@ -11,8 +6,7 @@ from pathlib import Path
 
 from app.quality import DATASETS
 
-# Process-local: seguro con --preload + 1 worker. Con múltiples workers
-# sin --preload, cada proceso cargaría su propia copia de los datasets.
+# Caché por proceso: con --preload y 1 worker los datasets se cargan una sola vez.
 _cache: dict[str, dict] = {}
 
 
@@ -28,14 +22,14 @@ def _cached(key: str, path: Path) -> dict:
 
 
 def load_raw(name: str, r1_dir: Path) -> dict:
-    """Versión CRUDA (R1) de un dataset. Lanza KeyError si no existe."""
+    """Versión cruda (R1). KeyError si no existe."""
     if name not in DATASETS:
         raise KeyError(name)
     return _cached(f"r1:{name}", r1_dir / DATASETS[name])
 
 
 def load_treated(name: str, r2_dir: Path) -> dict:
-    """Versión TRATADA (R2) de un dataset, con columnas de bandera."""
+    """Versión tratada (R2), con columnas de bandera."""
     if name not in DATASETS:
         raise KeyError(name)
     return _cached(f"r2:{name}", r2_dir / DATASETS[name])

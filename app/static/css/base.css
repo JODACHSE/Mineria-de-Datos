@@ -1,0 +1,40 @@
+/* base.css — elementos HTML, tipografía y scroll. */
+
+/* Los anclajes no quedan bajo el header ni la barra móvil: el navegador descuenta este padding. */
+html {
+  scroll-padding-top: calc(var(--header-h) + var(--subnav-h) + 1rem);
+  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
+body {
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: clip;
+}
+
+::selection { background: rgba(var(--brand-rgb), .22); }
+
+h1, h2, h3, .h1, .h2, .h3, .display-1, .display-2, .display-3, .display-4, .display-5, .display-6 {
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+h4, h5, h6, .h4, .h5, .h6 { letter-spacing: -.01em; }
+p, li { text-wrap: pretty; }
+.lead { color: var(--bs-secondary-color); font-weight: 400; }
+
+code, kbd, .font-monospace { font-feature-settings: "calt" 0; }
+code { color: var(--bs-success-text-emphasis); background: var(--bs-success-bg-subtle); padding: .1em .35em; border-radius: .35rem; font-size: .85em; }
+pre code { background: none; padding: 0; color: inherit; }
+
+a { transition: color var(--dur) ease, text-decoration-color var(--dur) ease; text-underline-offset: .2em; }
+
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: .25rem; }
+.btn:focus-visible, .form-control:focus, .form-select:focus { box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color); outline: 0; }
+.form-control:focus, .form-select:focus { border-color: rgba(var(--brand-rgb), .55); }
+
+img, svg, video, canvas, iframe { max-width: 100%; }

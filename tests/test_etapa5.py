@@ -44,7 +44,7 @@ def test_medida_no_aditiva_se_recalcula(con):
     q = olap.query(con, "region", "rendimiento")
     nacional = olap.kpis(con, ["produccion", "area_cosechada"])
     assert q["grand_total"] == round(nacional["produccion"] / nacional["area_cosechada"], 2)
-    assert q["share_pct"] is None  # no se reparte un cociente en participaciones
+    assert q["share_pct"] is None  # No se reparte un cociente en participaciones.
 
 
 def test_slice_y_dice(con):
@@ -76,10 +76,10 @@ def test_cero_reportado_no_es_faltante(con):
 def test_diccionario_coincide_con_el_esquema(con):
     for d in dw.dictionary(con):
         columnas = [r[1] for r in con.execute(f"PRAGMA table_info({d['tabla']})")]
-        assert [a["col"] for a in d["atributos"]] == columnas  # todo atributo documentado, en orden
+        assert [a["col"] for a in d["atributos"]] == columnas  # Todo atributo documentado, en orden.
         assert d["filas"] > 0 and all(a["distintos"] > 0 for a in d["atributos"])
     sin_coord = con.execute("SELECT COUNT(*) FROM dim_territorio WHERE territorio_key <> 0 AND latitud IS NULL").fetchone()[0]
-    assert sin_coord == 0  # DIVIPOLA cubre todos los municipios de EVA
+    assert sin_coord == 0  # DIVIPOLA cubre todos los municipios de EVA.
 
 
 def test_atributos_de_analisis_consultables(con):

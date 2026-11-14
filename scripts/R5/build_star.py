@@ -1,12 +1,7 @@
-"""R5 · Construye el modelo estrella y ejecuta las validaciones.
+"""R5 · Construye el modelo estrella y muestra sus validaciones.
 
-Uso (desde la raíz del repositorio):
-
-    python scripts/R5/build_star.py
-
-Lee app/static/data/R2/eva_basicos.json (datos tratados en R2/R3), crea
-app/data/R5/wololo_dw.sqlite con SQL/R5/01_modelo_estrella.sql y muestra
-las validaciones de SQL/R5/02_validaciones.sql.
+Uso: python scripts/R5/build_star.py
+Entrada: app/static/data/R2/eva_basicos.json · Salida: app/data/R5/wololo_dw.sqlite
 """
 import sys
 from pathlib import Path

@@ -1,9 +1,6 @@
-"""Contextos para las páginas de la Etapa 4 (análisis multidimensional).
+"""Contextos de R4 (conocimiento evidente): una función por dimensión.
 
-Cada función `build_r4_dim_*_context` carga los datos ya tratados de R2,
-computa las agregaciones necesarias y devuelve un dict listo para la
-plantilla. Los datos brutos nunca llegan al template: solo cifras y
-estructuras para Chart.js.
+Agregan el EVA tratado de R2 y devuelven solo cifras y series para Chart.js.
 """
 from __future__ import annotations
 
@@ -16,7 +13,7 @@ from app.services import datasets as ds
 _NUMERIC_FIELDS = ("AreaSembrada", "AreaCosechada", "Produccion", "Rendimiento")
 _CULTIVOS_ORDER = ["Maíz", "Arroz", "Papa", "Plátano", "Yuca", "Frijol"]
 
-# Mapeo departamento → región geográfica de Colombia
+# Departamento -> región natural.
 _REGION_MAP: dict[str, str] = {
     "Antioquia": "Andina",
     "Boyacá": "Andina",
@@ -59,7 +56,7 @@ def _pct(part: int, total: int) -> float:
 
 
 def build_r4_dim_poblacional_context(r2_dir: Path) -> dict:
-    """Agrega el dataset EVA tratado para la Dimensión Poblacional."""
+    """Dimensión poblacional: cultivos y ciclos."""
     raw = ds.load_treated("eva_basicos", r2_dir)
     rows = _rows_as_dicts(raw)
     total = len(rows)
@@ -87,21 +84,20 @@ def build_r4_dim_poblacional_context(r2_dir: Path) -> dict:
         else:
             cultivo_faltantes[cultivo] += 1
 
-    # ---- indicadores ------------------------------------------------
+    # --- Indicadores ---
     top_cultivo = max(cultivo_counts, key=cultivo_counts.get)
     top_count = cultivo_counts[top_cultivo]
     minoritario = min(cultivo_counts, key=cultivo_counts.get)
     completitud_pct = _pct(completos, total)
 
-    # ---- datos para filtros (client-side) ---------------------------
-    # Agregación cruzada Cultivo × CicloCultivo para los filtros JS
+    # --- Datos para los filtros (cultivo × ciclo) ---
     cross: dict[str, Counter] = {}
     for r in rows:
         cultivo = r.get("Cultivo", "Desconocido")
         ciclo = r.get("CicloCultivo") or "Sin dato"
         cross.setdefault(cultivo, Counter())[ciclo] += 1
 
-    # ---- chart data -------------------------------------------------
+    # --- Gráficos ---
     cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_counts]
     cultivos_ordered += [c for c in cultivo_counts if c not in _CULTIVOS_ORDER]
 
@@ -124,11 +120,9 @@ def build_r4_dim_poblacional_context(r2_dir: Path) -> dict:
         "pcts": [_pct(estado_counts[e], total) for e in estados_ordered],
     }
 
-    # Cross data for JS filter: {cultivo: {ciclo: count}}
     cross_serializable = {c: dict(cc) for c, cc in cross.items()}
 
     return {
-        # indicadores
         "total_registros": total,
         "top_cultivo": top_cultivo,
         "top_cultivo_pct": _pct(top_count, total),
@@ -138,7 +132,6 @@ def build_r4_dim_poblacional_context(r2_dir: Path) -> dict:
         "minoritario_pct": _pct(cultivo_counts[minoritario], total),
         "completitud_pct": completitud_pct,
         "completos_n": completos,
-        # cultivos table (para la viz de filtros)
         "cultivos_tabla": [
             {
                 "cultivo": c,
@@ -148,19 +141,17 @@ def build_r4_dim_poblacional_context(r2_dir: Path) -> dict:
             }
             for c in cultivos_ordered
         ],
-        # chart data
         "cultivos_chart": cultivos_chart,
         "ciclo_chart": ciclo_chart,
         "estado_chart": estado_chart,
         "cross_data": cross_serializable,
-        # filter options
         "filter_cultivos": cultivos_ordered,
         "filter_ciclos": ciclos_ordered,
     }
 
 
 def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
-    """Agrega el dataset EVA tratado para la Dimensión Territorial."""
+    """Dimensión territorial: departamentos y regiones."""
     raw = ds.load_treated("eva_basicos", r2_dir)
     rows = _rows_as_dicts(raw)
     total = len(rows)
@@ -181,7 +172,7 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
     total_depts = len(dept_counts)
     total_munis = sum(len(v) for v in dept_munis.values())
 
-    # ---- indicadores ------------------------------------------------
+    # --- Indicadores ---
     sorted_depts = sorted(dept_counts.items(), key=lambda x: -x[1])
     top_dept, top_dept_n = sorted_depts[0]
     top_dept_pct = _pct(top_dept_n, total)
@@ -192,7 +183,7 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
     top5_n = sum(n for _, n in sorted_depts[:5])
     top5_pct = _pct(top5_n, total)
 
-    # ---- region aggregation ----------------------------------------
+    # --- Agregación por región ---
     region_counts: Counter = Counter()
     region_depts: dict[str, list] = {}
     for dept, n in dept_counts.items():
@@ -200,8 +191,8 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         region_counts[region] += n
         region_depts.setdefault(region, []).append(dept)
 
-    # ---- chart data -------------------------------------------------
-    # VIZ-1: top 15 departments (horizontal bar)
+    # --- Gráficos ---
+    # VIZ-1: top 15 departamentos.
     top15 = sorted_depts[:15]
     top15_labels = [d for d, _ in top15]
     top15_values = [n for _, n in top15]
@@ -215,7 +206,7 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         "munis": top15_munis,
     }
 
-    # VIZ-2: by region (doughnut)
+    # VIZ-2: participación por región.
     region_ordered = [r for r in _REGION_ORDER if r in region_counts]
     region_ordered += [r for r in region_counts if r not in _REGION_ORDER]
     region_chart = {
@@ -225,7 +216,7 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         "dept_counts": [len(region_depts.get(r, [])) for r in region_ordered],
     }
 
-    # VIZ-3: registros por municipio único (density) — top 15 depts
+    # VIZ-3: registros por municipio (top 15).
     density_labels = top15_labels
     density_values = [
         round(top15_values[i] / top15_munis[i], 1) if top15_munis[i] else 0
@@ -238,7 +229,7 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         "registros": top15_values,
     }
 
-    # ---- cross data para filtro JS (dept → region, n, munis) --------
+    # --- Datos para los filtros (departamento -> región) ---
     cross_data = {
         d: {
             "n": dept_counts[d],
@@ -250,7 +241,6 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         for d in dept_counts
     }
 
-    # tabla completa de departamentos ordenada por registros
     depts_tabla = [
         {
             "dept": d,
@@ -265,7 +255,6 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
     ]
 
     return {
-        # indicadores
         "total_registros": total,
         "total_depts": total_depts,
         "total_munis": total_munis,
@@ -278,22 +267,18 @@ def build_r4_dim_territorial_context(r2_dir: Path) -> dict:
         "bottom_dept_pct": bottom_dept_pct,
         "top5_pct": top5_pct,
         "top5_depts": [d for d, _ in sorted_depts[:5]],
-        # chart data
         "dept_chart": dept_chart,
         "region_chart": region_chart,
         "density_chart": density_chart,
-        # filter options
         "filter_depts": [d for d, _ in sorted_depts],
         "filter_regiones": region_ordered,
-        # table
         "depts_tabla": depts_tabla,
-        # cross for JS filter
         "cross_data": cross_data,
     }
 
 
 def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
-    """Agrega el dataset EVA tratado para la Dimensión Temporal."""
+    """Dimensión temporal: años y semestres."""
     raw = ds.load_treated("eva_basicos", r2_dir)
     rows = _rows_as_dicts(raw)
     total = len(rows)
@@ -323,7 +308,7 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
     years_sorted = sorted(year_counts.keys())
     first_year, last_year = years_sorted[0], years_sorted[-1]
 
-    # ---- indicadores ------------------------------------------------
+    # --- Indicadores ---
     top_year = max(year_counts, key=year_counts.get)
     top_year_n = year_counts[top_year]
 
@@ -338,10 +323,10 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
     max_jump_year = max(yoy, key=yoy.get)
     max_jump_pct = yoy[max_jump_year]
 
-    # ---- chart data -------------------------------------------------
+    # --- Gráficos ---
     SEM_LABELS = ["Primer semestre", "Segundo semestre", "Anual"]
 
-    # VIZ-1: tendencia anual (bar + line overlay handled in JS)
+    # VIZ-1: tendencia anual.
     trend_chart = {
         "labels": [str(y) for y in years_sorted],
         "values": [year_counts[y] for y in years_sorted],
@@ -349,7 +334,7 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
         "yoy":    [yoy.get(y, 0) for y in years_sorted],
     }
 
-    # VIZ-2: apilado año × semestre
+    # VIZ-2: año × semestre.
     stacked_chart = {
         "labels": [str(y) for y in years_sorted],
         "datasets": [
@@ -361,7 +346,7 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
         ],
     }
 
-    # VIZ-3: líneas por cultivo a lo largo de los años
+    # VIZ-3: cultivos a lo largo de los años.
     cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_year]
     cultivo_year_chart = {
         "labels": [str(y) for y in years_sorted],
@@ -374,7 +359,7 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
         ],
     }
 
-    # ---- tabla y cross data para filtros ----------------------------
+    # --- Tabla y datos para los filtros ---
     years_tabla = [
         {
             "year": y,
@@ -400,7 +385,6 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
     }
 
     return {
-        # indicadores
         "total_registros": total,
         "total_years": len(years_sorted),
         "first_year": first_year,
@@ -411,23 +395,19 @@ def build_r4_dim_temporal_context(r2_dir: Path) -> dict:
         "growth_total_pct": growth_total,
         "max_jump_year": max_jump_year,
         "max_jump_pct": max_jump_pct,
-        # chart data
         "trend_chart": trend_chart,
         "stacked_chart": stacked_chart,
         "cultivo_year_chart": cultivo_year_chart,
-        # filter options
         "filter_years": [str(y) for y in years_sorted],
         "filter_semestres": SEM_LABELS,
-        # table + cross
         "years_tabla": years_tabla,
         "cross_data": cross_data,
-        # semestre summary for indicators
         "semestre_counts": {k: semestre_counts[k] for k in SEM_LABELS if k in semestre_counts},
     }
 
 
 def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
-    """Agrega el dataset EVA tratado para la Dimensión Relacional y Multivariada."""
+    """Dimensión relacional: cruces cultivo × región × semestre."""
     raw = ds.load_treated("eva_basicos", r2_dir)
     rows = _rows_as_dicts(raw)
     total = len(rows)
@@ -462,26 +442,23 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
     cultivos_ordered = [c for c in _CULTIVOS_ORDER if c in cultivo_region]
     years_sorted = sorted(year_set)
 
-    # ---- indicadores ------------------------------------------------
-    # combo3_valid: cruce trivariado real Cultivo × Región × Semestre —no un
-    # conteo derivado de cruzar solo dos variables— restringido al universo
-    # de los 6 cultivos básicos y las 5 regiones geográficas para que el
-    # denominador de IND-2 sea estable.
+    # --- Indicadores ---
+    # Cruce trivariado real, limitado a 6 cultivos y 5 regiones para que el denominador de IND-2 sea estable.
     combo3_valid = {
         k: v for k, v in combo3.items()
         if k[0] in cultivos_ordered and k[1] in _REGION_ORDER
     }
 
-    # IND-1: combinación cultivo×región×semestre más frecuente
+    # IND-1: combinación más frecuente.
     top_combo_key, top_combo_n = max(combo3_valid.items(), key=lambda kv: kv[1])
     top_combo_cultivo, top_combo_region, top_combo_sem = top_combo_key
     top_combo_pct = _pct(top_combo_n, total)
 
-    # IND-2: combinaciones activas sobre el máximo posible (6 cultivos × 5 regiones × 3 semestres)
+    # IND-2: combinaciones activas sobre las posibles (6 × 5 × 3).
     active_combos = len(combo3_valid)
     max_combos = len(cultivos_ordered) * len(_REGION_ORDER) * len(SEM_LABELS)
 
-    # IND-3: cultivo más transversal (presente en más regiones)
+    # IND-3: cultivo presente en más regiones.
     transversal_cultivo = max(
         cultivos_ordered,
         key=lambda c: sum(1 for r in _REGION_ORDER if cultivo_region.get(c, Counter()).get(r, 0) > 0),
@@ -490,8 +467,8 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         1 for r in _REGION_ORDER if cultivo_region.get(transversal_cultivo, Counter()).get(r, 0) > 0
     )
 
-    # ---- chart data -------------------------------------------------
-    # VIZ-1: barras agrupadas — región × cultivo (territorial × poblacional)
+    # --- Gráficos ---
+    # VIZ-1: región × cultivo.
     region_cultivo_chart = {
         "labels": _REGION_ORDER,
         "datasets": [
@@ -503,7 +480,7 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         ],
     }
 
-    # VIZ-2: barras apiladas — cultivo × semestre (poblacional × temporal)
+    # VIZ-2: cultivo × semestre.
     cultivo_semestre_chart = {
         "labels": cultivos_ordered,
         "datasets": [
@@ -515,7 +492,7 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         ],
     }
 
-    # VIZ-3: líneas — año × región (temporal × territorial)
+    # VIZ-3: año × región.
     region_year_chart = {
         "labels": [str(y) for y in years_sorted],
         "datasets": [
@@ -527,10 +504,7 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         ],
     }
 
-    # ---- tabla y cross data -----------------------------------------
-    # Tabla trivariada real (Cultivo × Región × Semestre), ordenada por
-    # frecuencia: evidencia visible de que IND-1/IND-2 cruzan las 3 variables
-    # conjuntamente y no solo derivan un conteo de un cruce bivariado.
+    # --- Tabla trivariada y datos para los filtros ---
     tabla_rows = [
         {
             "cultivo": c,
@@ -542,14 +516,12 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         for (c, r, s), n in sorted(combo3_valid.items(), key=lambda kv: -kv[1])
     ]
 
-    # cross_data[cultivo][region] = n  (for JS filter summaries)
     cross_data = {
         c: {r: cultivo_region.get(c, Counter()).get(r, 0) for r in _REGION_ORDER}
         for c in cultivos_ordered
     }
 
     return {
-        # indicadores
         "total_registros": total,
         "top_combo_cultivo": top_combo_cultivo,
         "top_combo_region": top_combo_region,
@@ -560,14 +532,11 @@ def build_r4_dim_relacional_context(r2_dir: Path) -> dict:
         "max_combos": max_combos,
         "transversal_cultivo": transversal_cultivo,
         "transversal_regions": transversal_regions,
-        # chart data
         "region_cultivo_chart": region_cultivo_chart,
         "cultivo_semestre_chart": cultivo_semestre_chart,
         "region_year_chart": region_year_chart,
-        # filter options
         "filter_cultivos": cultivos_ordered,
         "filter_regiones": _REGION_ORDER,
-        # table + cross
         "tabla_rows": tabla_rows,
         "cross_data": cross_data,
     }

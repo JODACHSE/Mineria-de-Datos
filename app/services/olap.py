@@ -1,16 +1,11 @@
-"""R5 · Motor de consultas OLAP sobre el modelo estrella (SQLite).
+"""R5 · Consultas OLAP sobre el modelo estrella (SQLite).
 
-Toda consulta se arma con niveles y medidas de una lista blanca (nada del
-cliente llega como SQL) y se resuelve con GROUP BY sobre la tabla de hechos.
-Los subtotales y el total general se calculan con su propia consulta, de modo
-que las medidas no aditivas (rendimiento, tasa de cosecha, municipios únicos)
-se recalculan en cada nivel en lugar de sumarse.
+Niveles y medidas salen de una lista blanca: nada del cliente llega como SQL.
+Subtotales y total se consultan aparte, así las medidas no aditivas
+(rendimiento, tasa de cosecha, municipios únicos) se recalculan, nunca se suman.
 
-Operaciones:
-  drill-down / roll-up → cambiar `rows`/`cols` a un nivel hijo/padre de la jerarquía
-  slice                → un filtro de un valor sobre una dimensión
-  dice                 → filtros sobre dos o más dimensiones
-  pivot                → intercambiar `rows` y `cols`
+drill-down/roll-up = cambiar rows/cols de nivel · slice = filtrar una dimensión ·
+dice = filtrar varias · pivot = intercambiar rows y cols.
 """
 from __future__ import annotations
 
@@ -18,7 +13,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-# nivel → (expresión SQL, etiqueta, dimensión)
+# nivel -> (expresión SQL, etiqueta, dimensión)
 LEVELS: dict[str, tuple[str, str, str]] = {
     "region": ("t.region", "Región", "territorio"),
     "departamento": ("t.departamento", "Departamento", "territorio"),
@@ -32,18 +27,17 @@ LEVELS: dict[str, tuple[str, str, str]] = {
     "desagregacion": ("c.desagregacion", "Desagregación", "cultivo"),
     "criterio": ("s.criterio", "Criterio", "sistema"),
     "sistema": ("s.sistema", "Sistema productivo", "sistema"),
-    # Atributos de análisis (no son niveles de jerarquía): sirven como columna o filtro.
+    # Atributos de análisis (no son niveles de jerarquía): columna o filtro.
     "capital": ("t.capital", "Capital / resto", "territorio"),
     "etapa": ("tm.etapa_desagregacion", "Etapa de desagregación EVA", "tiempo"),
     "variedad": ("c.variedad", "Variedad", "cultivo"),
     "estado_fisico": ("c.estado_fisico", "Estado físico", "cultivo"),
-    # Atributo degenerado de la tabla de hechos (bandera de calidad de R2).
+    # Bandera de calidad de R2 (atributo degenerado de los hechos).
     "coherencia": ("CASE f.area_incoherente WHEN 1 THEN 'Cosechada > sembrada' ELSE 'Coherente' END",
                    "Coherencia del área", "calidad"),
 }
 
-# Jerarquías (de lo general a lo detallado). `semestre` no es un nivel de la
-# jerarquía temporal: es un atributo para comparar A vs B entre años.
+# Jerarquías de lo general a lo detallado. `semestre` es un atributo, no un nivel.
 HIERARCHIES: dict[str, list[str]] = {
     "territorio": ["region", "departamento", "municipio"],
     "tiempo": ["trienio", "anio", "periodo"],
@@ -58,7 +52,7 @@ DIMENSIONS = {
     "sistema": "Sistema productivo",
 }
 
-# medida → (expresión SQL, etiqueta, unidad, agregación, decimales)
+# medida -> (expresión SQL, etiqueta, unidad, agregación, decimales)
 MEASURES: dict[str, tuple[str, str, str, str, int]] = {
     "produccion": ("SUM(f.produccion_t)", "Producción", "t", "SUM", 0),
     "area_sembrada": ("SUM(f.area_sembrada_ha)", "Área sembrada", "ha", "SUM", 0),
@@ -112,7 +106,7 @@ def _round(v, nd):
 
 
 def _sort_key(level: str, totals: dict):
-    # Los niveles temporales se ordenan cronológicamente; el resto por total desc.
+    # Niveles temporales en orden cronológico; el resto por total descendente.
     if LEVELS[level][2] == "tiempo":
         return lambda k: str(k)
     return lambda k: -(totals.get(k) or 0)
@@ -120,7 +114,7 @@ def _sort_key(level: str, totals: dict):
 
 def query(con: sqlite3.Connection, rows: str, measure: str, cols: str | None = None,
           filters: dict[str, list] | None = None, limit: int = MAX_ROWS) -> dict:
-    """Matriz `rows × cols` de `measure` bajo `filters`, con subtotales recalculados."""
+    """Matriz rows × cols de `measure` bajo `filters`, con subtotales recalculados."""
     if rows not in LEVELS or (cols and cols not in LEVELS):
         raise OlapError("Nivel desconocido")
     if measure not in MEASURES:
@@ -151,7 +145,7 @@ def query(con: sqlite3.Connection, rows: str, measure: str, cols: str | None = N
             f"SELECT {cexpr} AS c, {expr} {FROM}{where} GROUP BY c", params)}
         col_keys = sorted(col_totals, key=_sort_key(cols, col_totals))
 
-    # Participación: sobre el total de la selección (denominador explícito).
+    # Participación sobre el total de la selección.
     share = None
     if measure in ADDITIVE and grand:
         share = {str(r): round(100 * (row_totals[r] or 0) / grand, 1) for r in row_keys}
@@ -176,15 +170,14 @@ def query(con: sqlite3.Connection, rows: str, measure: str, cols: str | None = N
 
 
 def kpis(con: sqlite3.Connection, measures: list[str], filters: dict | None = None) -> dict:
-    """Medidas escalares (una consulta por medida) para las tarjetas de indicadores."""
+    """Medidas escalares para las tarjetas de indicadores."""
     where, params = _where(filters or {})
     return {m: _round(_scalar(con, m, where, params), MEASURES[m][4]) for m in measures}
 
 
 def extreme_cell(con: sqlite3.Connection, rows: str, cols: str, measure: str,
                  filters: dict | None = None, min_area_sembrada: float = 1000, lowest: bool = True):
-    """Combinación rows × cols con el valor mínimo (o máximo) de la medida. Solo considera
-    celdas con al menos `min_area_sembrada` ha para no destacar ruido de áreas diminutas."""
+    """Celda rows × cols con el valor mínimo (o máximo); ignora áreas menores a `min_area_sembrada` ha."""
     where, params = _where(filters or {})
     sql = (f"SELECT {LEVELS[rows][0]} AS r, {LEVELS[cols][0]} AS c, {MEASURES[measure][0]} AS v "
            f"{FROM}{where} GROUP BY r, c HAVING SUM(f.area_sembrada_ha) >= ? AND v IS NOT NULL "
@@ -212,7 +205,7 @@ def model_metadata() -> dict:
     }
 
 
-# ---------------------------------------------------------------- validaciones
+# --- Validaciones ---
 def _source_rows(r2_json: Path) -> list[dict]:
     with open(r2_json, encoding="utf-8") as fh:
         data = json.load(fh)
@@ -220,7 +213,7 @@ def _source_rows(r2_json: Path) -> list[dict]:
 
 
 def validations(con: sqlite3.Connection, r2_json: Path) -> list[dict]:
-    """Comprobaciones de integridad del modelo y comparaciones con el dato tratado."""
+    """Integridad del modelo y comparación con el JSON tratado."""
     src = _source_rows(r2_json)
     one = lambda sql: con.execute(sql).fetchone()[0]  # noqa: E731
     out = []

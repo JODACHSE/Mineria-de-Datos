@@ -1,15 +1,15 @@
-/**
- * app.js — punto de entrada. Cada módulo es autónomo y se activa solo si
- * encuentra sus elementos en la página.
- */
-import { initSound } from "./modules/sound.js";
-import { initTheme } from "./modules/theme.js";
-import { initMotion } from "./modules/motion.js";
-import { initExplorer } from "./modules/explorer.js";
-import { initCharts } from "./modules/charts.js";
-import { initOlap } from "./modules/olap.js";
-import { initR6Charts } from "./modules/r6charts.js";
+/** app.js — punto de entrada: inicializa cada módulo (los que no encuentran sus elementos no hacen nada). */
+import { initSound } from "./core/sound.js";
+import { initTheme } from "./core/theme.js";
+import { initLayout } from "./core/layout.js";
+import { initMotion } from "./core/motion.js";
+import { initExplorer } from "./features/explorer.js";
+import { initCharts } from "./features/charts.js";
+import { initOlap } from "./etapas/r5/olap.js";
+import { initR6Charts } from "./etapas/r6/charts.js";
+import { initRoadmap } from "./features/roadmap.js";
 
+initLayout();
 initSound();
 initTheme();
 initMotion();
@@ -17,3 +17,4 @@ initExplorer();
 initCharts();
 initOlap();
 initR6Charts();
+initRoadmap();

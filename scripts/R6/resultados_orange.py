@@ -1,12 +1,7 @@
-"""R6 · Reproduce sin interfaz los resultados de los flujos 01 y 02 y los guarda para la app.
+"""R6 · Reproduce sin interfaz los resultados de los flujos 01 y 02 para la app.
 
-Usa la librería de Orange con los mismos parámetros que los widgets (params_flujo.py):
-métricas de los tres modelos en las tres evaluaciones, matrices de confusión, silueta
-por k y perfil de los grupos de k-Means. Escribe app/static/data/R6/resultados.json,
-que lee la sección «Conocimiento oculto» de Flask.
-
-Uso (con el Python que trae Orange 3.40):
-    "%LOCALAPPDATA%/Programs/Orange/python.exe" scripts/R6/resultados_orange.py
+Uso: "%LOCALAPPDATA%/Programs/Orange/python.exe" scripts/R6/resultados_orange.py
+Salida: app/static/data/R6/resultados.json (mismos parámetros que los widgets, ver params_flujo.py).
 """
 import json
 import sys
@@ -31,7 +26,7 @@ OUT = ROOT / "app" / "static" / "data" / "R6" / "resultados.json"
 
 
 def learners():
-    # Traducción de los ajustes de los widgets (params_flujo.py) a los learners de la librería.
+    # Ajustes de los widgets -> learners de la librería.
     return [
         ("Regresión logística", LogisticRegressionLearner(**LR)),
         ("Árbol", TreeLearner(binarize=TREE["binary_trees"], max_depth=TREE["max_depth"],
@@ -92,7 +87,7 @@ def _nombre_grupo(perfil):
 
 def clustering():
     data = Orange.data.Table(str(DATA / "eva_municipios.csv"))
-    norm = Normalize(norm_type=Normalize.NormalizeBySD, center=True)(data)  # «Normalize columns» del widget
+    norm = Normalize(norm_type=Normalize.NormalizeBySD, center=True)(data)  # «Normalize columns» del widget.
     X = norm.X
     silhouettes, modelos = {}, {}
     for k in range(2, 11):
@@ -128,7 +123,7 @@ def clustering():
         }
         perfil["nombre"] = _nombre_grupo(perfil)
         perfiles.append(perfil)
-    # Orden estable para la app: por cultivo dominante, no por el índice interno de k-Means.
+    # Orden estable por cultivo dominante, no por el índice de k-Means.
     perfiles.sort(key=lambda p: max(p["pct_area"], key=p["pct_area"].get))
     for i, p in enumerate(perfiles, start=1):
         p["grupo"] = f"G{i}"

@@ -1,11 +1,7 @@
-"""R6 · Limpia los comentarios de YouTube y genera el corpus que lee Orange (widget Corpus).
+"""R6 · Limpia los comentarios y genera el corpus para Orange.
 
-Uso (desde la raíz del repo):  python scripts/R6/preparar_comentarios.py
-Entrada:  orange/data/youtube/comentarios_crudos.csv y videos.csv (los deja extraer_comentarios_youtube.py)
-Salida:   orange/data/youtube/corpus.csv (cabecera de 3 filas de Orange) y log_limpieza.json
-
-Cada paso deja su conteo y su motivo en el log. El idioma se detecta con una heurística de palabras
-funcionales (sin dependencias externas); sus límites se documentan en el log.
+Uso: python scripts/R6/preparar_comentarios.py
+Entrada: comentarios_crudos.csv y videos.csv · Salida: corpus.csv y log_limpieza.json (orange/data/youtube/)
 """
 from __future__ import annotations
 
@@ -71,7 +67,7 @@ def main() -> None:
     filas = crudos
     n0 = len(filas)
 
-    # 1) Vacíos
+    # 1) Vacíos.
     sig = []
     for r in filas:
         t = " ".join(html.unescape(r["texto"] or "").split())
@@ -80,7 +76,7 @@ def main() -> None:
     paso("Registros vacíos", n0, len(sig), "Comentario sin texto o solo espacios.")
     filas = sig
 
-    # 2) Datos personales y ruido (se enmascaran, no se descartan)
+    # 2) Datos personales y ruido: se enmascaran, no se descartan.
     masc = {"enlaces": 0, "correos": 0, "menciones": 0, "telefonos": 0, "marcas_de_tiempo": 0}
     for r in filas:
         t = r["texto"]
@@ -94,12 +90,12 @@ def main() -> None:
                   "motivo": "URL, correos, @menciones y teléfonos se sustituyen por marcas para no publicar datos de terceros; "
                             "las marcas de tiempo del video (1:23) se eliminan porque no son opinión."})
 
-    # 3) Irrelevantes: menos de 3 palabras con letras
+    # 3) Irrelevantes: menos de 3 palabras.
     rel = [r for r in filas if len([w for w in LETRAS.findall(r["texto"]) if w.lower() not in {"enlace", "usuario", "correo", "telefono"}]) >= 3]
     paso("Contenido irrelevante", len(filas), len(rel), "Menos de 3 palabras con letras (solo emojis, números, saludos o marcas).")
     filas = rel
 
-    # 4) Duplicados (idéntico tras quitar mayúsculas, tildes y signos), en todo el corpus
+    # 4) Duplicados (sin mayúsculas, tildes ni signos).
     vistos, unicos = set(), []
     for r in filas:
         k = clave_duplicado(r["texto"])
@@ -109,7 +105,7 @@ def main() -> None:
     paso("Duplicados", len(filas), len(unicos), "Mismo texto (sin mayúsculas, tildes ni signos) repetido, dentro o entre videos; se conserva el primero. Suele ser spam o copia.")
     filas = unicos
 
-    # 5) Idioma
+    # 5) Idioma (heurística de palabras funcionales).
     for r in filas:
         r["idioma"] = idioma(r["texto"])
     por_idioma: dict[str, int] = {}
@@ -120,7 +116,7 @@ def main() -> None:
          "El análisis es en español: se descartan los comentarios detectados como otro idioma. " + json.dumps(por_idioma, ensure_ascii=False))
     filas = es
 
-    # Salida para Orange
+    # --- Salida para Orange ---
     cab = ["texto", "id", "video", "consulta_origen", "fecha", "me_gusta", "respuestas"]
     tipos = ["s", "s", "d", "d", "t", "c", "c"]
     roles = ["meta", "meta", "meta", "meta", "meta", "", ""]

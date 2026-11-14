@@ -1,0 +1,38 @@
+{# Índice lateral de los reportes (scrollspy en js/core/layout.js).
+   toc_nav [(url, label, activo, disponible)] · toc_title · toc_items [(id, label)] · toc_extra / toc_extra_title #}
+<nav id="toc" class="toc" aria-label="Índice de la página">
+
+  {% if toc_nav %}
+  <p class="toc-title">{{ toc_nav_title | default("Dimensiones") }}</p>
+  <ul class="nav toc-pages">
+    {% for url, label, is_active, is_available in toc_nav %}
+    <li class="nav-item">
+      {% if is_available %}
+      <a class="nav-link {{ 'active' if is_active }}" href="{{ url }}" {% if is_active %}aria-current="page"{% endif %}>{{ label }}</a>
+      {% else %}
+      <span class="nav-link pe-none text-body-tertiary d-flex justify-content-between align-items-center">
+        {{ label }}<small class="badge text-bg-secondary rounded-pill fw-normal">Próximo</small>
+      </span>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  <p class="toc-title">{{ toc_title }}</p>
+  <ol class="nav flex-column toc-list">
+    {% for id, label in toc_items %}
+    <li class="nav-item"><a class="nav-link" href="#{{ id }}">{{ label }}</a></li>
+    {% endfor %}
+  </ol>
+
+  {% if toc_extra %}
+  <p class="toc-title">{{ toc_extra_title | default("Contenido adicional") }}</p>
+  <ul class="nav flex-column toc-list">
+    {% for id, label in toc_extra %}
+    <li class="nav-item"><a class="nav-link" href="#{{ id }}">{{ label }}</a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+</nav>

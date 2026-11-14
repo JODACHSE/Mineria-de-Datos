@@ -1,0 +1,121 @@
+/* tokens.css — variables de diseño (claro/oscuro): sobrescribe las --bs-* y define la marca y los tonos por etapa. */
+
+:root,
+[data-bs-theme="light"] {
+  /* Marca: verde esmeralda (contraste AA sobre blanco). */
+  --brand: #12805c;
+  --brand-rgb: 18, 128, 92;
+  --brand-hover: #0e6a4c;
+  --brand-contrast: #ffffff;          /* texto sobre fondos de marca */
+
+  --bs-success: var(--brand);
+  --bs-success-rgb: var(--brand-rgb);
+  --bs-success-text-emphasis: #0b4f39;
+  --bs-success-bg-subtle: #e4f4ec;
+  --bs-success-border-subtle: #b6e1cc;
+
+  /* Superficies y texto. */
+  --bs-body-bg: #fbfcfb;
+  --bs-body-bg-rgb: 251, 252, 251;
+  --bs-body-color: #16201b;
+  --bs-body-color-rgb: 22, 32, 27;
+  --bs-emphasis-color: #0a110d;
+  --bs-secondary-color: rgba(22, 32, 27, .66);
+  --bs-tertiary-color: rgba(22, 32, 27, .45);
+  --bs-secondary-bg: #ebefed;
+  --bs-tertiary-bg: #f3f6f4;
+  --bs-tertiary-bg-rgb: 243, 246, 244;
+  --bs-border-color: #e2e8e4;
+  --bs-border-color-translucent: rgba(16, 40, 28, .09);
+
+  --bs-link-color: var(--brand);
+  --bs-link-color-rgb: var(--brand-rgb);
+  --bs-link-hover-color: var(--brand-hover);
+  --bs-link-hover-color-rgb: 14, 106, 76;
+  --bs-focus-ring-color: rgba(var(--brand-rgb), .28);
+
+  --bs-font-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --bs-font-monospace: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --bs-body-font-size: 1rem;
+  --bs-body-line-height: 1.6;
+
+  --bs-border-radius: .625rem;
+  --bs-border-radius-sm: .5rem;
+  --bs-border-radius-lg: .875rem;
+  --bs-border-radius-xl: 1.25rem;
+  --bs-border-radius-xxl: 1.75rem;
+
+  /* Sombras. */
+  --bs-box-shadow-sm: 0 1px 2px rgba(16, 32, 24, .05), 0 1px 3px rgba(16, 32, 24, .04);
+  --bs-box-shadow: 0 6px 16px -4px rgba(16, 32, 24, .08), 0 2px 6px -2px rgba(16, 32, 24, .05);
+  --bs-box-shadow-lg: 0 20px 40px -12px rgba(16, 32, 24, .16);
+  --shadow-hover: 0 14px 32px -12px rgba(16, 32, 24, .18);
+
+  /* Segundo tono (degradados) y acentos por etapa (tono en app/etapas.py). */
+  --brand-2: #0e9aa7;
+  --brand-2-rgb: 14, 154, 167;
+  --gradient-brand: linear-gradient(120deg, var(--brand) 0%, var(--brand-2) 100%);
+  --tone-0-rgb: 120, 132, 126;   /* neutro (pendiente) */
+  --tone-1-rgb: 37, 99, 235;     /* R1 · azul */
+  --tone-2-rgb: 217, 119, 6;     /* R2 · ámbar */
+  --tone-3-rgb: 124, 58, 237;    /* R3 · violeta */
+  --tone-4-rgb: 18, 128, 92;     /* R4 · esmeralda */
+  --tone-5-rgb: 8, 145, 178;     /* R5 · cian */
+  --tone-6-rgb: 219, 39, 119;    /* R6 · fucsia */
+
+  /* Layout: js/core/layout.js escribe la altura real del header. */
+  --header-h: 4rem;
+  --subnav-h: 0px;
+  --surface-glass: rgba(251, 252, 251, .78);
+  --ease-out: cubic-bezier(.22, .61, .36, 1);
+  --dur: .2s;
+}
+
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+
+  --brand: #3cc497;
+  --brand-rgb: 60, 196, 151;
+  --brand-hover: #5fd3ad;
+  --brand-contrast: #04140e;
+  --brand-2: #3cc8d4;
+  --brand-2-rgb: 60, 200, 212;
+  --tone-0-rgb: 150, 162, 156;
+  --tone-1-rgb: 96, 150, 250;
+  --tone-2-rgb: 245, 170, 60;
+  --tone-3-rgb: 167, 130, 250;
+  --tone-4-rgb: 60, 196, 151;
+  --tone-5-rgb: 56, 200, 230;
+  --tone-6-rgb: 244, 114, 182;
+
+  --bs-success: var(--brand);
+  --bs-success-rgb: var(--brand-rgb);
+  --bs-success-text-emphasis: #8fe6c7;
+  --bs-success-bg-subtle: #0f2a20;
+  --bs-success-border-subtle: #1e4c3b;
+
+  --bs-body-bg: #0b100e;
+  --bs-body-bg-rgb: 11, 16, 14;
+  --bs-body-color: #e3eae6;
+  --bs-body-color-rgb: 227, 234, 230;
+  --bs-emphasis-color: #ffffff;
+  --bs-secondary-color: rgba(227, 234, 230, .68);
+  --bs-tertiary-color: rgba(227, 234, 230, .45);
+  --bs-secondary-bg: #18211d;
+  --bs-tertiary-bg: #121a16;
+  --bs-tertiary-bg-rgb: 18, 26, 22;
+  --bs-border-color: #233029;
+  --bs-border-color-translucent: rgba(200, 240, 220, .09);
+
+  --bs-link-color: var(--brand);
+  --bs-link-color-rgb: var(--brand-rgb);
+  --bs-link-hover-color: var(--brand-hover);
+  --bs-link-hover-color-rgb: 95, 211, 173;
+
+  --bs-box-shadow-sm: 0 1px 2px rgba(0, 0, 0, .4);
+  --bs-box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .55);
+  --bs-box-shadow-lg: 0 24px 48px -16px rgba(0, 0, 0, .7);
+  --shadow-hover: 0 16px 36px -14px rgba(0, 0, 0, .75);
+
+  --surface-glass: rgba(11, 16, 14, .72);
+}

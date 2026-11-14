@@ -1,6 +1,4 @@
-"""Pruebas unitarias de app/quality.py (perfilamiento, dimensiones, inventario).
-
-"""
+"""Pruebas de app/quality.py."""
 import json
 import sys
 from pathlib import Path
@@ -35,7 +33,7 @@ def test_numeric_stats_valores_conocidos():
     assert stats["maximo"] == 100.0
     assert stats["media"] == 26.5
     assert stats["mediana"] == 2.5
-    assert stats["outliers_iqr"] == 1  # solo 100 queda fuera de [q1-1.5*RIC, q3+1.5*RIC]
+    assert stats["outliers_iqr"] == 1  # Solo 100 queda fuera de [q1 − 1.5·RIC, q3 + 1.5·RIC].
 
 
 def test_profile_columns_eva_shape():
@@ -74,7 +72,7 @@ def test_nivel_impacto_reproducible():
 
 
 def test_hallazgo_duplicados_por_unidad_qcl():
-    """Los 'huevos en dos unidades' son 25 combinaciones que afectan 50 filas."""
+    """Los «huevos en dos unidades»: 25 combinaciones, 50 filas."""
     crudo = _load(R1_DIR, "qcl")
     rows = _rows_as_dicts(crudo)
     n_grupos, n_filas = _hallazgo_duplicados_por_unidad(rows, DATASET_SCHEMA["qcl"]["key_fields"])
@@ -83,7 +81,7 @@ def test_hallazgo_duplicados_por_unidad_qcl():
 
 
 def test_tratamiento_no_elimina_filas():
-    """scripts/clean_datasets.py nunca elimina registros, solo corrige o marca."""
+    """El tratamiento nunca elimina registros."""
     for name in DATASETS:
         crudo = _load(R1_DIR, name)
         tratado = _load(R2_DIR, name)
@@ -91,7 +89,7 @@ def test_tratamiento_no_elimina_filas():
 
 
 def test_tratamiento_corrige_falsos_duplicados_qcl():
-    """Bajo la llave corregida (+ Unidad), qcl no debe tener duplicados reales."""
+    """Con la llave corregida (+ Unidad) qcl no tiene duplicados."""
     tratado = _load(R2_DIR, "qcl")
     rows = _rows_as_dicts(tratado)
     n_dup = _count_duplicates(rows, DATASET_SCHEMA["qcl"]["unique_key_fields"])
@@ -99,7 +97,7 @@ def test_tratamiento_corrige_falsos_duplicados_qcl():
 
 
 def test_tratamiento_corrige_codigos_dane():
-    """Los códigos DANE tratados deben quedar con ancho fijo (2 y 5 dígitos)."""
+    """Códigos DANE de ancho fijo (2 y 5 dígitos)."""
     tratado = _load(R2_DIR, "eva_basicos")
     rows = _rows_as_dicts(tratado)
     assert all(len(str(r["CodigoMunicipioDane"])) == 5 for r in rows)

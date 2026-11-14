@@ -1,12 +1,6 @@
-"""Reconstruye los archivos JSON de app/static/data/R1/ a partir de los CSV
-originales en app/data/, sin volver a llamar a la API de FAOSTAT.
+"""R1 · Regenera app/static/data/R1/ desde los CSV de app/data/ sin llamar a la API.
 
-Útil cuando solo se necesita regenerar el explorador o el gráfico del
-sitio (por ejemplo, después de editar manualmente un CSV) sin gastar una
-nueva consulta a la API.
-
-Uso:
-    python scripts/rebuild_chart.py
+Uso: python scripts/rebuild_chart.py
 """
 from __future__ import annotations
 

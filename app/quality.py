@@ -1,30 +1,14 @@
-"""Lógica de calidad de datos: esquemas, perfilamiento y diagnóstico.
+"""Calidad de datos: esquemas, perfilamiento y diagnóstico (Python puro, sin Flask).
 
-Módulo Python puro (sin dependencia de Flask ni de `current_app`), para
-que tanto las rutas como los scripts offline
-(`scripts/clean_datasets.py`) puedan reutilizarlo sin necesitar un
-contexto de aplicación.
-
-Dos familias de esquema conviven aquí:
-- FAOSTAT (fs, qcl, qcl_basicos): formato "largo" -> Área, Producto,
-  Elemento, Año, Unidad, Valor.
-- EVA (eva_basicos): formato "ancho" y municipal -> Departamento,
-  Municipio, Cultivo, Año, con 4 variables numéricas propias
-  (AreaSembrada, AreaCosechada, Produccion, Rendimiento).
-
-`compute_quality()` es la función de diagnóstico usada por R1
-(`/r1`, `/api/quality/<name>`) y se mantiene **congelada**: mismas
-claves de salida, misma lógica, para no introducir regresiones en un
-entregable ya completado. El perfilamiento por columna y las 6
-dimensiones de calidad de R2 viven en funciones nuevas y separadas
-(`profile_columns`, `compute_dimensions`, etc.).
+`compute_quality()` es el contrato congelado de R1: no cambiar sus claves de salida.
+Lo de R2 vive en `profile_columns()`, `compute_dimensions()` y `build_problem_inventory()`.
 """
 from __future__ import annotations
 
 import re
 from collections import Counter, defaultdict
 
-# Nombre de cultivo EVA -> nombre exacto del Producto en FAOSTAT (crosswalk)
+# Cultivo EVA -> Producto FAOSTAT.
 CROP_MAPPING = {
     "Maíz": "Maíz",
     "Arroz": "Arroz",
@@ -34,7 +18,7 @@ CROP_MAPPING = {
     "Frijol": "Frijoles, secos",
 }
 
-# Nombre lógico -> archivo físico dentro de app/static/data/R1
+# Nombre lógico -> archivo en app/static/data/R1.
 DATASETS = {
     "qcl": "qcl.json",
     "qcl_basicos": "qcl_basicos.json",
@@ -42,7 +26,7 @@ DATASETS = {
     "eva_basicos": "eva_basicos.json",
 }
 
-# Metadata de columnas compartida por los 3 datasets FAOSTAT (formato largo).
+# Columnas comunes a los 3 datasets FAOSTAT (formato largo).
 _FAOSTAT_COLUMN_META = {
     "Área": {"tipo": "categorico", "dominio": {"Colombia"}},
     "Elemento": {"tipo": "categorico"},
@@ -73,19 +57,7 @@ _EVA_COLUMN_META = {
     "NombreCientifico": {"tipo": "texto"},
 }
 
-# Configuración de columnas por dataset: qué campo es la "clave" para
-# detectar duplicados, cuáles son numéricas (para completitud/validez),
-# y cuáles son las columnas "categóricas" que la API expone para filtrar
-# y que el explorador de datos usa para poblar sus selects.
-#
-# Además de lo ya usado por R1 (key_fields, numeric_fields, filter_fields,
-# year_field, display_columns), R2 añade:
-# - column_meta: metadata por columna para el perfilamiento (profile_columns).
-# - campos_criticos: columnas que alimentan directamente el análisis
-#   (usadas por completitud/validez/nivel de impacto).
-# - unique_key_fields: llave de unicidad para R2 (puede ampliar key_fields).
-# - consistency_check / accuracy_check: qué regla de negocio usar en
-#   compute_dimensions() para las dimensiones "consistencia" y "exactitud".
+# Esquema por dataset: llaves, campos numéricos, filtros y reglas de calidad de R1/R2.
 DATASET_SCHEMA = {
     "qcl": {
         "key_fields": ("Área", "Producto", "Elemento", "Año"),
@@ -139,14 +111,7 @@ DATASET_SCHEMA = {
     },
 }
 
-# Umbrales de calidad exigidos (punto 2 del enunciado de R2: "requisitos
-# de calidad"), definidos según el uso previsto de cada dataset (análisis
-# de seguridad alimentaria y producción agrícola para actores de política
-# pública: exige datos completos, sin duplicados, dentro de rango y
-# razonablemente vigentes; la exactitud/consistencia entre fuentes es
-# deseable pero se sabe de antemano que hay divergencias metodológicas
-# reales entre EVA y FAOSTAT, por eso el umbral de exactitud es más laxo
-# para los datasets FAOSTAT que dependen del cruce con EVA).
+# Umbrales mínimos de R2 por dimensión. Exactitud es más laxa en FAOSTAT porque depende del cruce con EVA.
 QUALITY_REQUIREMENTS = {
     "eva_basicos": {"completitud": 95, "unicidad": 99, "validez": 90, "consistencia": 80, "exactitud": 95, "actualidad": 60},
     "qcl": {"completitud": 90, "unicidad": 99, "validez": 90, "consistencia": 80, "exactitud": 70, "actualidad": 60},
@@ -155,16 +120,13 @@ QUALITY_REQUIREMENTS = {
 }
 
 
-
 def _rows_as_dicts(dataset: dict) -> list[dict]:
     cols = dataset["columns"]
     return [dict(zip(cols, row)) for row in dataset["rows"]]
 
 
 def _to_float(value):
-    # Atajo para el caso común (el JSON ya trae float/int nativos, no texto
-    # con coma decimal): evita el str()+replace() de la ruta lenta, lo que
-    # importa mucho en columnas de cientos de miles de celdas.
+    # Atajo: el JSON ya trae números nativos.
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return float(value)
     try:
@@ -174,17 +136,9 @@ def _to_float(value):
 
 
 def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
-    """Diagnóstico de calidad calculado en vivo (no precalculado a mano).
+    """Diagnóstico de R1: completitud, unicidad y validez.
 
-    Cubre completitud, unicidad y validez para CUALQUIER dataset
-    registrado en DATASET_SCHEMA (no asume un único esquema de columnas).
-
-    NOTA: esta función es la que usa el entregable R1 (ya completado).
-    Se mantiene sin cambios de comportamiento; las 6 dimensiones de R2
-    viven en `compute_dimensions()`.
-
-    Retorna `missing_valor` (español) junto a claves en inglés —
-    inconsistencia heredada, congelada para no romper el contrato de R1.
+    Contrato congelado: no renombrar ni quitar claves (incluida `missing_valor`).
     """
     schema = DATASET_SCHEMA[schema_name]
     key_fields = schema["key_fields"]
@@ -242,9 +196,7 @@ def compute_quality(dataset: dict, schema_name: str = "qcl") -> dict:
     )
 
 
-# --------------------------------------------------------------------
-# R2 · Perfilamiento por columna
-# --------------------------------------------------------------------
+# --- R2 · Perfilamiento por columna ---
 
 def _percentile(sorted_vals: list[float], p: float) -> float:
     n = len(sorted_vals)
@@ -256,15 +208,7 @@ def _percentile(sorted_vals: list[float], p: float) -> float:
 
 
 def _numeric_stats(sorted_vals: list[float]) -> dict:
-    """Estadísticos descriptivos + outliers por rango intercuartílico (1.5×IQR).
-
-    Media/mediana/desviación se calculan con aritmética de punto flotante
-    simple, NO con el módulo `statistics` (su precisión "exacta" vía
-    `Fraction` lo vuelve 10-50x más lento sobre listas de decenas de miles
-    de valores — perceptible en el tiempo de carga de /r2 con EVA, 48.932
-    filas). El resultado es el mismo salvo diferencias de punto flotante
-    muy por debajo del redondeo a 3 decimales que se aplica al final.
-    """
+    """Estadísticos y outliers por IQR (1.5×RIC). Evita `statistics`: es 10–50× más lento en EVA."""
     n = len(sorted_vals)
     q1, q3 = _percentile(sorted_vals, 0.25), _percentile(sorted_vals, 0.75)
     iqr = q3 - q1
@@ -290,13 +234,7 @@ def _numeric_stats(sorted_vals: list[float]) -> dict:
 
 
 def profile_columns(rows: list[dict], columns: list[str], column_meta: dict) -> dict[str, dict]:
-    """Perfilamiento por columna en una sola pasada (Python puro).
-
-    Para ~48.932 filas x 18 columnas (el dataset más grande del proyecto)
-    esto son ~880k celdas: trivial para CPython en el contexto de una
-    petición Flask, por lo que no hace falta pandas ni precálculo offline
-    para mantener la filosofía "en vivo" ya usada por R1.
-    """
+    """Perfil de cada columna en una sola pasada."""
     n = len(rows)
     acc = {c: {"nulos": 0, "counter": Counter(), "numeric": []} for c in columns}
 
@@ -342,9 +280,7 @@ def profile_columns(rows: list[dict], columns: list[str], column_meta: dict) -> 
     return profile
 
 
-# --------------------------------------------------------------------
-# R2 · Las 6 dimensiones de calidad
-# --------------------------------------------------------------------
+# --- R2 · Las 6 dimensiones de calidad ---
 
 def _year_of(value, year_field_is_range: bool = False) -> int | None:
     raw = str(value)[:4]
@@ -352,9 +288,7 @@ def _year_of(value, year_field_is_range: bool = False) -> int | None:
 
 
 def _count_duplicates(rows: list[dict], key_fields: tuple[str, ...]) -> int:
-    """Cuenta filas duplicadas bajo una llave dada. Reutilizable para comparar
-    la unicidad medida con la llave original de R1 (`key_fields`) contra la
-    llave corregida de R2 (`unique_key_fields`)."""
+    """Filas duplicadas bajo una llave."""
     seen = set()
     duplicados = 0
     for r in rows:
@@ -367,16 +301,9 @@ def _count_duplicates(rows: list[dict], key_fields: tuple[str, ...]) -> int:
 
 
 def _consistencia_unidad_por_elemento(rows: list[dict]) -> tuple[int, int]:
-    """Para cada par (Producto, Elemento), toma la Unidad modal y cuenta
-    filas que no coinciden.
+    """Filas cuya Unidad difiere de la modal de su (Producto, Elemento).
 
-    Se agrupa por (Producto, Elemento) y NO solo por Elemento: un mismo
-    Elemento (p. ej. "Producción") cubre en FAOSTAT tanto cultivos
-    (toneladas) como ganadería (cabezas, kg/ha, etc.), así que agrupar
-    solo por Elemento generaba cientos de falsos positivos por
-    heterogeneidad legítima de producto. Agrupando por (Producto,
-    Elemento) el chequeo aísla exactamente el caso real: huevos con
-    Producción reportada en 'toneladas' Y en '1000 No.'.
+    Se agrupa por ambos porque un mismo Elemento cubre cultivos y ganadería con unidades distintas.
     """
     por_grupo = defaultdict(Counter)
     for r in rows:
@@ -399,7 +326,7 @@ def _consistencia_area_vs_sembrada(rows: list[dict]) -> tuple[int, int]:
 
 
 def _exactitud_rendimiento_calculado(rows: list[dict], tolerancia: float = 0.01) -> tuple[int, int]:
-    """EVA: Producción/AreaCosechada vs. Rendimiento reportado (tolerancia relativa 1%)."""
+    """EVA: Producción/Área cosechada frente al Rendimiento reportado (tolerancia 1 %)."""
     n_ok, n_verificables = 0, 0
     for r in rows:
         area = _to_float(r.get("AreaCosechada"))
@@ -416,7 +343,7 @@ def _exactitud_rendimiento_calculado(rows: list[dict], tolerancia: float = 0.01)
 
 
 def _exactitud_cruce_eva_faostat(integracion: dict | None) -> float | None:
-    """qcl/qcl_basicos: 100 - promedio(|Diferencia_pct|) de integracion_eva_faostat.json."""
+    """qcl/qcl_basicos: 100 − promedio de |Diferencia_pct| frente a EVA."""
     if not integracion or not integracion.get("rows"):
         return None
     cols = integracion["columns"]
@@ -428,7 +355,7 @@ def _exactitud_cruce_eva_faostat(integracion: dict | None) -> float | None:
 
 
 def _exactitud_ci_bounds(rows: list[dict]) -> tuple[int, int]:
-    """fs: donde existan Valor + límites de intervalo de confianza, Lower <= Valor <= Upper."""
+    """fs: Lower <= Valor <= Upper donde haya intervalo de confianza."""
     lower_key = "Confidence interval: Lower bound"
     upper_key = "Confidence interval: Upper bound"
     por_grupo = defaultdict(dict)
@@ -450,12 +377,7 @@ def _exactitud_ci_bounds(rows: list[dict]) -> tuple[int, int]:
 
 def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | None = None,
                         hoy_anio: int = 2026) -> dict:
-    """Calcula las 6 dimensiones de calidad exigidas por el entregable R2.
-
-    Cada valor es 0-100, o `None` cuando la dimensión "no aplica" (p. ej.
-    exactitud en un dataset sin mecanismo de contraste disponible) — nunca
-    se inventa un número para rellenar una celda.
-    """
+    """Las 6 dimensiones de R2, de 0 a 100, o None cuando no aplica (nunca se inventa un valor)."""
     schema = DATASET_SCHEMA[schema_name]
     rows = _rows_as_dicts(dataset)
     total = len(rows)
@@ -466,15 +388,12 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
     campos_criticos = schema["campos_criticos"]
     column_meta = schema["column_meta"]
 
-    # --- Completitud: nulos en campos críticos ---
     nulos_criticos = sum(1 for r in rows for f in campos_criticos if r.get(f) in (None, "", "NaN"))
     completitud = round(100 * (1 - nulos_criticos / (total * len(campos_criticos))), 2)
 
-    # --- Unicidad: duplicados bajo unique_key_fields ---
     duplicados = _count_duplicates(rows, schema["unique_key_fields"])
     unicidad = round(100 * (total - duplicados) / total, 2)
 
-    # --- Validez: violaciones de rango/dominio/patrón en campos críticos ---
     filas_invalidas = 0
     for r in rows:
         invalida = False
@@ -499,7 +418,6 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
             filas_invalidas += 1
     validez = round(100 * (1 - filas_invalidas / total), 2)
 
-    # --- Consistencia (regla específica por dataset) ---
     check = schema.get("consistency_check")
     if check == "area_vs_sembrada":
         n_incons, n_verif = _consistencia_area_vs_sembrada(rows)
@@ -509,7 +427,6 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
         n_incons, n_verif = 0, 0
     consistencia = round(100 * (1 - n_incons / n_verif), 2) if n_verif else None
 
-    # --- Exactitud (regla específica por dataset) ---
     accuracy_check = schema.get("accuracy_check")
     if accuracy_check == "rendimiento_calculado":
         n_ok, n_verif_ex = _exactitud_rendimiento_calculado(rows)
@@ -522,7 +439,6 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
     else:
         exactitud = None
 
-    # --- Actualidad: antigüedad del último año disponible respecto a hoy ---
     year_field = schema["year_field"]
     anios = [_year_of(r.get(year_field)) for r in rows]
     anios = [a for a in anios if a is not None]
@@ -543,15 +459,10 @@ def compute_dimensions(dataset: dict, schema_name: str, *, integracion: dict | N
     )
 
 
-# --------------------------------------------------------------------
-# R2 · Inventario de problemas
-# --------------------------------------------------------------------
+# --- R2 · Inventario de problemas ---
 
 def nivel_impacto(pct_afectados: float, campo_critico: bool) -> str:
-    """Regla determinista y documentada para el "nivel de impacto" del
-    inventario de problemas: combina severidad relativa (% de registros
-    afectados) con si el campo alimenta directamente el análisis.
-    """
+    """Nivel de impacto: % de registros afectados y si el campo alimenta el análisis."""
     if pct_afectados <= 0:
         return "Ninguno"
     if campo_critico and pct_afectados >= 10:
@@ -564,16 +475,9 @@ def nivel_impacto(pct_afectados: float, campo_critico: bool) -> str:
 
 
 def _iqr_bounds_por_grupo(rows: list[dict], group_fields: tuple[str, ...], value_field: str) -> dict[tuple, tuple[float, float]]:
-    """Límites IQR (± 1.5×RIC) de `value_field`, calculados POR GRUPO
-    (`group_fields`) en vez de globalmente.
+    """Límites IQR de `value_field` por grupo.
 
-    En los datasets FAOSTAT de formato largo, 'Valor' mezcla en una sola
-    columna magnitudes no comparables (producción en toneladas, existencias
-    en cabezas, rendimiento en kg/ha, indicadores en %, según el Producto y
-    el Elemento de cada fila); calcular un IQR global sobre esa columna
-    produciría cientos de "atípicos" que en realidad solo reflejan esa
-    heterogeneidad legítima. Agrupando por (Producto, Elemento) — cada
-    grupo SÍ comparte unidad — el chequeo vuelve a ser significativo.
+    En FAOSTAT 'Valor' mezcla unidades (t, cabezas, kg/ha, %); por grupo sí son comparables.
     """
     valores_por_grupo: dict[tuple, list[float]] = defaultdict(list)
     for r in rows:
@@ -583,7 +487,7 @@ def _iqr_bounds_por_grupo(rows: list[dict], group_fields: tuple[str, ...], value
 
     bounds = {}
     for k, vals in valores_por_grupo.items():
-        if len(vals) < 4:  # el rango intercuartílico no es significativo con muestras muy pequeñas
+        if len(vals) < 4:  # Con menos de 4 valores el RIC no es significativo.
             continue
         ordenados = sorted(vals)
         q1, q3 = _percentile(ordenados, 0.25), _percentile(ordenados, 0.75)
@@ -593,9 +497,7 @@ def _iqr_bounds_por_grupo(rows: list[dict], group_fields: tuple[str, ...], value
 
 
 def _outliers_grupo_iqr(rows: list[dict], group_fields: tuple[str, ...], value_field: str) -> tuple[int, int]:
-    """Cuenta outliers de `value_field` usando límites IQR por grupo (ver
-    `_iqr_bounds_por_grupo`). Devuelve (n_outliers, n_evaluados) — los
-    grupos con menos de 4 valores no se evalúan (RIC no significativo)."""
+    """Outliers por grupo: devuelve (n_outliers, n_evaluados)."""
     bounds = _iqr_bounds_por_grupo(rows, group_fields, value_field)
     n_outliers, n_evaluados = 0, 0
     for r in rows:
@@ -613,12 +515,7 @@ def _outliers_grupo_iqr(rows: list[dict], group_fields: tuple[str, ...], value_f
 
 
 def _hallazgo_duplicados_por_unidad(rows: list[dict], key_fields: tuple[str, ...]) -> tuple[int, int]:
-    """Agrupa por `key_fields` SIN 'Unidad' y cuenta cuántos grupos mezclan más
-    de una Unidad distinta (p. ej. huevos en toneladas Y en 1000 unidades) —
-    esas filas parecían "duplicadas" bajo la llave original de R1.
-
-    Devuelve (n_grupos_ambiguos, n_filas_afectadas).
-    """
+    """Grupos que mezclan Unidades bajo la llave sin 'Unidad': (n_grupos, n_filas)."""
     grupos: dict[tuple, set] = defaultdict(set)
     miembros: dict[tuple, list] = defaultdict(list)
     for r in rows:
@@ -637,20 +534,9 @@ def _hallazgo_duplicados_por_unidad(rows: list[dict], key_fields: tuple[str, ...
 
 def build_problem_inventory(all_rows: dict[str, list[dict]], profiles: dict[str, dict] | None = None,
                               integracion: dict | None = None) -> list[dict]:
-    """Inventario de problemas (punto 5 del enunciado de R2).
+    """Inventario de problemas de R2: hallazgos automáticos del perfil + 3 de dominio.
 
-    `all_rows` = {nombre_dataset: [fila_dict, ...]} ya cargados (Python
-    puro, sin depender de Flask). Genera entradas automáticas a partir del
-    perfilamiento por columna (nulos, fuera de rango/dominio, valores no
-    conformes, outliers) más 3 hallazgos narrativos que requieren
-    conocimiento de dominio (área>sembrada en EVA, doble unidad en qcl,
-    intervalos de confianza en fs).
-
-    `profiles`, si se pasa, evita recalcular `profile_columns` para
-    datasets que el llamador ya perfiló (p. ej. la ruta `/r2`, que
-    necesita el mismo perfil para su propia sección de perfilamiento) —
-    importa para EVA (48.932 filas): recalcularlo aquí duplicaría el
-    costo más caro de la página.
+    `profiles` evita recalcular perfiles que el llamador ya tiene (EVA es lo más costoso de /r2).
     """
     inventario: list[dict] = []
     _id_counter: dict[str, int] = defaultdict(int)
@@ -674,10 +560,7 @@ def build_problem_inventory(all_rows: dict[str, list[dict]], profiles: dict[str,
             causa_probable=causa_probable,
         ))
 
-    # Datasets FAOSTAT de formato largo: la columna 'Valor' mezcla productos
-    # y elementos con unidades distintas, así que su outlier IQR *global* no
-    # es significativo (ver _outliers_grupo_iqr) y se excluye del bucle
-    # automático; se reemplaza por un hallazgo narrativo agrupado más abajo.
+    # El IQR global de 'Valor' en FAOSTAT no es significativo: se trata aparte, por grupo.
     faostat_datasets = {n for n, s in DATASET_SCHEMA.items() if s.get("consistency_check") == "unidad_por_elemento"}
 
     for name, rows in all_rows.items():

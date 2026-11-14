@@ -1,9 +1,7 @@
-"""R6 · Base común de los generadores de flujos .ows (generar_flujos_orange.py y generar_flujo_texto.py).
+"""R6 · Base común de los generadores de flujos .ows (requiere el Python de Orange).
 
-Registra los widgets de Orange, crea el entorno de pruebas de widgets y ofrece la clase BaseFlow con lo que
-comparten ambos generadores: describir un widget, empaquetar sus ajustes, enlazar nodos validando los canales
-y guardar el .ows. Cada generador define su propio `add`, porque difieren en cómo validan los ajustes.
-Solo se importa desde scripts/R6 (con el Python de Orange).
+Registra los widgets y ofrece BaseFlow: describir widgets, empaquetar ajustes,
+enlazar nodos validando canales y guardar el .ows.
 """
 import importlib
 import io
@@ -24,7 +22,7 @@ from orangewidget.workflow.discovery import WidgetDiscovery as _WD  # noqa: E402
 
 W = "Orange.widgets."
 
-# Registra las categorías de widgets de Orange para poder describirlos.
+# Registra las categorías de widgets de Orange.
 _registro = WidgetRegistry()
 _discovery = WidgetDiscovery(_registro)
 _entry_point = next(iter(Config().widgets_entry_points()))
@@ -47,23 +45,19 @@ helper.setUp()
 
 
 def ruta(rel):
-    """Ruta relativa al .ows (prefix 'basedir'): el flujo abre en cualquier equipo que clone el repo.
-
-    abspath es solo un marcador neutro, sin rutas personales; Orange resuelve con prefix + relpath."""
+    """Ruta relativa al .ows: el flujo abre en cualquier equipo que clone el repo."""
     return RecentPath("orange/data/" + rel.rsplit("/", 1)[-1], "basedir", rel)
 
 
 def stored_settings(wcls, settings):
-    """Copia de los ajustes pedidos con la versión del widget, para evitar migraciones de ajustes antiguos."""
+    """Ajustes con la versión del widget, para evitar migraciones."""
     stored = dict(settings)
     stored["__version__"] = getattr(wcls, "settings_version", 1)
     return stored
 
 
 def clean_file_paths(props):
-    """Orange añade datasets de ejemplo con rutas absolutas de ESTE equipo: se descartan.
-
-    Queda solo la ruta relativa al .ows (prefix 'basedir')."""
+    """Descarta los datasets de ejemplo que Orange guarda con rutas absolutas de este equipo."""
     props["recent_paths"] = [p for p in props.get("recent_paths", []) if getattr(p, "prefix", None) == "basedir"]
     props.pop("active_path", None)
 
@@ -77,14 +71,14 @@ class BaseFlow:
 
     @staticmethod
     def describe(qname):
-        """(descripción del widget, clase del widget, nombre de la clase) para 'paquete.modulo.Clase'."""
+        """(descripción, clase y nombre) del widget 'paquete.modulo.Clase'."""
         mod, _, cname = qname.rpartition(".")
         modulo = importlib.import_module(mod)
         return _DISC.widget_description(modulo, widget_name=cname), getattr(modulo, cname), cname
 
     @staticmethod
     def pack(w):
-        """Ajustes del widget listos para guardar (sin la geometría de la ventana)."""
+        """Ajustes listos para guardar, sin la geometría de la ventana."""
         props = w.settingsHandler.pack_data(w)
         props.pop("savedWidgetGeometry", None)
         return props

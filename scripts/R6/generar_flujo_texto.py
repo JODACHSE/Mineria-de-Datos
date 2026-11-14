@@ -1,10 +1,7 @@
-"""R6 · Genera el flujo 03 (texto de YouTube) con la API de Orange y el complemento Text.
+"""R6 · Genera orange/flujos/03_comentarios_youtube.ows (Orange 3.40 + Orange3-Text).
 
-Uso (con el Python de Orange 3.40 + Orange3-Text, desde la raíz del repo):
-    python scripts/R6/generar_flujo_texto.py orange/flujos orange/data/youtube
-Crea orange/flujos/03_comentarios_youtube.ows. Crea cada widget real, comprueba que los ajustes pedidos quedaron
-aplicados, ejecuta Preprocess -> Bag of Words y fija en Select Rows la condición "video = Vxx" con datos reales.
-Las rutas del flujo (corpus.csv, stopwords_es.txt) son relativas al .ows: abre en cualquier equipo que clone el repo.
+Uso: python scripts/R6/generar_flujo_texto.py orange/flujos orange/data/youtube
+Comprueba cada ajuste con el widget real; las rutas del flujo son relativas al .ows.
 """
 import copy
 import sys
@@ -22,10 +19,10 @@ class Flow(BaseFlow):
 
     def add(self, key, qname, title, pos, feed=None, **settings):
         desc, wcls, cname = self.describe(qname)
-        stored = stored_settings(wcls, copy.deepcopy(settings))   # Orange modifica estos objetos al resolver rutas
-        env = {"basedir": str(DATOS.parent.parent / "flujos")} if cname == "OWPreprocess" else {}   # solo Preprocess necesita resolver su lista de palabras vacías
+        stored = stored_settings(wcls, copy.deepcopy(settings))  # Orange modifica estos objetos al resolver rutas.
+        env = {"basedir": str(DATOS.parent.parent / "flujos")} if cname == "OWPreprocess" else {}
         w = helper.create_widget(wcls, stored_settings=stored, env=env)
-        for k, v in settings.items():           # compara contra la copia: la migración de Orange puede mutar el dict
+        for k, v in settings.items():  # Compara contra la copia: la migración de Orange puede mutar el dict.
             if not hasattr(w, k):
                 raise AttributeError(f"{cname} no tiene el ajuste '{k}'")
             if k in ("recent_paths", "storedsettings"):
@@ -40,7 +37,7 @@ class Flow(BaseFlow):
             feed(w)
         props = self.pack(w)
         if cname == "OWPreprocess":
-            # Se guarda lo pedido (rutas relativas al .ows), no lo que Orange resolvió con el entorno de este equipo
+            # Se guardan las rutas relativas pedidas, no las que Orange resolvió en este equipo.
             props["storedsettings"] = settings["storedsettings"]
         if cname == "OWFile":
             clean_file_paths(props)
@@ -49,20 +46,20 @@ class Flow(BaseFlow):
         return w
 
 T = "orangecontrib.text.widgets."
-DATOS = Path(sys.argv[2]).resolve()                    # carpeta orange/data/youtube con corpus.csv
+DATOS = Path(sys.argv[2]).resolve()
 RUTA_SW = ruta("../data/youtube/stopwords_es.txt")
 K_TEMAS = 4
 PP = {"name": "", "preprocessors": [
-    ("preprocess.transform", {"methods": [0, 3]}),                         # minúsculas + quitar URL
-    ("preprocess.tokenize", {"method": 3, "pattern": r"\w+"}),             # palabras
-    ("preprocess.filter", {                                                # ANTES de normalizar: si no, las raíces no coinciden con la lista
+    ("preprocess.transform", {"methods": [0, 3]}),
+    ("preprocess.tokenize", {"method": 3, "pattern": r"\w+"}),
+    ("preprocess.filter", {  # Antes de normalizar: si no, las raíces no coinciden con la lista.
         "methods": [0, 2, 3, 4], "language": None, "sw_path": RUTA_SW, "sw_list": [RUTA_SW],
         "lx_path": None, "lx_list": [], "incl_num": False, "pattern": r"^.{1,2}$",
-        "freq_type": 1, "abs_start": 2, "abs_end": 1000000}),              # palabras en >= 2 comentarios
-    ("preprocess.normalize", {"method": 1, "snowball_language": "es", "lemmagen_language": "es"}),   # Snowball español
+        "freq_type": 1, "abs_start": 2, "abs_end": 1000000}),
+    ("preprocess.normalize", {"method": 1, "snowball_language": "es", "lemmagen_language": "es"}),
 ]}
 
-# Para fijar la condición "video = Vxx" en Select Rows hay que abrir su contexto con los datos reales
+# Select Rows necesita los datos reales para fijar la condición «video = Vxx».
 from Orange.data import Table  # noqa
 from orangecontrib.text.widgets.owcorpus import OWCorpus  # noqa
 
@@ -99,7 +96,7 @@ def fijar(idx):
     def _f(w):
         helper.send_signal(w.Inputs.data, bow, widget=w)
         w.remove_all_rows()
-        w.add_row(bow.domain["video"], 0, (idx + 1,))               # discreto: operador 0 = "is", valor = (índice + 1,)
+        w.add_row(bow.domain["video"], 0, (idx + 1,))  # Variable discreta: operador 0 = «is», valor = (índice + 1,).
         w.conditions_changed()
         assert w.conditions and getattr(w.conditions[0][0], "name", w.conditions[0][0]) == "video", w.conditions
     return _f

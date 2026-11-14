@@ -1,18 +1,16 @@
-"""Las 8 etapas/entregables del curso.
+"""Las 7 etapas del curso (RN = Etapa N). Fuente única para menú, portada, footer y /entregables.
 
-Cada 'Etapa N' del enunciado del docente corresponde a un entregable
-'RN' del proyecto. Hoy solo Etapa 1 / R1 está definida; las demás se
-muestran como 'Próximamente' tanto en el dropdown del navbar como en
-la página /entregables. Vive en su propio módulo para que app/__init__.py
-pueda inyectarla como global de plantilla y esté disponible en TODAS las
-páginas, no solo en la de entregables.
+Una etapa con estado "completado" se publica; las demás aparecen como «Próximamente».
 """
 
 from app.services.etapa5 import VISTAS as R5_VISTAS
 
+# icono: Bootstrap Icons · tono: color de acento 1–6 (--tone-N en tokens.css; 0 = neutro).
 ETAPAS = [
     {
         "codigo": "R1",
+        "icono": "bi-clipboard-data",
+        "tono": 1,
         "titulo": "Del problema a los datos",
         "resumen": "Problema, preguntas analíticas, fuentes, dataset inicial, diccionario y diagnóstico de calidad.",
         "estado": "completado",
@@ -20,6 +18,8 @@ ETAPAS = [
     },
     {
         "codigo": "R2",
+        "icono": "bi-shield-check",
+        "tono": 2,
         "titulo": "Diagnóstico y calidad de los datos",
         "resumen": "Perfilamiento, 6 dimensiones de calidad, inventario de problemas y tratamiento real "
                    "aplicado a los 4 datasets (EVA + FAOSTAT).",
@@ -28,6 +28,8 @@ ETAPAS = [
     },
     {
         "codigo": "R3",
+        "icono": "bi-arrow-repeat",
+        "tono": 3,
         "titulo": "Tratamiento ETL con SSIS",
         "resumen": "Paquetes SSIS EVA y FAOSTAT con staging, reglas de limpieza, rama de revisión, "
                    "tres iteraciones, indicadores y verificación de re-ejecución sin duplicados.",
@@ -36,6 +38,8 @@ ETAPAS = [
     },
     {
         "codigo": "R4",
+        "icono": "bi-bar-chart-line",
+        "tono": 4,
         "titulo": "Conocimiento evidente",
         "resumen": "Cuatro preguntas de análisis exploratorio (poblacional, territorial, temporal "
                    "y multivariada) sobre los datos de producción agrícola EVA, con indicadores, "
@@ -52,6 +56,8 @@ ETAPAS = [
     },
     {
         "codigo": "R5",
+        "icono": "bi-box",
+        "tono": 5,
         "titulo": "Análisis multidimensional",
         "resumen": "Modelo estrella (SQLite) con 4 dimensiones, 8 medidas y 4 jerarquías sobre el EVA "
                    "tratado; cuatro vistas interactivas con drill-down, roll-up, slice, dice y pivot, "
@@ -64,6 +70,8 @@ ETAPAS = [
     },
     {
         "codigo": "R6",
+        "icono": "bi-eye",
+        "tono": 6,
         "titulo": "Conocimiento oculto",
         "resumen": "Tres modelos supervisados (regresión logística, árbol y Random Forest) para anticipar "
                    "rendimientos altos, clustering k-Means de municipios y análisis de texto de comentarios "
@@ -74,12 +82,14 @@ ETAPAS = [
 ] + [
     {
         "codigo": f"R{n}",
+        "icono": "bi-hourglass-split",
+        "tono": 0,
         "titulo": "Aún no definido",
         "resumen": "Este entregable todavía no se ha definido. Se documentará en una próxima etapa del curso.",
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(7, 9)
+    for n in range(7, 8)
 ]
 
 R4_DIMENSIONES = [
@@ -102,7 +112,7 @@ R4_TOC_ITEMS = [
 
 
 def r4_toc_nav(active):
-    """Navegación lateral compartida entre las 4 páginas de dimensiones de R4."""
+    """Navegación entre las 4 dimensiones de R4."""
     from flask import url_for
 
     return [(url_for(endpoint), label, key == active, True) for endpoint, key, label in R4_DIMENSIONES]

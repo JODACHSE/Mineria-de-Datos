@@ -1,16 +1,9 @@
-"""R6 · Extrae comentarios de YouTube con la API YouTube Data v3.
+"""R6 · Extrae comentarios con la YouTube Data API v3 (YOUTUBE_API_KEY en .env).
 
-Uso (desde la raíz del repo):  python scripts/R6/extraer_comentarios_youtube.py
-Requiere: requests, python-dotenv y la clave en .env  ->  YOUTUBE_API_KEY=...
-
-Criterios de búsqueda y límites: scripts/R6/youtube_config.json
-Salida en orange/data/youtube/:
-  videos.csv              video, enlace, canal, fecha de publicación, vistas, comentarios, consulta de origen
-  comentarios_crudos.csv  texto, me gusta, respuestas y fecha (SIN autor ni identificadores de la persona)
-  log_extraccion.json     fecha, parámetros, cuota estimada, restricciones encontradas
-
-Privacidad: no se guarda nombre, canal, foto ni id del autor. La clave nunca se imprime ni se escribe:
-los mensajes de error se limpian antes de mostrarse.
+Uso: python scripts/R6/extraer_comentarios_youtube.py
+Criterios: scripts/R6/youtube_config.json
+Salida (orange/data/youtube/): videos.csv, comentarios_crudos.csv y log_extraccion.json
+No guarda autor, canal ni identificadores, y nunca imprime la clave.
 """
 from __future__ import annotations
 
@@ -30,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CONFIG = Path(__file__).with_name("youtube_config.json")
 OUT = ROOT / "orange" / "data" / "youtube"
 API = "https://www.googleapis.com/youtube/v3"
-COSTO = {"search": 100, "videos": 1, "commentThreads": 1}   # unidades de cuota por llamada
+COSTO = {"search": 100, "videos": 1, "commentThreads": 1}  # Unidades de cuota por llamada.
 CUOTA_DIARIA = 10_000
 MOTIVOS_CUOTA = {"quotaExceeded", "dailyLimitExceeded", "rateLimitExceeded"}
 
@@ -94,7 +87,7 @@ def extraer_id(valor: str) -> str | None:
 
 
 def buscar_videos(cli: Cliente, cfg: dict, log: dict) -> dict[str, str]:
-    """video_id -> consulta de origen ('manual' para los dados a mano)."""
+    """video_id -> consulta de origen ('manual' si se dio a mano)."""
     candidatos: dict[str, str] = {}
     for v in cfg.get("videos_manuales", []):
         vid = extraer_id(v)
@@ -137,7 +130,7 @@ def metadatos(cli: Cliente, ids: list[str], log: dict) -> dict[str, dict]:
                 "titulo": sn.get("title", ""), "canal": sn.get("channelTitle", ""),
                 "fecha_publicacion": sn.get("publishedAt", "")[:10],
                 "vistas": int(st.get("viewCount", 0)),
-                # sin 'commentCount' = comentarios desactivados
+                # Sin 'commentCount' = comentarios desactivados.
                 "comentarios_api": int(st["commentCount"]) if "commentCount" in st else None,
             }
         for vid in set(lote) - set(datos):

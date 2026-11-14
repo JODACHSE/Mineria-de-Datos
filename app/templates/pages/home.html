@@ -3,9 +3,13 @@
 
 {% block title %}{{ proyecto_tema | capitalize }} · {{ proyecto_cobertura }} — Inicio{% endblock %}
 
+{# Lo publicado sale de app/etapas.py: la portada se actualiza sola. #}
+{% set publicados = etapas | selectattr("estado", "equalto", "completado") | list %}
+{% set ultimo = publicados | last %}
+
 {% block content %}
 
-{# ===== HERO ===== #}
+{# --- Hero --- #}
 <section class="hero py-5 border-bottom">
   <div class="container py-lg-4">
     <div class="d-flex flex-wrap justify-content-between gap-2 small text-success fw-semibold mb-3 reveal">
@@ -29,9 +33,8 @@
           alimentos.
         </p>
         <div class="d-flex flex-wrap gap-2 mt-4 reveal">
-          <a href="{{ url_for('pages.r1') }}" class="btn btn-success btn-lg">Ver reporte R1 <i class="bi bi-arrow-right ms-1"></i></a>
-          <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success btn-lg">Ver reporte R2</a>
-          <a href="{{ url_for('pages.r3') }}" class="btn btn-outline-success btn-lg">Ver reporte R3</a>
+          <a href="{{ url_for('pages.entregables') }}" class="btn btn-success btn-lg"><i class="bi bi-map me-2" aria-hidden="true"></i>Recorrer los {{ publicados | length }} entregables <i class="bi bi-arrow-right ms-1"></i></a>
+          <a href="{{ url_for(ultimo.url_endpoint) }}" class="btn btn-outline-success btn-lg"><span class="font-monospace small me-1">{{ ultimo.codigo }}</span> {{ ultimo.titulo }}</a>
           <a href="{{ url_for('pages.r1') }}#vista-datos" class="btn btn-link btn-lg link-body-emphasis">Explorar los datos</a>
         </div>
         <p class="small text-body-secondary font-monospace mt-4 mb-0 reveal">
@@ -51,7 +54,7 @@
   </div>
 </section>
 
-{# ===== EL PROBLEMA ===== #}
+{# --- El problema --- #}
 <section class="container py-5">
   <div class="row g-4 align-items-end mb-4">
     <div class="col-lg-7">
@@ -73,7 +76,7 @@
   </div>
 </section>
 
-{# ===== PREGUNTAS ===== #}
+{# --- Preguntas --- #}
 <section class="bg-body-tertiary py-5">
   <div class="container">
     {{ section_head("Preguntas del entregable R1", "Una pregunta principal,<br>cuatro rutas de entrada") }}
@@ -113,7 +116,7 @@
   </div>
 </section>
 
-{# ===== FUENTES ===== #}
+{# --- Fuentes --- #}
 <section class="container py-5">
   {{ section_head("Fuentes de datos", "Dos escalas, una sola<br>lectura del territorio") }}
   <div class="row row-cols-1 row-cols-md-2 g-3">
@@ -138,24 +141,27 @@
   </div>
 </section>
 
-{# ===== CTA ===== #}
+{# --- Lo que hay hoy --- #}
 <section class="container pb-5">
-  <div class="card bg-success-subtle border-success-subtle text-center reveal">
-    <div class="card-body p-4 p-lg-5">
-      <p class="text-success fw-semibold small mb-1">Productos R1, R2 y R3</p>
-      <h2 class="fw-bold">El equipo entiende el problema<br>y tiene bases justificables</h2>
-      <p class="text-body-secondary mx-auto mt-3 mb-4" style="max-width:56ch;">
-        R1 no busca todavía el mejor modelo, sino una base sólida —problema, preguntas,
-        fuentes, dataset, diccionario y diagnóstico de calidad— para iniciar el
-        proceso de minería de conocimiento. R2 perfila, mide y trata esos datos, y R3
-        automatiza ese tratamiento con paquetes SSIS verificables y repetibles.
-      </p>
-      <div class="d-flex flex-wrap justify-content-center gap-2">
-        <a href="{{ url_for('pages.r1') }}" class="btn btn-success">Abrir el reporte R1</a>
-        <a href="{{ url_for('pages.r2') }}" class="btn btn-outline-success">Abrir el reporte R2</a>
-        <a href="{{ url_for('pages.r3') }}" class="btn btn-outline-success">Abrir el reporte R3</a>
-      </div>
+  {{ section_head("Lo que hay hoy", publicados | length ~ " entregables publicados,<br>del problema al conocimiento oculto",
+                  "Cada etapa construye sobre la anterior: primero entender y limpiar los datos, después describirlos, modelarlos en cubos OLAP y, por último, buscar patrones con aprendizaje automático.") }}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+    {% for e in publicados %}
+    <div class="col">
+      <a class="card h-100 card-hover text-decoration-none tone-{{ e.tono }} reveal" href="{{ url_for(e.url_endpoint) }}">
+        <div class="card-body">
+          <div class="stage-item mb-2">
+            <span class="stage-icon"><i class="bi {{ e.icono }}" aria-hidden="true"></i></span>
+            <span class="stage-text"><span class="stage-code">{{ e.codigo }}</span><span class="stage-title fw-semibold">{{ e.titulo }}</span></span>
+          </div>
+          <p class="small text-body-secondary mb-0">{{ e.resumen }}</p>
+        </div>
+      </a>
     </div>
+    {% endfor %}
+  </div>
+  <div class="text-center mt-4 reveal">
+    <a href="{{ url_for('pages.entregables') }}" class="btn btn-outline-success"><i class="bi bi-map me-2" aria-hidden="true"></i>Ver la hoja de ruta completa</a>
   </div>
 </section>
 
