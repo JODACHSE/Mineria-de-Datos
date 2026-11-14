@@ -98,15 +98,16 @@
 </h2>
 {% endmacro %}
 
-{# Tabla responsive: la página aporta su thead (table_open … table_close). #}
-{% macro table_open(wrap=False, extra="") %}
+{# Marco de tabla responsive: la página escribe dentro su propia tabla (con encabezados)
+   usando table_class() para las clases. Uso: call table_box() … endcall #}
+{% macro table_box() %}
 <div class="table-responsive rounded border mb-3">
-  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}"><!-- NOSONAR: el thead lo añade cada página -->
-{% endmacro %}
-{% macro table_close() %}
-  </table>
+  {{ caller() }}
 </div>
 {% endmacro %}
+{% macro table_class(wrap=False, extra="") -%}
+table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}
+{%- endmacro %}
 
 {# Tarjetas de enfoque. items: [(icon, color, titulo, texto)] #}
 {% macro enfoque_cards(items) %}

@@ -1,5 +1,5 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, table_box, table_class %}
 
 {% set report_code = "R6 · Conocimiento oculto" %}
 {% set report_title = 'Conocimiento oculto<br><span class="text-success">Modelos, grupos y voces sobre la producción</span>' %}
@@ -38,7 +38,7 @@
 {% macro matriz(m, titulo) %}
 <div class="col-md-6">
   <h4 class="h6 fw-bold">{{ titulo }}</h4>
-  {{ table_open(extra="small text-center") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small text-center") }}">
     <caption class="visually-hidden">{{ titulo }}</caption>
     <thead><tr><th scope="col" class="text-start">Real \ Predicho</th>{% for e in m.etiquetas %}<th scope="col">{{ e }}</th>{% endfor %}<th scope="col">Total</th></tr></thead>
     <tbody>
@@ -50,7 +50,7 @@
         <td class="font-monospace">{{ f.total | miles }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </div>
 {% endmacro %}
 
@@ -144,21 +144,21 @@
   {{ sec(1, "Objetivo y preguntas de análisis") }}
   <p>Descubrir patrones que expliquen <strong>dónde y por qué el rendimiento agrícola de los cultivos básicos queda por debajo de su referente</strong>,
     un componente de la disponibilidad de alimentos, más allá de los totales y cruces de R4 y R5.</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Análisis</th><th scope="col">Pregunta</th><th scope="col">Tipo</th></tr></thead>
     <tbody>
       <tr><td>Supervisado</td><td>¿Un registro (municipio × desagregación × semestre) tendrá un rendimiento por encima de la mediana de su cultivo, conociendo solo lo que se sabe antes de cosechar?</td><td>Clasificación binaria</td></tr>
       <tr><td>Clustering</td><td>¿Qué tipos de municipio agrícola existen según su tamaño, su mezcla de cultivos y la parte de lo sembrado que cosechan?</td><td>k-Means</td></tr>
       <tr><td>Comentarios</td><td>¿Qué factores asocian quienes comentan con producir y acceder a alimentos básicos, y cómo se relacionan con lo que muestran los datos EVA?</td><td>Minería de texto</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="datos" class="mb-5 reveal">
   {{ sec(2, "Datos y transformaciones adicionales") }}
   <p class="small">Fuente: EVA tratado en R2/R3 ({{ prep.registros_fuente | miles }} registros, <span class="font-monospace">{{ prep.fuente }}</span>).
     Las transformaciones las hace <span class="font-monospace">scripts/R6/preparar_datos_orange.py</span> y quedan en <span class="font-monospace">orange/data/log_preparacion.json</span>.</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Paso</th><th scope="col" class="text-end">Antes</th><th scope="col" class="text-end">Después</th><th scope="col" class="text-end">Descartados</th><th scope="col">Motivo</th></tr></thead>
     <tbody>
       {% for p in prep.pasos %}
@@ -166,7 +166,7 @@
           <td class="text-end font-monospace">{{ p.descartados | miles }}</td><td class="text-body-secondary">{{ p.motivo }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <p class="small text-body-secondary mb-0">Variables nuevas: <span class="font-monospace">RendimientoAlto</span> (clase), <span class="font-monospace">Log10_AreaSembrada</span>,
     <span class="font-monospace">Semestre</span>, <span class="font-monospace">GrupoCV</span> (municipio, para validar por grupos) y, por municipio,
     tamaño, número de cultivos, diversificación (1 − Herfindahl), % de área por cultivo y tasa de cosecha.</p>
@@ -200,7 +200,7 @@
   {{ flujo("flujo_01_supervisado.png", "01_supervisado.ows", "clasificación supervisada",
            "Balance de clases y relevancia de variables, selección sin fuga, tres modelos evaluados con validación cruzada (estratificada y por municipio) y con la prueba temporal 2024.") }}
 
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <caption class="visually-hidden">Métricas de los tres modelos en las tres evaluaciones (clase objetivo Alto)</caption>
     <thead><tr><th scope="col">Evaluación</th><th scope="col">Modelo</th><th scope="col" class="text-end">AUC</th><th scope="col" class="text-end">Exactitud</th><th scope="col" class="text-end">F1</th><th scope="col" class="text-end">Precisión</th><th scope="col" class="text-end">Recall</th></tr></thead>
     <tbody>
@@ -214,7 +214,7 @@
       {% endfor %}
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   <div class="card border-0 shadow-sm mb-3"><div class="card-body">
     <h3 class="h6 fw-bold mb-1">AUC por modelo y esquema de evaluación</h3>
@@ -268,7 +268,7 @@
     <div class="chart-frame" style="height:240px;" role="img" aria-label="Silueta media de k-Means para k entre 2 y 10"><canvas id="r6-silueta"></canvas></div>
   </div></div>
 
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Grupo</th><th scope="col" class="text-end">Municipios</th><th scope="col">Cultivo dominante (% del área)</th><th scope="col" class="text-end">Área anual (ha)*</th>
       <th scope="col" class="text-end">Tasa de cosecha</th><th scope="col" class="text-end">Rend. relativo**</th><th scope="col">Regiones principales</th><th scope="col" class="text-end">Silueta</th></tr></thead>
     <tbody>
@@ -283,7 +283,7 @@
         <td class="text-end font-monospace">{{ dec(g.silueta) }}{% if g.pct_silueta_negativa %}<br><small class="text-body-secondary">{{ g.pct_silueta_negativa }} % &lt; 0</small>{% endif %}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <p class="small text-body-secondary">* Media geométrica del área sembrada anual. ** Mediana del rendimiento dividido por la mediana de su cultivo (1 = típico); no entró al agrupamiento.</p>
 
   {% call callout("bi-lightbulb") %}
@@ -320,7 +320,7 @@
   {{ flujo("flujo_03_comentarios_youtube.png", "03_comentarios_youtube.ows", "minería de texto",
            "Corpus en español, preprocesamiento, nube de palabras, colocaciones, temas LDA, bolsa de palabras y palabras que distinguen a cada video.") }}
 
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Video</th><th scope="col">Canal</th><th scope="col">Publicado</th><th scope="col" class="text-end">Extraídos</th><th scope="col" class="text-end">Analizados</th></tr></thead>
     <tbody>
       {% for v in videos %}
@@ -328,14 +328,14 @@
         <td>{{ v.fecha_publicacion }}</td><td class="text-end font-monospace">{{ v.comentarios_extraidos }}</td><td class="text-end font-monospace">{{ v.limpios }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   <h3 class="h5 fw-bold mt-4">Flujo de texto en Orange</h3>
   <p class="small">Corpus → Preprocesar texto (minúsculas, tokenización, lista de 755 palabras vacías en español, Snowball) → Bolsa de palabras, Temas (LDA, 4),
     Colocaciones y Word Enrichment por video (FDR ≤ 0,2). Además, un diccionario de términos cuenta qué factores menciona cada comentario.</p>
   <div class="row g-3">
     <div class="col-lg-7">
-      {{ table_open(extra="small") }}
+      {% call table_box() %}<table class="{{ table_class(extra="small") }}">
         <caption class="visually-hidden">Porcentaje de comentarios que mencionan cada factor, por video</caption>
         <thead><tr><th scope="col">Factor</th><th scope="col" class="text-end">Total</th>{% for v in videos %}<th scope="col" class="text-end">{{ v.codigo }}</th>{% endfor %}</tr></thead>
         <tbody>
@@ -345,7 +345,7 @@
             <td class="text-end font-monospace">{{ f.V03_pct | replace(".", ",") }}</td></tr>
           {% endfor %}
         </tbody>
-      {{ table_close() }}
+      </table>{% endcall %}
       <p class="small text-body-secondary">% de comentarios de cada video; un comentario puede mencionar varios factores. Es conteo de expresiones: no detecta ironía ni negación.</p>
     </div>
     <div class="col-lg-5">
