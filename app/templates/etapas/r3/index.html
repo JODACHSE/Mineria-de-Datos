@@ -1,5 +1,5 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_box, table_class %}
 
 {% set report_code = "R3" %}
 {% set report_title = 'Tratamiento ETL<br><span class="text-success">con SSIS</span>' %}
@@ -142,7 +142,7 @@
     <code>cat.Regla</code>). Lo que tiene una corrección obvia se corrige; lo que requiere criterio
     humano va a revisión; lo extremo pero posible se marca.
   </p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Paquete</th><th scope="col">Código</th><th scope="col">Problema</th><th scope="col">Campo</th><th scope="col">Acción</th><th scope="col">Justificación</th></tr></thead>
     <tbody>
       {% for paq, cod, prob, campo, accion, just in reglas %}
@@ -153,7 +153,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="diseno" class="mb-5 reveal">
@@ -189,7 +189,7 @@
 
   {% for titulo, filas, color in [("EVA — producción municipal", eva_filas, "success"), ("FAOSTAT — QCL + QCL básicos + FS", fao_filas, "info")] %}
   <h3 class="h5 fw-bold mt-4">{{ titulo }}</h3>
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <thead><tr><th scope="col">Lote</th><th scope="col" class="text-end">Recibidos</th><th scope="col" class="text-end">Aceptados</th><th scope="col" class="text-end">Duplicados</th><th scope="col" class="text-end">Revisión</th><th scope="col" class="text-end">Sin explicar</th><th scope="col" class="text-end">% aceptación</th></tr></thead>
     <tbody>
       {% for f in filas %}
@@ -204,7 +204,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <div class="accordion mb-3" id="acc-{{ loop.index }}">
     {% for f in filas %}
     <div class="accordion-item">
@@ -242,7 +242,7 @@
   {{ report_h2("6", "Comparación de la calidad: original vs. iteraciones") }}
   {% for paquete, filas in indicadores.items() %}
   <h3 class="h6 fw-bold mt-3">{{ paquete }}</h3>
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <thead><tr><th scope="col">Indicador</th><th scope="col" class="text-end">Original</th><th scope="col" class="text-end">I1</th><th scope="col" class="text-end">I2</th><th scope="col" class="text-end">I3</th></tr></thead>
     <tbody>
       {% for nombre, orig, its in filas %}
@@ -255,7 +255,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   {% endfor %}
   <div class="row g-3">
     <div class="col-md-6">
@@ -335,13 +335,13 @@
     <code>LOTE_REABIERTO</code> y vuelve a cargar con el mismo <code>IdLote</code>. Resultado esperado
     para el mismo lote en dos ejecuciones:
   </p>
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <thead><tr><th scope="col">Lote</th><th scope="col" class="text-end">Staging</th><th scope="col" class="text-end">Limpios</th><th scope="col" class="text-end">Revisión</th><th scope="col" class="text-end">Claves repetidas</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">EVA-I3</td><td class="text-end font-monospace">{{ eva_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ eva_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ eva_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>
       <tr><td class="font-monospace">FAOSTAT-I3</td><td class="text-end font-monospace">{{ fao_i3.recibidos | miles }}</td><td class="text-end font-monospace">{{ fao_i3.aceptados | miles }}</td><td class="text-end font-monospace">{{ fao_i3.total_revision | miles }}</td><td class="text-end font-monospace text-success fw-bold">0</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="reproducir" class="mb-5 reveal">

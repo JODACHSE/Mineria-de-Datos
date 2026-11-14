@@ -1,6 +1,6 @@
 {% extends "layouts/report.html" %}
 {% from "etapas/r4/_macros.html" import informe, sec_head, ind_card, powerbi, interp_item, limite_decision %}
-{% from "macros/ui.html" import stat, tag, callout, report_h2, table_open, table_close, enfoque_cards, conocimientos_cards %}
+{% from "macros/ui.html" import stat, tag, callout, report_h2, table_box, table_class, enfoque_cards, conocimientos_cards %}
 
 {% set report_code = "R4 · Análisis Multidimensional" %}
 {% set report_title = 'Análisis Multidimensional<br><span class="text-success">Dimensión Poblacional</span>' %}
@@ -55,7 +55,7 @@
 <section id="variables" class="mb-5 reveal">
   {{ sec_head(2, "Variables utilizadas") }}
 
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <thead>
       <tr>
         <th scope="col">Variable</th>
@@ -82,7 +82,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 {# --- Indicadores --- #}
@@ -179,7 +179,7 @@
 
   <div id="filter-result" class="card border-0 bg-body-tertiary">
     <div class="card-body py-2">
-      {{ table_open(extra="small") }}
+      {% call table_box() %}<table class="{{ table_class(extra="small") }}">
         <thead>
           <tr>
             <th scope="col">Cultivo</th>
@@ -201,7 +201,7 @@
           </tr>
           {% endfor %}
         </tbody>
-      {{ table_close() }}
+      </table>{% endcall %}
     </div>
   </div>
 </section>

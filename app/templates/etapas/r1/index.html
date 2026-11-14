@@ -1,5 +1,5 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, source_card, quality_bar, report_h2, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, source_card, quality_bar, report_h2, table_box, table_class %}
 
 {% set report_code = "R1" %}
 {% set report_title = 'Del problema<br><span class="text-success">a los datos</span>' %}
@@ -233,7 +233,7 @@
   </div>
 
   <h3 class="h5 fw-bold">Dataset principal — EVA, producción agrícola municipal</h3>
-  {{ table_open(wrap=True) }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True) }}">
     <tbody>
       <tr><th scope="row" class="w-25">Nombre</th><td>Evaluaciones Agropecuarias Municipales – EVA. 2019–2024. Base Agrícola (extracto: 6 cultivos básicos)</td></tr>
       <tr><th scope="row">Productor</th><td>Min. de Agricultura y Desarrollo Rural / UPRA</td></tr>
@@ -243,10 +243,10 @@
       <tr><th scope="row">Cobertura temporal</th><td>2019–2024, semestral</td></tr>
       <tr><th scope="row">Trazabilidad</th><td>CSV original conservado sin modificar en <code>app/data/eva_basicos_colombia.csv</code></td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   <h3 class="h5 fw-bold mt-4">Dataset complementario — FAOSTAT (nacional/global)</h3>
-  {{ table_open(wrap=True) }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True) }}">
     <tbody>
       <tr><th scope="row" class="w-25">Nombre</th><td>FAOSTAT · Suite of Food Security Indicators (FS) + Crops and livestock products (QCL)</td></tr>
       <tr><th scope="row">Productor</th><td>FAO — Statistics Division (ESS)</td></tr>
@@ -254,7 +254,7 @@
       <tr><th scope="row">Unidad de análisis</th><td>País (o territorio) · Indicador/Producto · Año</td></tr>
       <tr><th scope="row">Licencia</th><td>CC BY-4.0 (atribución a FAO)</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   {% call callout("bi-link-45deg") %}
     <strong>Posibilidad de integración:</strong> EVA (regional) y FAOSTAT (nacional) se
@@ -268,7 +268,7 @@
 <section id="diccionario" class="mb-5 reveal">
   {{ report_h2("6", "Diccionario de datos") }}
   <h3 class="h5 fw-bold">EVA — producción municipal (18 variables)</h3>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Campo</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col">Dominio / unidad</th><th scope="col">Fuente</th><th scope="col">Ejemplo</th><th scope="col">Observaciones</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">CodigoDeptoDane</td><td>Código DANE del departamento</td><td>Categórico</td><td>2 dígitos</td><td>EVA</td><td>05</td><td>Llave geográfica estable</td></tr>
@@ -288,10 +288,10 @@
       <tr><td class="font-monospace">EstadoFisico</td><td>Estado físico del producto reportado</td><td>Categórico</td><td>Grano seco, En fresco, Paddy…</td><td>EVA</td><td>Paddy o cáscara verde</td><td>Afecta comparabilidad de unidades entre cultivos</td></tr>
       <tr><td class="font-monospace">CodigoCultivo / NombreCientifico</td><td>Identificadores agronómicos</td><td>Categórico</td><td>Texto/numérico</td><td>EVA</td><td>1010102 / Oryza sativa</td><td>—</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   <h3 class="h5 fw-bold mt-4">FAOSTAT — formato largo (aplica a fs.json, qcl.json, qcl_basicos.json)</h3>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Campo</th><th scope="col">Descripción</th><th scope="col">Tipo</th><th scope="col">Dominio / unidad</th><th scope="col">Fuente</th><th scope="col">Ejemplo</th><th scope="col">Observaciones</th></tr></thead>
     <tbody>
       <tr><td class="font-monospace">Área</td><td>País / territorio</td><td>Categórico</td><td>Texto</td><td>FAOSTAT</td><td>Colombia</td><td>Filtrado solo a Colombia</td></tr>
@@ -301,7 +301,7 @@
       <tr><td class="font-monospace">Unidad</td><td>Unidad de medida del valor</td><td>Categórico</td><td>t, %, kg/ha…</td><td>FAOSTAT</td><td>toneladas</td><td>Varía según el elemento</td></tr>
       <tr><td class="font-monospace">Valor</td><td>Valor medido</td><td>Numérico continuo</td><td>≥ 0</td><td>FAOSTAT</td><td>27638.53</td><td>Puede faltar en algunos años</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="caracterizacion" class="mb-5 reveal">
@@ -389,7 +389,7 @@
     geográficas/temporales</strong> exigida en el entregable, y además produce un hallazgo
     real de calidad (ver sección 7).
   </p>
-  {{ table_open(extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(extra="small") }}">
     <thead><tr><th scope="col">Año</th><th scope="col">Cultivo</th><th scope="col" class="text-end">Producción EVA (t)</th><th scope="col" class="text-end">Producción FAOSTAT (t)</th><th scope="col" class="text-end">Diferencia</th></tr></thead>
     <tbody>
       {% for row in integracion.rows %}
@@ -402,7 +402,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <p class="small text-body-secondary">
     Elaboración propia a partir de EVA (UPRA/MinAgricultura) y FAOSTAT (FAO). Los signos
     negativos indican que EVA reportó menos que FAOSTAT ese año; sucede en Maíz a partir

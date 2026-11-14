@@ -1,5 +1,5 @@
 {% extends "layouts/report.html" %}
-{% from "macros/ui.html" import stat, tag, callout, table_open, table_close %}
+{% from "macros/ui.html" import stat, tag, callout, table_box, table_class %}
 
 {% set report_code = "R5 · Análisis multidimensional" %}
 {% set report_title = 'Análisis multidimensional<br><span class="text-success">Modelo estrella de la producción agrícola</span>' %}
@@ -94,7 +94,7 @@
   {% set profundizados = r4_relacion | selectattr("profundizar") | list %}
   <p class="small text-body-secondary">{{ profundizados | length }} de {{ r4_relacion | length }} requieren mayor profundidad.
     La columna «Análisis» enlaza la vista de R5 que los retoma; C1–C8 son los conocimientos multidimensionales (sección 5).</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Conocimiento evidente de R4</th><th scope="col">¿Profundizar?</th><th scope="col">Por qué</th><th scope="col">Cómo lo aborda R5</th><th scope="col">Análisis</th></tr></thead>
     <tbody>
       {% for r in r4_relacion %}
@@ -112,7 +112,7 @@
       </tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="analisis" class="mb-5 reveal">
@@ -150,7 +150,7 @@
 <section id="operaciones" class="mb-5 reveal">
   {{ sec(4, "Operaciones multidimensionales") }}
   <p class="small">Todas recalculan las medidas con una nueva consulta al modelo; cambiar el tipo de gráfica no cuenta como operación.</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Operación</th><th scope="col">Cómo se implementa</th><th scope="col">Ejemplo aplicado</th></tr></thead>
     <tbody>
       {% set como = {
@@ -168,7 +168,7 @@
             <span class="text-body-secondary">{{ e.dimensiones }} {{ e.medidas }} {{ e.nivel }}</span></td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="hallazgos" class="mb-5 reveal">
@@ -286,7 +286,7 @@
 <section id="diccionario" class="mb-5 reveal">
   {{ sec(9, "Dimensiones, medidas y jerarquías") }}
   <h3 class="h5 fw-bold">Jerarquías</h3>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Dimensión</th><th scope="col">Jerarquía (general → detalle)</th><th scope="col">Por qué la agrupación es válida</th></tr></thead>
     <tbody>
       <tr><td>Territorio</td><td>Región → Departamento → Municipio</td><td>Cada municipio pertenece a un único departamento (código DIVIPOLA) y cada departamento a una única región natural.</td></tr>
@@ -294,7 +294,7 @@
       <tr><td>Cultivo</td><td>Grupo → Cultivo → Desagregación</td><td>Cada desagregación EVA corresponde a un cultivo y cada cultivo a un grupo (cereales, raíces y tubérculos…).</td></tr>
       <tr><td>Sistema productivo</td><td>Criterio → Sistema</td><td>Cada sistema se define con un solo criterio: nivel tecnológico (tecnificado/tradicional), destino o sin diferenciar.</td></tr>
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <p class="small text-body-secondary">Que cada hijo tenga un solo padre se comprueba en la sección 11 (grupo «Jerarquías»).</p>
 
   <h3 class="h5 fw-bold mt-4">Diccionario de dimensiones</h3>
@@ -358,7 +358,7 @@
   </div>
 
   <h3 class="h5 fw-bold mt-4">Medidas</h3>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Medida</th><th scope="col">Unidad</th><th scope="col">Fórmula / agregación</th><th scope="col">¿Aditiva?</th><th scope="col">Significado</th></tr></thead>
     <tbody>
       {% set signif = {
@@ -377,7 +377,7 @@
           <td>{{ signif[k] }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
   <p class="small text-body-secondary">Los porcentajes indican siempre su denominador (total de la selección, de la fila o de la columna)
     y se recalculan al cambiar de nivel; los totales de las medidas no aditivas se obtienen con su propia consulta.</p>
 </section>
@@ -404,7 +404,7 @@
       </ol>
     </div></div></div>
   </div>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Variable original (EVA tratado)</th><th scope="col">Campo del modelo</th><th scope="col">Transformación</th></tr></thead>
     <tbody>
       {% for o, d, t in [
@@ -429,13 +429,13 @@
       <tr><td>{{ o }}</td><td class="font-monospace">{{ d }}</td><td>{{ t }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 <section id="validaciones" class="mb-5 reveal">
   {{ sec(11, "Validaciones del modelo") }}
   <p class="small text-body-secondary">Se ejecutan en vivo contra la base y el JSON tratado (<span class="font-monospace">SQL/R5/02_validaciones.sql</span>).</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Grupo</th><th scope="col">Comprobación</th><th scope="col" class="text-end">Modelo</th><th scope="col" class="text-end">Origen / esperado</th><th scope="col">Resultado</th><th scope="col">Nota</th></tr></thead>
     <tbody>
       {% for v in validaciones %}
@@ -445,7 +445,7 @@
           <td class="text-body-secondary">{{ v.nota }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 
   <h3 class="h6 fw-bold mt-4">Faltantes, categorías desconocidas y respuestas negativas</h3>
   <div class="row row-cols-1 row-cols-md-3 g-3">
@@ -470,7 +470,7 @@
 <section id="condiciones" class="mb-5 reveal">
   {{ sec(12, "Condiciones del análisis") }}
   <p class="small text-body-secondary">Reglas de cálculo que se aplican en todas las consultas, indicadores, matrices y gráficas de R5.</p>
-  {{ table_open(wrap=True, extra="small") }}
+  {% call table_box() %}<table class="{{ table_class(wrap=True, extra="small") }}">
     <thead><tr><th scope="col">Condición</th><th scope="col">Cómo se cumple</th><th scope="col">Dónde se comprueba</th></tr></thead>
     <tbody>
       {% for c, como, donde in [
@@ -488,7 +488,7 @@
       <tr><td class="fw-semibold">{{ c }}</td><td>{{ como }}</td><td class="text-body-secondary">{{ donde }}</td></tr>
       {% endfor %}
     </tbody>
-  {{ table_close() }}
+  </table>{% endcall %}
 </section>
 
 {% endblock %}

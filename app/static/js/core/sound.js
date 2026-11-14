@@ -36,9 +36,10 @@ let unlocked = false;
 function unlockOnce() {
   if (unlocked) return;
   unlocked = true;
-  ui.unlock();
-  // Presintetiza los cues para que el primer clic no espere.
-  ui.preload(Object.values(CUE));
+  // Presintetiza los cues para que el primer clic no espere. Sin audio el sitio sigue igual.
+  ui.unlock()
+    .then(() => ui.preload(Object.values(CUE)))
+    .catch(() => { /* el navegador no permite audio: se omiten los sonidos */ });
 }
 
 export function initSound() {
