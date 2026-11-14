@@ -62,6 +62,15 @@ ETAPAS = [
             {"label": v["corto"], "endpoint": "pages.r5_vista", "args": {"slug": v["slug"]}} for v in R5_VISTAS
         ],
     },
+    {
+        "codigo": "R6",
+        "titulo": "Conocimiento oculto",
+        "resumen": "Tres modelos supervisados (regresión logística, árbol y Random Forest) para anticipar "
+                   "rendimientos altos, clustering k-Means de municipios y análisis de texto de comentarios "
+                   "de YouTube en Orange Data Mining, con conclusiones integradas.",
+        "estado": "completado",
+        "url_endpoint": "pages.r6",
+    },
 ] + [
     {
         "codigo": f"R{n}",
@@ -70,7 +79,7 @@ ETAPAS = [
         "estado": "pendiente",
         "url_endpoint": None,
     }
-    for n in range(6, 9)
+    for n in range(7, 9)
 ]
 
 R4_DIMENSIONES = [

@@ -69,6 +69,13 @@ class Config:
     # con scripts/R5/build_star.py o automáticamente al arrancar si no existe.
     R5_SOURCE_JSON = R2_JSON_DIR / "eva_basicos.json"
     R5_DB_PATH = Path(os.environ.get("R5_DB_PATH", BASE_DIR / "app" / "data" / "R5" / "wololo_dw.sqlite"))
+    # R6 · Conocimiento oculto: resultados de Orange, comentarios de YouTube y productos entregables.
+    R6_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R6"
+    ORANGE_DIR = BASE_DIR / "orange"
+    YOUTUBE_DIR = ORANGE_DIR / "data" / "youtube"
+    VIDEO_ETAPA6_URL = os.environ.get("VIDEO_ETAPA6_URL", "https://youtu.be/kvMEUs-LW4k")
+    INFORME_ETAPA6_URL = os.environ.get("INFORME_ETAPA6_URL", "")
+    INFORME_ETAPA6_PDF = "etapa6/Informe_Etapa6_Conocimiento_Oculto.pdf"   # dentro de app/static/
     VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
 
         # Informe de Power BI (Publicar en la web). URL pública del "Publish to web".

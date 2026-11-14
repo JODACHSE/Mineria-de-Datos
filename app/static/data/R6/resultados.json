@@ -1,0 +1,408 @@
+{
+  "orange_version": "3.40.0",
+  "supervisado": {
+    "registros": 39934,
+    "entrenamiento": 34242,
+    "prueba": 5692,
+    "clase": {
+      "Bajo": 21048,
+      "Alto": 18886
+    },
+    "pct_alto": 47.3,
+    "predictoras": [
+      "Cultivo",
+      "DesagregacionCultivo",
+      "Region",
+      "Departamento",
+      "Semestre",
+      "Log10_AreaSembrada"
+    ],
+    "evaluaciones": {
+      "cv": {
+        "nombre": "Validación cruzada estratificada (10 pliegues)",
+        "modelos": [
+          {
+            "modelo": "Regresión logística",
+            "auc": 0.738,
+            "ca": 0.668,
+            "f1": 0.615,
+            "precision": 0.681,
+            "recall": 0.561,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  10589,
+                  8297
+                ],
+                [
+                  4951,
+                  16097
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Árbol",
+            "auc": 0.787,
+            "ca": 0.71,
+            "f1": 0.687,
+            "precision": 0.703,
+            "recall": 0.671,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  12673,
+                  6213
+                ],
+                [
+                  5348,
+                  15700
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Random Forest",
+            "auc": 0.799,
+            "ca": 0.724,
+            "f1": 0.702,
+            "precision": 0.719,
+            "recall": 0.685,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  12944,
+                  5942
+                ],
+                [
+                  5062,
+                  15986
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "municipio": {
+        "nombre": "Validación cruzada por municipio (GrupoCV)",
+        "modelos": [
+          {
+            "modelo": "Regresión logística",
+            "auc": 0.728,
+            "ca": 0.661,
+            "f1": 0.606,
+            "precision": 0.672,
+            "recall": 0.551,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  10411,
+                  8475
+                ],
+                [
+                  5077,
+                  15971
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Árbol",
+            "auc": 0.721,
+            "ca": 0.655,
+            "f1": 0.626,
+            "precision": 0.642,
+            "recall": 0.611,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  11536,
+                  7350
+                ],
+                [
+                  6424,
+                  14624
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Random Forest",
+            "auc": 0.691,
+            "ca": 0.632,
+            "f1": 0.607,
+            "precision": 0.614,
+            "recall": 0.6,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  11326,
+                  7560
+                ],
+                [
+                  7134,
+                  13914
+                ]
+              ]
+            }
+          }
+        ]
+      },
+      "temporal": {
+        "nombre": "Entrenar 2019–2023 → probar 2024",
+        "modelos": [
+          {
+            "modelo": "Regresión logística",
+            "auc": 0.741,
+            "ca": 0.677,
+            "f1": 0.606,
+            "precision": 0.692,
+            "recall": 0.54,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  1418,
+                  1210
+                ],
+                [
+                  631,
+                  2433
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Árbol",
+            "auc": 0.691,
+            "ca": 0.641,
+            "f1": 0.586,
+            "precision": 0.625,
+            "recall": 0.552,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  1451,
+                  1177
+                ],
+                [
+                  869,
+                  2195
+                ]
+              ]
+            }
+          },
+          {
+            "modelo": "Random Forest",
+            "auc": 0.805,
+            "ca": 0.729,
+            "f1": 0.697,
+            "precision": 0.72,
+            "recall": 0.676,
+            "matriz": {
+              "etiquetas": [
+                "Alto",
+                "Bajo"
+              ],
+              "valores": [
+                [
+                  1776,
+                  852
+                ],
+                [
+                  689,
+                  2375
+                ]
+              ]
+            }
+          }
+        ]
+      }
+    }
+  },
+  "clustering": {
+    "municipios": 1098,
+    "variables": [
+      "Log10_AreaSembradaAnual",
+      "NumCultivos",
+      "Diversificacion",
+      "PctArea_Arroz",
+      "PctArea_Frijol",
+      "PctArea_Maíz",
+      "PctArea_Papa",
+      "PctArea_Plátano",
+      "PctArea_Yuca",
+      "TasaCosecha"
+    ],
+    "k_elegido": 5,
+    "silueta_por_k": {
+      "2": 0.253,
+      "3": 0.214,
+      "4": 0.242,
+      "5": 0.272,
+      "6": 0.265,
+      "7": 0.253,
+      "8": 0.25,
+      "9": 0.233,
+      "10": 0.215
+    },
+    "silueta_global": 0.272,
+    "grupos": [
+      {
+        "municipios": 113,
+        "pct_area": {
+          "Arroz": 70.2,
+          "Frijol": 1.2,
+          "Maíz": 13.8,
+          "Papa": 0.0,
+          "Plátano": 9.3,
+          "Yuca": 5.6
+        },
+        "area_anual_ha_geo": 3896,
+        "num_cultivos": 4.2,
+        "diversificacion": 0.4,
+        "tasa_cosecha": 0.81,
+        "rend_rel_mediana": 1.15,
+        "regiones": {
+          "Andina": 42,
+          "Orinoquía": 27,
+          "Caribe": 25
+        },
+        "silueta": 0.312,
+        "pct_silueta_negativa": 1,
+        "nombre": "Especializados en arroz",
+        "grupo": "G1"
+      },
+      {
+        "municipios": 155,
+        "pct_area": {
+          "Arroz": 0.3,
+          "Frijol": 46.5,
+          "Maíz": 27.2,
+          "Papa": 10.4,
+          "Plátano": 10.6,
+          "Yuca": 5.0
+        },
+        "area_anual_ha_geo": 281,
+        "num_cultivos": 3.7,
+        "diversificacion": 0.57,
+        "tasa_cosecha": 0.84,
+        "rend_rel_mediana": 0.92,
+        "regiones": {
+          "Andina": 91,
+          "Pacífica": 5,
+          "Amazonía": 3
+        },
+        "silueta": 0.194,
+        "pct_silueta_negativa": 8,
+        "nombre": "Mixtos de frijol y maíz",
+        "grupo": "G2"
+      },
+      {
+        "municipios": 392,
+        "pct_area": {
+          "Arroz": 5.4,
+          "Frijol": 5.6,
+          "Maíz": 43.6,
+          "Papa": 1.6,
+          "Plátano": 16.4,
+          "Yuca": 27.4
+        },
+        "area_anual_ha_geo": 715,
+        "num_cultivos": 4.0,
+        "diversificacion": 0.56,
+        "tasa_cosecha": 0.82,
+        "rend_rel_mediana": 0.98,
+        "regiones": {
+          "Caribe": 42,
+          "Andina": 37,
+          "Pacífica": 12
+        },
+        "silueta": 0.144,
+        "pct_silueta_negativa": 17,
+        "nombre": "Mixtos de maíz y yuca",
+        "grupo": "G3"
+      },
+      {
+        "municipios": 150,
+        "pct_area": {
+          "Arroz": 0.0,
+          "Frijol": 3.2,
+          "Maíz": 10.0,
+          "Papa": 85.9,
+          "Plátano": 0.4,
+          "Yuca": 0.5
+        },
+        "area_anual_ha_geo": 563,
+        "num_cultivos": 2.7,
+        "diversificacion": 0.21,
+        "tasa_cosecha": 0.86,
+        "rend_rel_mediana": 1.07,
+        "regiones": {
+          "Andina": 97,
+          "Pacífica": 3
+        },
+        "silueta": 0.458,
+        "pct_silueta_negativa": 0,
+        "nombre": "Especializados en papa",
+        "grupo": "G4"
+      },
+      {
+        "municipios": 288,
+        "pct_area": {
+          "Arroz": 2.1,
+          "Frijol": 5.3,
+          "Maíz": 11.4,
+          "Papa": 1.4,
+          "Plátano": 73.4,
+          "Yuca": 6.4
+        },
+        "area_anual_ha_geo": 660,
+        "num_cultivos": 3.9,
+        "diversificacion": 0.39,
+        "tasa_cosecha": 0.92,
+        "rend_rel_mediana": 0.94,
+        "regiones": {
+          "Andina": 73,
+          "Pacífica": 17,
+          "Amazonía": 6
+        },
+        "silueta": 0.375,
+        "pct_silueta_negativa": 0,
+        "nombre": "Especializados en plátano",
+        "grupo": "G5"
+      }
+    ]
+  }
+}

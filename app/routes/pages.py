@@ -1,12 +1,14 @@
 """Blueprint `pages`: todas las vistas HTML del sitio."""
 from __future__ import annotations
 
+from pathlib import Path
+
 from flask import Blueprint, abort, current_app, render_template, send_from_directory, url_for
 
 from app.etapas import ETAPAS, FASES_CRISP
 from app.routes import _dirs
 from app.services import datasets as ds
-from app.services.etapa3 import build_r3_context
+from app.services.etapa3 import _embed, build_r3_context
 from app.services.etapa4 import (
     build_r4_dim_poblacional_context,
     build_r4_dim_territorial_context,
@@ -14,6 +16,7 @@ from app.services.etapa4 import (
     build_r4_dim_relacional_context,
 )
 from app.services.etapa5 import VISTAS, VISTAS_BY_SLUG, build_r5_context, build_r5_vista_context
+from app.services.etapa6 import build_r6_context
 from app.services.reports import build_r1_context, build_r2_context
 
 pages_bp = Blueprint("pages", __name__)
@@ -123,6 +126,20 @@ def r5_vista(slug):
         ctx = build_r5_vista_context(current_app.config["R5_DB_PATH"], slug, ds)
         ds.cache_set(key, ctx)
     return render_template("pages/r5_vista.html", toc_nav=_r5_nav(slug), **ctx)
+
+
+@pages_bp.route("/r6")
+def r6():
+    cfg = current_app.config
+    ctx = ds.cache_get("ctx:r6")
+    if ctx is None:
+        ctx = build_r6_context(cfg["R6_JSON_DIR"], cfg["YOUTUBE_DIR"], cfg["ORANGE_DIR"])
+        ds.cache_set("ctx:r6", ctx)
+    pdf = cfg["INFORME_ETAPA6_PDF"]
+    informe_pdf_url = url_for("static", filename=pdf) if (Path(current_app.static_folder) / pdf).exists() else ""
+    return render_template("pages/r6.html", informe_pdf_url=informe_pdf_url,
+                           informe_url=cfg["INFORME_ETAPA6_URL"], video_url=cfg["VIDEO_ETAPA6_URL"],
+                           video_embed=_embed(cfg["VIDEO_ETAPA6_URL"]), **ctx)
 
 
 @pages_bp.route("/entregables")

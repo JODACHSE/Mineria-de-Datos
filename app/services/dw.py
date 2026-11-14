@@ -249,8 +249,9 @@ def build(r2_json: Path, db_path: Path) -> dict:
 
 
 def ensure(r2_json: Path, db_path: Path) -> None:
-    """Construye la base si no existe o si el JSON tratado es más reciente."""
-    if not db_path.exists() or db_path.stat().st_mtime < r2_json.stat().st_mtime:
+    """Construye la base si no existe o si el JSON tratado, el DDL o este ETL son más recientes."""
+    fuentes = (r2_json, DDL_PATH, Path(__file__))
+    if not db_path.exists() or db_path.stat().st_mtime < max(f.stat().st_mtime for f in fuentes):
         build(r2_json, db_path)
 
 
