@@ -1,4 +1,4 @@
-"""Punto de entrada. En producción Render ejecuta `gunicorn run:app`."""
+"""Punto de entrada (`python run.py` en local, `gunicorn run:app` en Render)."""
 import os
 
 from dotenv import load_dotenv

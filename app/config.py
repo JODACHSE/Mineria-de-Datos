@@ -1,10 +1,6 @@
-"""Configuración de la aplicación Flask.
-
-Los valores sensibles se leen desde variables de entorno (.env) y nunca
-se escriben directamente en el código, siguiendo el principio de
-trazabilidad y buenas prácticas usado también en scripts/fetch_faostat.py.
-"""
+"""Configuración de Flask. Todo valor sensible sale de variables de entorno (.env)."""
 import os
+import secrets
 from pathlib import Path
 
 from app.etapas import ETAPAS
@@ -12,14 +8,34 @@ from app.etapas import ETAPAS
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+def _env(name: str, default):
+    """Variable de entorno; si no existe o está vacía (p. ej. `X=` en .env) usa el valor por defecto."""
+    return os.environ.get(name) or default
+
+# Valor público de .env.example: nunca debe firmar sesiones.
+_PLACEHOLDER_SECRET = "dev-key-cambiar-en-produccion"
+
+
+def _secret_key() -> str:
+    """SECRET_KEY del entorno, o una aleatoria por proceso si falta o es la de ejemplo."""
+    key = os.environ.get("SECRET_KEY", "")
+    return key if key and key != _PLACEHOLDER_SECRET else secrets.token_hex(32)
+
+
 class Config:
-    """Configuración base, válida para desarrollo y producción."""
 
-    APP_NAME = os.environ.get("APP_NAME", "Seguridad Alimentaria & Producción Agrícola")
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-key-cambiar-en-produccion")
-    DEBUG = os.environ.get("FLASK_DEBUG", "1") == "1"
+    APP_NAME = _env("APP_NAME", "Seguridad Alimentaria & Producción Agrícola")
+    SECRET_KEY = _secret_key()
+    # Depuración solo con FLASK_DEBUG=1.
+    DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
 
-    # Metadatos del proyecto académico (se inyectan en las plantillas)
+    # Cookies de sesión (token CSRF): sin acceso desde JS y solo por HTTPS fuera de desarrollo.
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = "Lax"
+    SESSION_COOKIE_SECURE = not DEBUG
+    MAX_CONTENT_LENGTH = 1 * 1024 * 1024  # La app no recibe archivos.
+
+    # --- Metadatos del proyecto (disponibles en todas las plantillas) ---
     PROYECTO_TEMA = "Seguridad alimentaria y producción agrícola"
     PROYECTO_COBERTURA = "Colombia (nacional)"
     PROYECTO_PERIODO = "2000 – 2024"
@@ -28,7 +44,7 @@ class Config:
         ETAPAS[0]["titulo"],
     )
 
-    # --- Identidad del equipo (Wololo) --------------------------------
+    # --- Equipo ---
     BRAND_NAME = "Wololo"
     BRAND_TAGLINE = "Software Development"
     BRAND_YEAR = "2024"
@@ -36,10 +52,7 @@ class Config:
     UNIVERSIDAD_NOMBRE = "Universidad de Cundinamarca"
     UNIVERSIDAD_URL = "https://www.ucundinamarca.edu.co/"
 
-    # Repositorio público en GitHub. Placeholder: reemplazar por la URL real
-    # una vez creado el repositorio (único lugar que hay que tocar; se usa
-    # en el botón del navbar y en el footer).
-    GITHUB_REPO_URL = os.environ.get("GITHUB_REPO_URL", "https://github.com/JODACHSE/Mineria-de-Datos")
+    GITHUB_REPO_URL = _env("GITHUB_REPO_URL", "https://github.com/JODACHSE/Mineria-de-Datos")
 
     DEVELOPERS = [
         {
@@ -60,31 +73,30 @@ class Config:
         },
     ]
 
-    # Rutas de datos
+    # --- Rutas de datos ---
     DATA_DIR = BASE_DIR / "app" / "data"
     R1_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R1"
     R2_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R2"
     R3_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R3"
-    # R5 · Modelo estrella (SQLite). Se reconstruye desde el EVA tratado de R2
-    # con scripts/R5/build_star.py o automáticamente al arrancar si no existe.
+    # R5: SQLite generado desde el EVA tratado (se reconstruye al arrancar si falta).
     R5_SOURCE_JSON = R2_JSON_DIR / "eva_basicos.json"
-    R5_DB_PATH = Path(os.environ.get("R5_DB_PATH", BASE_DIR / "app" / "data" / "R5" / "wololo_dw.sqlite"))
-    # R6 · Conocimiento oculto: resultados de Orange, comentarios de YouTube y productos entregables.
+    R5_DB_PATH = Path(_env("R5_DB_PATH", BASE_DIR / "app" / "data" / "R5" / "wololo_dw.sqlite"))
+    # R6: resultados de Orange, comentarios de YouTube y entregables.
     R6_JSON_DIR = BASE_DIR / "app" / "static" / "data" / "R6"
     ORANGE_DIR = BASE_DIR / "orange"
     YOUTUBE_DIR = ORANGE_DIR / "data" / "youtube"
-    VIDEO_ETAPA6_URL = os.environ.get("VIDEO_ETAPA6_URL", "https://youtu.be/kvMEUs-LW4k")
-    INFORME_ETAPA6_URL = os.environ.get("INFORME_ETAPA6_URL", "")
-    INFORME_ETAPA6_PDF = "etapa6/Informe_Etapa6_Conocimiento_Oculto.pdf"   # dentro de app/static/
-    VIDEO_ETAPA3_URL = os.environ.get("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
+    VIDEO_ETAPA6_URL = _env("VIDEO_ETAPA6_URL", "https://youtu.be/kvMEUs-LW4k")
+    INFORME_ETAPA6_URL = _env("INFORME_ETAPA6_URL", "")
+    INFORME_ETAPA6_PDF = "etapas/r6/Informe_Etapa6_Conocimiento_Oculto.pdf"  # Relativo a app/static/.
+    VIDEO_ETAPA3_URL = _env("VIDEO_ETAPA3_URL", "https://youtu.be/z8omdqE1M5I")
 
-        # Informe de Power BI (Publicar en la web). URL pública del "Publish to web".
-    POWERBI_REPORT_URL = os.environ.get("POWERBI_REPORT_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
-    # Embeds por página (una por dimensión de R4), apuntan al mismo informe con pageName distinto.
-    POWERBI_R4_POBLACIONAL_URL = os.environ.get("POWERBI_R4_POBLACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=4429d44521a72f684755")
-    POWERBI_R4_TERRITORIAL_URL = os.environ.get("POWERBI_R4_TERRITORIAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=933585140258a290e5b5")
-    POWERBI_R4_TEMPORAL_URL = os.environ.get("POWERBI_R4_TEMPORAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=cc4de66d143540f8e1c4")
-    POWERBI_R4_RELACIONAL_URL = os.environ.get("POWERBI_R4_RELACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=95f533e177084c73fb5d")
-    # Carpeta docs/ (raíz del proyecto) y nombre del .pbix para descargarlo desde la web.
+        # --- R4 · Power BI ---
+        # Informe completo ("Publicar en la web") y una página embebida por dimensión.
+    POWERBI_REPORT_URL = _env("POWERBI_REPORT_URL", "https://app.powerbi.com/view?r=eyJrIjoiY2Y0ZmNhZDAtNjQ5MC00YjNhLTk1OTgtMmIwMmI0YzZlMWU3IiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9")
+    POWERBI_R4_POBLACIONAL_URL = _env("POWERBI_R4_POBLACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=4429d44521a72f684755")
+    POWERBI_R4_TERRITORIAL_URL = _env("POWERBI_R4_TERRITORIAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=933585140258a290e5b5")
+    POWERBI_R4_TEMPORAL_URL = _env("POWERBI_R4_TEMPORAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=cc4de66d143540f8e1c4")
+    POWERBI_R4_RELACIONAL_URL = _env("POWERBI_R4_RELACIONAL_URL", "https://app.powerbi.com/view?r=eyJrIjoiZTM5YjNiZTktM2NmYy00NTk1LTk3M2UtMTljNzA5MTI1MjBlIiwidCI6IjA3ZGE2N2EwLTFmNDMtNGU4Yy05NzdmLTVmODhiNjQ3MGVlNiIsImMiOjR9&pageName=95f533e177084c73fb5d")
+    # El .pbix se descarga desde /docs/<POWERBI_PBIX_FILE>.
     DOCS_DIR = BASE_DIR / "docs"
-    POWERBI_PBIX_FILE = os.environ.get("POWERBI_PBIX_FILE", "EVA_PowerBI_wololo.pbix")
+    POWERBI_PBIX_FILE = _env("POWERBI_PBIX_FILE", "R4/EVA_PowerBI_wololo.pbix")

@@ -1,12 +1,8 @@
-"""R6 · Cuenta qué factores mencionan los comentarios de YouTube (diccionario de términos, auditable).
+"""R6 · Cuenta los factores que mencionan los comentarios (diccionario de términos).
 
-Uso (desde la raíz del repo):  python scripts/R6/factores_comentarios.py
-Entrada:  orange/data/youtube/corpus.csv  (lo deja preparar_comentarios.py)
-Salida:   orange/data/youtube/factores_por_video.csv  y  factores_log.json
-
-Es un análisis de contenido, no de sentimiento: un comentario "menciona" un factor si contiene alguna de sus
-expresiones (sin tildes, sin mayúsculas). Un comentario puede mencionar varios factores. No distingue ironía ni
-negaciones: sirve para ordenar temas, no para medir opiniones. Los diccionarios están aquí para poder discutirlos.
+Uso: python scripts/R6/factores_comentarios.py
+Entrada: orange/data/youtube/corpus.csv · Salida: factores_por_video.csv y factores_log.json
+Análisis de contenido, no de sentimiento: no detecta ironía ni negaciones.
 """
 from __future__ import annotations
 
@@ -33,7 +29,7 @@ FACTORES = {
 }
 
 
-EXACTAS = {"caro", "santos", "duque", "uribe", "petro", "tlc"}      # palabra completa (evita "Carolina", "santos" del santoral, etc.)
+EXACTAS = {"caro", "santos", "duque", "uribe", "petro", "tlc"}  # Palabra completa (evita falsos positivos como «Carolina»).
 
 
 def patron(t: str) -> re.Pattern:
@@ -49,7 +45,7 @@ def main() -> None:
     with (DIR / "corpus.csv").open(encoding="utf-8", newline="") as f:
         lector = csv.reader(f)
         cab = next(lector)
-        next(lector), next(lector)                       # filas de tipos y roles de Orange
+        next(lector), next(lector)  # Filas de tipos y roles de Orange.
         filas = [dict(zip(cab, r)) for r in lector]
     for r in filas:
         r["cod"] = r["video"].split(" ")[0]

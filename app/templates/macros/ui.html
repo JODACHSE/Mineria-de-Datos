@@ -1,9 +1,6 @@
-{# ===========================================================================
-   macros/ui.html — componentes reutilizables construidos con clases de Bootstrap.
-   Ningún macro introduce CSS propio: solo composición de utilidades.
-   =========================================================================== #}
+{# Macros comunes de interfaz (solo clases de Bootstrap). #}
 
-{# Título de sección: etiqueta pequeña + h2 + (opcional) párrafo de apoyo. #}
+{# Etiqueta + h2 + párrafo opcional. #}
 {% macro section_head(eyebrow, title, lead=None, center=False) %}
 <div class="mb-4 reveal {{ 'text-center' if center }}">
   <p class="text-success fw-semibold small mb-1">{{ eyebrow }}</p>
@@ -12,11 +9,11 @@
 </div>
 {% endmacro %}
 
-{# Cifra destacada. `value` se anima con count-up si es numérica (data-countup). #}
+{# Cifra destacada; si es numérica se anima con count-up. #}
 {% macro stat(value, label, countup=True, size="fs-2") %}
-<div class="card h-100 border-0 bg-body-tertiary reveal">
+<div class="card h-100 border-0 bg-body-tertiary stat-card reveal">
   <div class="card-body">
-    <div class="{{ size }} fw-bold lh-1 text-success font-monospace"
+    <div class="{{ size }} fw-bold lh-1 text-success font-monospace stat-value"
          {% if countup and value is number %}data-countup="{{ value }}"{% endif %}>
       {% if countup and value is number %}0{% else %}{{ value }}{% endif %}
     </div>
@@ -25,7 +22,7 @@
 </div>
 {% endmacro %}
 
-{# Bloque de énfasis (reemplaza al antiguo .callout). Uso: {% call callout() %}...{% endcall %} #}
+{# Bloque de énfasis. Uso: {% call callout() %}…{% endcall %} #}
 {% macro callout(icon="bi-lightbulb", color="success") %}
 <div class="alert alert-{{ color }} border-0 border-start border-4 border-{{ color }} d-flex gap-3 reveal" role="note">
   <i class="bi {{ icon }} fs-4 flex-shrink-0"></i>
@@ -33,7 +30,6 @@
 </div>
 {% endmacro %}
 
-{# Etiqueta (badge) con color semántico de Bootstrap. #}
 {% macro tag(text, color="secondary", soft=True) %}
 {% if soft %}
 <span class="badge rounded-pill text-{{ color }}-emphasis bg-{{ color }}-subtle border border-{{ color }}-subtle">{{ text }}</span>
@@ -42,12 +38,11 @@
 {% endif %}
 {% endmacro %}
 
-{# Nivel de impacto -> color. #}
 {% macro impact_tag(level) %}
 {{ tag("Impacto " ~ level, "danger" if level == "Alto" else ("warning" if level == "Medio" else "success")) }}
 {% endmacro %}
 
-{# Barra de calidad con requisito opcional. La barra se anima al entrar en pantalla. #}
+{# Barra de calidad con requisito opcional. #}
 {% macro quality_bar(label, value, req=None) %}
 {% set ok = value is not none and (req is none or value >= req) %}
 <div class="mb-3">
@@ -66,7 +61,7 @@
 </div>
 {% endmacro %}
 
-{# Ficha de fuente de datos: tipo -> color, cuerpo como lista de definiciones. #}
+{# Ficha de fuente de datos (tipo -> color). #}
 {% macro source_card(tipo, escala, titulo, items) %}
 {% set color = {"Primaria": "danger", "Secundaria": "warning", "Terciaria": "success"}[tipo] %}
 <div class="col">
@@ -85,7 +80,6 @@
 </div>
 {% endmacro %}
 
-{# Tarjeta simple con icono. #}
 {% macro icon_card(icon, title, text, color="success") %}
 <div class="col">
   <div class="card h-100 border-0 bg-body-tertiary reveal">
@@ -98,24 +92,23 @@
 </div>
 {% endmacro %}
 
-{# Encabezado de una sección de reporte (h2 numerado). #}
 {% macro report_h2(num, text) %}
 <h2 class="h3 fw-bold border-bottom pb-2 mb-3">
   {% if num %}<span class="text-success font-monospace me-2">{{ num }}</span>{% endif %}{{ text }}
 </h2>
 {% endmacro %}
 
-{# Contenedor de tabla responsive con estilo homogéneo. #}
+{# Tabla responsive: la página aporta su thead (table_open … table_close). #}
 {% macro table_open(wrap=False, extra="") %}
 <div class="table-responsive rounded border mb-3">
-  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}">{# <!-- NOSONAR --> macro reutilizable: cada página que la usa añade su propio thead con th (ver table_close). #}
+  <table class="table table-sm table-hover align-middle mb-0 {{ 'text-nowrap' if not wrap }} {{ extra }}"><!-- NOSONAR: el thead lo añade cada página -->
 {% endmacro %}
 {% macro table_close() %}
   </table>
 </div>
 {% endmacro %}
 
-{# Fila de tarjetas de "enfoque" (icono + título + texto). items: [(icon, color, titulo, texto)]. #}
+{# Tarjetas de enfoque. items: [(icon, color, titulo, texto)] #}
 {% macro enfoque_cards(items) %}
 <div class="row row-cols-1 row-cols-md-3 g-3 mt-1">
   {% for icon, color, titulo, texto in items %}
@@ -134,8 +127,7 @@
 </div>
 {% endmacro %}
 
-{# Tarjetas de "conocimientos evidentes" (R4): pregunta/variables/procedimiento/evidencia/
-   hallazgo/interpretación/utilidad/limitación. items: [{n, color, icon, titulo, pregunta, ...}]. #}
+{# Conocimientos evidentes de R4. items: [{n, color, icon, titulo, pregunta, …}] #}
 {% macro conocimientos_cards(items, variables_label="Variables") %}
 <div class="row g-4">
   {% for c in items %}

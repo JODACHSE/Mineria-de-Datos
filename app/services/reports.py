@@ -1,7 +1,4 @@
-"""Construcción de los contextos de R1 y R2 y de las consultas de la API.
-
-Toda la lógica pesada vive aquí; las rutas solo orquestan y renderizan.
-"""
+"""Contextos de R1 y R2 y consultas de la API de datasets."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -37,7 +34,7 @@ EXPLORER_OPTIONS = [
 ]
 
 
-# ------------------------------------------------------------------ R1
+# --- R1 ---
 def build_r1_context(r1_dir: Path) -> dict:
     qcl_basicos = ds.load_raw("qcl_basicos", r1_dir)
     qcl = ds.load_raw("qcl", r1_dir)
@@ -95,9 +92,9 @@ def build_r1_context(r1_dir: Path) -> dict:
     )
 
 
-# ------------------------------------------------------------------ R2
+# --- R2 ---
 def build_r2_context(r1_dir: Path, r2_dir: Path) -> dict:
-    """Costoso pero determinista: se calcula una vez por proceso (ver rutas)."""
+    """Costoso pero determinista: se calcula una vez por proceso."""
     integracion = ds.load_integracion(r1_dir)
     treatment_log = ds.load_treatment_log(r2_dir)
 
@@ -115,7 +112,7 @@ def build_r2_context(r1_dir: Path, r2_dir: Path) -> dict:
         dim_despues = compute_dimensions(tratado, name, **kwargs)
 
         if name != "eva_basicos":
-            # "Antes" refleja el método de R1 (llave de unicidad sin 'Unidad').
+            # «Antes» usa la llave de unicidad de R1 (sin 'Unidad').
             total = len(rows_crudo)
             dup_antes = _count_duplicates(rows_crudo, schema["key_fields"])
             dim_antes["unicidad"] = round(100 * (total - dup_antes) / total, 2) if total else None
@@ -151,9 +148,9 @@ def build_r2_context(r1_dir: Path, r2_dir: Path) -> dict:
     )
 
 
-# ------------------------------------------------------------------ API
+# --- API ---
 def query_dataset(dataset: dict, name: str, args: dict) -> dict:
-    """Filtra y pagina un dataset. `args` es un dict con las query params."""
+    """Filtra y pagina un dataset según los parámetros de la URL."""
     schema = DATASET_SCHEMA[name]
     producto_field = schema["filter_fields"].get("producto")
     elemento_field = schema["filter_fields"].get("elemento")

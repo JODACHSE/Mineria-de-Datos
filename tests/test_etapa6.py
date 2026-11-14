@@ -1,4 +1,4 @@
-"""Pruebas de R6: sección «Conocimiento oculto» y resultados reproducidos de Orange."""
+"""Pruebas de R6: página y resultados de Orange."""
 import sys
 from pathlib import Path
 
@@ -30,12 +30,12 @@ def test_pagina_r6(client):
 
 def test_contexto_r6_coherente():
     ctx = build_r6_context(Config.R6_JSON_DIR, Config.YOUTUBE_DIR, Config.ORANGE_DIR)
-    # Tres modelos evaluados bajo los mismos tres esquemas
+    # Tres modelos bajo los mismos tres esquemas.
     assert set(ctx["evaluaciones"]) == {"cv", "municipio", "temporal"}
     assert all(len(e["modelos"]) == 3 for e in ctx["evaluaciones"].values())
-    # La matriz de confusión de la prueba 2024 suma los registros de prueba
+    # La matriz de 2024 suma los registros de prueba.
     assert ctx["matriz_temporal"]["total"] == ctx["sup"]["prueba"]
-    # El clustering cubre todos los municipios
+    # El clustering cubre todos los municipios.
     assert sum(g["municipios"] for g in ctx["grupos"]) == ctx["clu"]["municipios"]
-    # Los comentarios analizados por video suman el corpus limpio
+    # Los comentarios por video suman el corpus limpio.
     assert sum(v["limpios"] for v in ctx["videos"]) == ctx["limpieza"]["salida"]

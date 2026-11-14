@@ -1,4 +1,4 @@
-"""Pruebas de la etapa 3: página /r3, descargas y consistencia de las iteraciones."""
+"""Pruebas de R3: página, descargas e iteraciones."""
 import json
 import sys
 from pathlib import Path
@@ -38,7 +38,7 @@ def test_r3_en_entregables_y_menu(client):
 
 @pytest.mark.parametrize("nombre", ["Informe_Etapa3_Tratamiento_ETL_SSIS.pdf", "Informe_Etapa3_Tratamiento_ETL_SSIS.docx"])
 def test_informe_descargable(client, nombre):
-    resp = client.get(f"/static/etapa3/{nombre}")
+    resp = client.get(f"/static/etapas/r3/{nombre}")
     assert resp.status_code == 200
     assert len(resp.data) > 10_000
 

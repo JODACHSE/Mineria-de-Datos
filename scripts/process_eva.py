@@ -1,32 +1,11 @@
-"""Limpieza y trazabilidad del dataset EVA (producción municipal).
+"""R1 · EVA crudo -> JSON de la app, sin alterar el CSV original.
 
-Uso:
-    python scripts/process_eva.py
+Uso: python scripts/process_eva.py
+Entrada: app/data/eva_basicos_colombia.csv · Salida: app/static/data/R1/eva_basicos.json
+y integracion_eva_faostat.json (EVA nacional por cultivo y año frente a FAOSTAT).
 
-Este script documenta EXACTAMENTE qué transformaciones se aplicaron al
-CSV crudo descargado de datos.gov.co (Evaluaciones Agropecuarias
-Municipales – EVA, filtrado a 6 cultivos básicos), para cumplir con el
-requisito de trazabilidad: el CSV original nunca se modifica en disco
-(queda intacto en app/data/eva_basicos_colombia.csv); este script lee
-ese archivo, transforma una copia en memoria y escribe los JSON que
-consume la app en app/static/data/R1/.
-
-Transformaciones aplicadas (y solo estas):
-1. Conversión de formato numérico colombiano (punto = miles, coma =
-   decimal, p. ej. "1.499,40") a float estándar, en las 4 columnas
-   numéricas (Área sembrada, Área cosechada, Producción, Rendimiento).
-2. Renombrado de columnas a identificadores cortos sin tildes/espacios
-   (p. ej. "Código Dane municipio" -> "CodigoMunicipioDane"), manteniendo
-   una correspondencia 1:1 documentada en el diccionario de datos de R1.
-3. Ninguna fila se elimina ni se imputa: el diagnóstico de calidad (ver
-   /r1#calidad) reporta los hallazgos reales (p. ej. área cosechada >
-   área sembrada en algunos registros) sin "arreglarlos" todavía — eso
-   corresponde a un entregable posterior de limpieza.
-
-Además construye integracion_eva_faostat.json: agrega la producción de
-EVA a escala nacional (suma por Cultivo + Año) y la cruza con la
-producción nacional de FAOSTAT (QCL) para los mismos 6 cultivos y años,
-usando esas dos variables como llave de integración.
+Solo convierte el formato numérico colombiano ("1.499,40" -> 1499.4) y renombra
+columnas; no elimina ni imputa filas (eso es R2).
 """
 from __future__ import annotations
 
@@ -74,7 +53,7 @@ def log(msg: str) -> None:
 
 
 def parse_co_number(series: pd.Series) -> pd.Series:
-    """'1.499,40' (formato CO) -> 1499.40 (float)."""
+    """'1.499,40' -> 1499.40"""
     return pd.to_numeric(
         series.astype(str).str.replace(".", "", regex=False).str.replace(",", ".", regex=False),
         errors="coerce",

@@ -1,0 +1,148 @@
+{% from "macros/ui.html" import tag %}
+{# Bloques comunes de las 4 páginas de R4. #}
+
+{% macro informe(periodo) %}
+<section id="conocimiento-evidente" class="mb-5 reveal">
+  <div class="card border-0 shadow-sm bg-body-tertiary">
+    <div class="card-body p-4">
+      <div class="d-flex align-items-center gap-2 mb-2">
+        <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+        <h2 class="h5 fw-bold mb-0">Informe</h2>
+      </div>
+      <p class="small text-body-secondary mb-3" style="max-width:70ch;">
+        Esta etapa realiza un análisis exploratorio del dataset EVA (cultivos básicos, Colombia,
+        {{ periodo }}) tratado en R2/R3, para identificar conocimientos evidentes mediante
+        indicadores, comparaciones y visualizaciones. Cada una de las cuatro dimensiones (Poblacional,
+        Territorial, Temporal y Relacional — navegación lateral) se desarrolla en su propia página,
+        con su propio tablero embebido del informe de Power BI.
+      </p>
+
+      <div class="pt-2 border-top">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <i class="bi bi-file-earmark-word-fill text-success"></i>
+          <span class="small fw-semibold">Informe técnico de la etapa:</span>
+          <a class="btn btn-success btn-sm"
+             href="https://mailunicundiedu-my.sharepoint.com/:w:/g/personal/afrodriguezcorrea_ucundinamarca_edu_co/cQr_CkcSDq53T7NqFK_EWRxnEgUCkSyOSqD90EMQYWTciLjKPA"
+             target="_blank" rel="noopener">
+            <i class="bi bi-box-arrow-up-right me-1"></i>Abrir informe (Word Online)</a>
+        </div>
+        <p class="small text-body-secondary mt-2 mb-0">
+          <i class="bi bi-database me-1"></i>Fuente: EVA — Evaluaciones Agropecuarias Municipales (datos.gov.co)
+          &nbsp;·&nbsp;<i class="bi bi-calendar3 me-1"></i>Periodo analizado: 2019–2024
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endmacro %}
+
+{% macro sec_head(n, titulo) %}
+  <div class="d-flex align-items-center gap-3 border-bottom pb-2 mb-3">
+    <span class="badge rounded-circle bg-success d-flex align-items-center justify-content-center fs-6" style="width:2rem;height:2rem;">{{ n }}</span>
+    <h2 class="h3 fw-bold mb-0">{{ titulo }}</h2>
+  </div>
+{% endmacro %}
+
+{# Indicador: valor y detalle por call; pct alimenta la barra. #}
+{% macro ind_card(icon, color, codigo, etiqueta, pct) %}
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm card-hover">
+        <div class="card-body pb-2">
+          <div class="d-flex align-items-start justify-content-between mb-3">
+            <div class="p-2 rounded-3 bg-{{ color }} bg-opacity-10">
+              <i class="bi {{ icon }} text-{{ color }} fs-4"></i>
+            </div>
+            {{ tag(codigo, color) }}
+          </div>
+          <p class="small text-body-secondary mb-1">{{ etiqueta }}</p>
+          {{ caller() }}
+        </div>
+        <div class="card-footer border-0 bg-transparent">
+          <div class="progress" style="height:5px;" role="progressbar" aria-valuenow="{{ pct }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar bg-{{ color }}" style="width:{{ pct }}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endmacro %}
+
+{% macro powerbi(dimension, embed_url, report_url, pbix_url) %}
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+        <i class="bi bi-bar-chart-line-fill text-success"></i>
+        <span class="small fw-semibold">Informe interactivo de Power BI · Dimensión {{ dimension }}</span>
+        <span class="ms-auto d-flex gap-2">
+          {% if report_url %}
+          <a href="{{ report_url }}" target="_blank" rel="noopener" class="btn btn-success btn-sm">
+            Abrir en Power BI <i class="bi bi-box-arrow-up-right ms-1"></i>
+          </a>
+          {% endif %}
+          {% if pbix_url %}
+          <a href="{{ pbix_url }}" class="btn btn-outline-success btn-sm">
+            <i class="bi bi-download me-1"></i>Descargar .pbix
+          </a>
+          {% endif %}
+        </span>
+      </div>
+      {% if embed_url %}
+      <div class="rounded border shadow-sm overflow-hidden mx-auto" style="aspect-ratio:600/373.5;max-width:900px;">
+        <iframe title="Informe Power BI · Dimensión {{ dimension }} (EVA)" src="{{ embed_url }}"
+                width="100%" height="100%" frameborder="0" allowfullscreen loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      {% else %}
+      <span class="badge text-bg-secondary rounded-pill">Próximamente</span>
+      <span class="small text-body-secondary">Publica la página en Power BI o descarga el <code>.pbix</code> (botón de arriba).</span>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{# Ítem del acordeón de interpretaciones (texto por call; el primero abierto). #}
+{% macro interp_item(n, viz, color, titulo) %}
+    <div class="accordion-item border rounded mb-2">
+      <h3 class="accordion-header">
+        <button class="accordion-button rounded fw-semibold{{ '' if n == 1 else ' collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#interp-{{ n }}">
+          <span class="me-2">{{ tag(viz, color) }}</span> {{ titulo }}
+        </button>
+      </h3>
+      <div id="interp-{{ n }}" class="accordion-collapse collapse{{ ' show' if n == 1 }}" data-bs-parent="#acc-interp">
+        <div class="accordion-body small">
+          {{ caller() }}
+        </div>
+      </div>
+    </div>
+{% endmacro %}
+
+{# Limitación principal + decisión (HTML ya armado). #}
+{% macro limite_decision(limitacion, decision) %}
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-warning card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-warning bg-opacity-10">
+              <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-warning-emphasis">Limitación principal del análisis</h3>
+          </div>
+          <p class="small mb-0">{{ limitacion }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card h-100 border-0 shadow-sm border-start border-4 border-success card-hover">
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="p-2 rounded-3 bg-success bg-opacity-10">
+              <i class="bi bi-lightbulb-fill text-success fs-5"></i>
+            </div>
+            <h3 class="h6 fw-bold mb-0 text-success">Decisión sustentada en los datos</h3>
+          </div>
+          <p class="small mb-0">{{ decision }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endmacro %}

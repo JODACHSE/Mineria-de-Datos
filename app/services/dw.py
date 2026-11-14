@@ -1,12 +1,7 @@
-"""R5 · Transformación y carga del modelo estrella (SQLite).
+"""R5 · ETL del modelo estrella (SQLite) desde el EVA tratado de R2.
 
-Lee el EVA tratado en R2 (`app/static/data/R2/eva_basicos.json`), crea las
-tablas con `SQL/R5/01_modelo_estrella.sql` y carga las cuatro dimensiones y la
-tabla de hechos. Es idempotente: cada ejecución reconstruye la base desde cero.
-
-Se usa desde `scripts/R5/build_star.py` (línea de comandos) y desde la app,
-que construye la base al arrancar si todavía no existe. Solo usa la biblioteca
-estándar (sqlite3/json): no agrega dependencias a producción.
+Crea las tablas con `SQL/R5/01_modelo_estrella.sql` y reconstruye todo en cada
+ejecución. Lo usan `scripts/R5/build_star.py` y la app al arrancar (`ensure()`).
 """
 from __future__ import annotations
 
@@ -23,10 +18,8 @@ DDL_PATH = BASE_DIR / "SQL" / "R5" / "01_modelo_estrella.sql"
 
 DESCONOCIDO = "Desconocido"
 
-# Desagregación EVA → sistema productivo. EVA codifica el sistema dentro del
-# nombre de la desagregación; separarlo permite comparar tecnificado vs
-# tradicional en maíz y arroz aunque EVA cambie la desagregación (en 2021 el
-# maíz pasó de "tecnificado/tradicional" a "amarillo/blanco tecnificado/…").
+# Desagregación EVA -> sistema productivo (tecnificado/tradicional), estable
+# aunque EVA cambie los nombres (en 2021 el maíz pasó a amarillo/blanco).
 _SISTEMA_POR_DESAGREGACION = {
     "Arroz riego": "Tecnificado",
     "Arroz secano mecanizado": "Tecnificado",
@@ -74,8 +67,7 @@ def _trienio(anio: int) -> str:
 
 
 def _etapa_desagregacion(anio: int) -> str:
-    # En 2021 EVA reemplazó "Maíz tecnificado/tradicional" (reportado en fresco) por
-    # "Maíz amarillo/blanco tecnificado/tradicional" (reportado en grano seco).
+    # Desde 2021 el maíz se reporta en grano seco y no en fresco.
     return "2019–2020 (anterior)" if anio <= 2020 else "2021–2024 (actual)"
 
 
@@ -89,7 +81,7 @@ def _variedad(desag: str, cultivo: str) -> str:
 
 
 def _num_co(v: str | None) -> float | None:
-    """'-75,581775' → -75.581775 (DIVIPOLA usa coma decimal)."""
+    """'-75,581775' -> -75.581775 (DIVIPOLA usa coma decimal)."""
     try:
         return float(v.replace(",", ".")) if v and v.strip() else None
     except ValueError:
@@ -97,7 +89,7 @@ def _num_co(v: str | None) -> float | None:
 
 
 def load_divipola() -> dict[str, dict]:
-    """Código DIVIPOLA → tipo de entidad y coordenadas (CSV versionado en app/data/)."""
+    """Código DIVIPOLA -> tipo de entidad y coordenadas."""
     path = next(iter(sorted((BASE_DIR / "app" / "data").glob("DIVIPOLA*.csv"))), None)
     if path is None:
         return {}
@@ -116,7 +108,7 @@ def load_source(r2_json: Path) -> list[dict]:
     return [dict(zip(cols, row)) for row in data["rows"]]
 
 
-# Sentencias que puede contener el DDL del modelo estrella (SQL/R5/01_modelo_estrella.sql).
+# Únicas sentencias permitidas en el DDL.
 _DDL_PERMITIDO = re.compile(
     r"^(PRAGMA\s+foreign_keys\s*=\s*ON"
     r"|DROP\s+TABLE\s+IF\s+EXISTS\s+\w+"
@@ -126,12 +118,7 @@ _DDL_PERMITIDO = re.compile(
 
 
 def _ddl_statements(path: Path) -> list[str]:
-    """Lee el DDL y devuelve sus sentencias, rechazando cualquier otra cosa.
-
-    El archivo se ejecuta sentencia por sentencia y solo si es PRAGMA
-    foreign_keys, DROP TABLE IF EXISTS, CREATE TABLE o CREATE INDEX: así un
-    archivo alterado no puede inyectar DML ni otras instrucciones.
-    """
+    """Sentencias del DDL; rechaza cualquier otra cosa para que un archivo alterado no inyecte SQL."""
     sin_comentarios = re.sub(r"--[^\n]*", "", path.read_text(encoding="utf-8"))
     sentencias = [s.strip() for s in sin_comentarios.split(";") if s.strip()]
     for s in sentencias:
@@ -141,7 +128,7 @@ def _ddl_statements(path: Path) -> list[str]:
 
 
 def build(r2_json: Path, db_path: Path) -> dict:
-    """Reconstruye la base estrella y devuelve un resumen de la carga."""
+    """Reconstruye la base y devuelve un resumen de la carga."""
     rows = load_source(r2_json)
     db_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = db_path.with_suffix(".tmp")
@@ -153,7 +140,7 @@ def build(r2_json: Path, db_path: Path) -> dict:
         for sentencia in _ddl_statements(DDL_PATH):
             con.execute(sentencia)
 
-        # ---- dimensiones (miembro 0 = Desconocido) ---------------------
+        # --- Dimensiones (clave 0 = Desconocido) ---
         divipola = load_divipola()
         territorios = {"00000": (0, "00000", DESCONOCIDO, "00", DESCONOCIDO, DESCONOCIDO,
                                  DESCONOCIDO, DESCONOCIDO, None, None)}
@@ -172,7 +159,7 @@ def build(r2_json: Path, db_path: Path) -> dict:
                     (r.get("CodigoDeptoDane") or "").strip() or cod_mun[:2],
                     depto, _REGION_MAP.get(depto, DESCONOCIDO),
                     dv.get("tipo", DESCONOCIDO),
-                    # DIVIPOLA asigna el código DDD001 a la capital de cada departamento.
+                    # DIVIPOLA asigna DDD001 a la capital de cada departamento.
                     "Capital departamental" if cod_mun.endswith("001") else "Resto de municipios",
                     dv.get("latitud"), dv.get("longitud"),
                 )
@@ -194,7 +181,7 @@ def build(r2_json: Path, db_path: Path) -> dict:
                     r.get("CicloCultivo") or DESCONOCIDO, r.get("EstadoFisico") or DESCONOCIDO,
                     r.get("NombreCientifico") or DESCONOCIDO, anio, anio,
                 ]
-            if desag:  # vigencia: primer y último año con registros
+            if desag:  # Vigencia: primer y último año con registros.
                 c = cultivos[desag]
                 c[10], c[11] = min(c[10], anio), max(c[11], anio)
                 cultivos_por_sistema.setdefault(
@@ -211,10 +198,9 @@ def build(r2_json: Path, db_path: Path) -> dict:
         con.executemany("INSERT INTO dim_cultivo VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", cultivos.values())
         con.executemany("INSERT INTO dim_sistema_productivo VALUES (?,?,?,?,?,?)", sistemas)
 
-        # ---- hechos (búsqueda de claves sustitutas) ---------------------
+        # --- Hechos ---
         def num(v):
-            # Faltante → NULL (no 0): así no se confunde con una respuesta
-            # negativa reportada (p. ej., área cosechada 0 = no hubo cosecha).
+            # Faltante -> NULL, no 0: 0 es una respuesta real (p. ej. sin cosecha).
             return float(v) if v not in (None, "") else None
 
         facts = []
@@ -249,22 +235,21 @@ def build(r2_json: Path, db_path: Path) -> dict:
 
 
 def ensure(r2_json: Path, db_path: Path) -> None:
-    """Construye la base si no existe o si el JSON tratado, el DDL o este ETL son más recientes."""
+    """Construye la base si falta o si el JSON, el DDL o este ETL son más recientes."""
     fuentes = (r2_json, DDL_PATH, Path(__file__))
     if not db_path.exists() or db_path.stat().st_mtime < max(f.stat().st_mtime for f in fuentes):
         build(r2_json, db_path)
 
 
 def connect(db_path: Path) -> sqlite3.Connection:
-    """Conexión de solo lectura para las consultas de la app."""
+    """Conexión de solo lectura."""
     con = sqlite3.connect(f"file:{db_path.as_posix()}?mode=ro", uri=True, check_same_thread=False)
     con.row_factory = sqlite3.Row
     return con
 
 
-# ============================================================ diccionario
-# Rol de cada atributo: Clave · Nivel de jerarquía · Atributo de análisis (se
-# puede usar como columna o filtro en el explorador OLAP) · Descriptivo.
+# --- Diccionario de datos ---
+# Rol: Clave · Nivel de jerarquía · Atributo de análisis (columna o filtro OLAP) · Descriptivo.
 DICCIONARIO = [
     {
         "tabla": "dim_territorio", "nombre": "Territorio", "pregunta": "¿Dónde se produce?",
@@ -357,7 +342,7 @@ DICCIONARIO = [
 
 
 def dictionary(con: sqlite3.Connection) -> list[dict]:
-    """DICCIONARIO con filas por tabla y, por atributo, nº de valores distintos y ejemplos (sin el miembro 0)."""
+    """Diccionario con nº de valores distintos y ejemplos por atributo (sin el miembro 0)."""
     out = []
     for d in DICCIONARIO:
         tabla, pk = d["tabla"], d["atributos"][0][0]

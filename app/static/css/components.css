@@ -1,0 +1,220 @@
+/* components.css — ajustes de componentes de Bootstrap, acentos por etapa y microinteracciones. */
+
+/* --- Botones --- */
+.btn {
+  --bs-btn-font-weight: 500;
+  --bs-btn-padding-x: 1rem;
+  letter-spacing: -.005em;
+  transition: color var(--dur) ease, background-color var(--dur) ease, border-color var(--dur) ease, box-shadow var(--dur) ease, transform var(--dur) ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn-lg { --bs-btn-padding-x: 1.35rem; --bs-btn-font-size: 1rem; --bs-btn-border-radius: var(--bs-border-radius-lg); }
+.btn-success {
+  --bs-btn-bg: var(--brand);
+  --bs-btn-border-color: var(--brand);
+  --bs-btn-color: var(--brand-contrast);
+  --bs-btn-hover-bg: var(--brand-hover);
+  --bs-btn-hover-border-color: var(--brand-hover);
+  --bs-btn-hover-color: var(--brand-contrast);
+  --bs-btn-active-bg: var(--brand-hover);
+  --bs-btn-active-border-color: var(--brand-hover);
+  --bs-btn-active-color: var(--brand-contrast);
+  --bs-btn-disabled-bg: var(--brand);
+  --bs-btn-disabled-border-color: var(--brand);
+  --bs-btn-disabled-color: var(--brand-contrast);
+  --bs-btn-focus-shadow-rgb: var(--brand-rgb);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.btn-success:hover { box-shadow: 0 8px 20px -8px rgba(var(--brand-rgb), .6); }
+.btn-outline-success {
+  --bs-btn-color: var(--bs-success-text-emphasis);
+  --bs-btn-border-color: var(--bs-success-border-subtle);
+  --bs-btn-hover-bg: var(--bs-success-bg-subtle);
+  --bs-btn-hover-border-color: rgba(var(--brand-rgb), .5);
+  --bs-btn-hover-color: var(--bs-success-text-emphasis);
+  --bs-btn-active-bg: var(--bs-success-bg-subtle);
+  --bs-btn-active-border-color: var(--brand);
+  --bs-btn-active-color: var(--bs-success-text-emphasis);
+  --bs-btn-focus-shadow-rgb: var(--brand-rgb);
+}
+.btn-outline-secondary { --bs-btn-color: var(--bs-secondary-color); --bs-btn-border-color: var(--bs-border-color); --bs-btn-hover-bg: var(--bs-tertiary-bg); --bs-btn-hover-color: var(--bs-emphasis-color); --bs-btn-hover-border-color: var(--bs-border-color); }
+.btn-check:checked + .btn-outline-success { --bs-btn-active-bg: var(--brand); --bs-btn-active-color: var(--brand-contrast); }
+.btn .bi-arrow-right { transition: transform var(--dur) ease; display: inline-block; }
+.btn:hover .bi-arrow-right { transform: translateX(3px); }
+
+/* En oscuro el verde de marca es claro: el texto sobre él va oscuro. */
+.badge.bg-success, .text-bg-success { color: var(--brand-contrast) !important; }
+
+/* --- Tarjetas --- */
+.card {
+  --bs-card-border-color: var(--bs-border-color-translucent);
+  --bs-card-border-radius: var(--bs-border-radius-lg);
+  --bs-card-inner-border-radius: calc(var(--bs-border-radius-lg) - 1px);
+  --bs-card-cap-bg: transparent;
+  --bs-card-spacer-y: 1.25rem;
+  --bs-card-spacer-x: 1.25rem;
+}
+.card.shadow-sm { box-shadow: var(--bs-box-shadow-sm) !important; border: 1px solid var(--bs-border-color-translucent) !important; }
+.card.bg-body-tertiary { border: 1px solid var(--bs-border-color-translucent) !important; }
+.card-hover { transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out), border-color .25s ease; }
+.card-hover:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover) !important; border-color: rgba(var(--brand-rgb), .25) !important; }
+
+.stat-card { position: relative; overflow: hidden; }
+.stat-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -30% -60% auto;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(var(--brand-rgb), .12), transparent 70%);
+  pointer-events: none;
+}
+.stat-value { letter-spacing: -.03em; font-feature-settings: "tnum"; }
+
+/* --- Alertas / callouts --- */
+.alert { --bs-alert-border-radius: var(--bs-border-radius-lg); }
+.alert.border-start { border-start-start-radius: .375rem !important; border-end-start-radius: .375rem !important; }
+
+/* --- Badges --- */
+.badge { font-weight: 600; letter-spacing: .01em; }
+
+/* --- Tablas --- */
+.table { --bs-table-bg: transparent; --bs-table-hover-bg: rgba(var(--brand-rgb), .05); }
+.table > thead th {
+  font-size: .72rem;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--bs-secondary-color);
+  background: var(--bs-tertiary-bg);
+  border-bottom-color: var(--bs-border-color);
+}
+.table-responsive.rounded { border-radius: var(--bs-border-radius-lg) !important; border-color: var(--bs-border-color-translucent) !important; }
+
+/* --- Formularios --- */
+.form-control, .form-select { border-color: var(--bs-border-color); transition: border-color var(--dur) ease, box-shadow var(--dur) ease; }
+.form-control:hover, .form-select:hover { border-color: rgba(var(--brand-rgb), .35); }
+
+/* --- Pestañas dentro del contenido --- */
+.nav-tabs { --bs-nav-tabs-link-active-color: var(--bs-emphasis-color); }
+.nav-tabs .nav-link { color: var(--bs-secondary-color); }
+
+/* --- Progreso --- */
+.progress { --bs-progress-bg: var(--bs-secondary-bg); --bs-progress-border-radius: 999px; }
+.progress-bar[data-progress] { transition: width 1s var(--ease-out); }
+
+/* --- Gráficos --- */
+.chart-frame { position: relative; height: clamp(260px, 60vw, 380px); }
+@media (min-width: 768px) { .chart-frame { height: clamp(280px, 38vw, 380px); } }
+
+/* --- Acordeón --- */
+.accordion { --bs-accordion-border-color: var(--bs-border-color-translucent); --bs-accordion-active-bg: var(--bs-success-bg-subtle); --bs-accordion-active-color: var(--bs-success-text-emphasis); --bs-accordion-btn-focus-box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color); --bs-accordion-border-radius: var(--bs-border-radius-lg); --bs-accordion-inner-border-radius: calc(var(--bs-border-radius-lg) - 1px); }
+
+/* --- Entrada por scroll (motion.js añade .is-visible) --- */
+.reveal { opacity: 0; transform: translateY(14px); transition: opacity .6s var(--ease-out), transform .6s var(--ease-out); }
+.reveal.is-visible { opacity: 1; transform: none; }
+/* Sin JS el contenido no queda invisible. */
+.no-js .reveal { opacity: 1; transform: none; }
+
+/* --- Acentos por etapa (tone-N ← app/etapas.py) --- */
+.tone-0 { --tone-rgb: var(--tone-0-rgb); }
+.tone-1 { --tone-rgb: var(--tone-1-rgb); }
+.tone-2 { --tone-rgb: var(--tone-2-rgb); }
+.tone-3 { --tone-rgb: var(--tone-3-rgb); }
+.tone-4 { --tone-rgb: var(--tone-4-rgb); }
+.tone-5 { --tone-rgb: var(--tone-5-rgb); }
+.tone-6 { --tone-rgb: var(--tone-6-rgb); }
+
+/* Etapa: icono en baldosa tintada + código + título (menú, portada). */
+.stage-item { display: flex; align-items: center; gap: .75rem; white-space: normal; }
+.stage-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: .625rem;
+  background: rgba(var(--tone-rgb, var(--brand-rgb)), .12);
+  color: rgb(var(--tone-rgb, var(--brand-rgb)));
+  font-size: 1rem;
+  transition: transform .25s var(--ease-out), background-color var(--dur) ease, color var(--dur) ease, box-shadow var(--dur) ease;
+}
+.stage-text { display: flex; flex-direction: column; line-height: 1.2; min-width: 0; }
+.stage-code { font-family: var(--bs-font-monospace); font-size: .68rem; font-weight: 600; letter-spacing: .04em; color: rgb(var(--tone-rgb, var(--brand-rgb))); }
+.stage-title { font-size: .9rem; font-weight: 500; color: var(--bs-body-color); }
+.stage-item:hover .stage-icon,
+.stage-item:focus-visible .stage-icon,
+.stage-item.active .stage-icon {
+  background: rgb(var(--tone-rgb, var(--brand-rgb)));
+  color: #fff;
+  box-shadow: 0 6px 14px -6px rgba(var(--tone-rgb, var(--brand-rgb)), .8);
+  transform: rotate(-6deg) scale(1.06);
+}
+.dropdown-item.stage-item.active,
+.mobile-nav-link.stage-item.active { background: rgba(var(--tone-rgb, var(--brand-rgb)), .1); }
+.dropdown-item.stage-item.disabled { opacity: .55; }
+.stage-menu { min-width: 19rem; }
+.mobile-stages { margin: .25rem 0 .5rem; }
+.mobile-nav-link.stage-item { justify-content: flex-start; }
+.mobile-stages .mobile-subnav { margin-left: 2.6rem; }
+
+/* --- Degradados de marca --- */
+.page-hero h1 .text-success,
+.hero-title .text-success,
+
+.stat-value.text-success {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+.badge.rounded-circle.bg-success { background: var(--gradient-brand) !important; box-shadow: 0 6px 14px -6px rgba(var(--brand-rgb), .7); }
+.btn-success { background-image: linear-gradient(120deg, rgba(255, 255, 255, 0) 30%, rgba(var(--brand-2-rgb), .45)); }
+.progress-bar.bg-success { background: var(--gradient-brand) !important; }
+
+/* Línea de acento que se dibuja al pasar el cursor. */
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--gradient-brand);
+  transform: scaleX(.18);
+  transform-origin: 0 50%;
+  transition: transform .5s var(--ease-out);
+}
+.stat-card { transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out); }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+.stat-card:hover::before { transform: scaleX(1); }
+
+.report-body .card { transition: border-color .25s ease, box-shadow .25s ease; }
+.report-body .card:hover { border-color: rgba(var(--brand-rgb), .28) !important; }
+
+/* Halo de las cabeceras: deriva lenta. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-hero::before, .hero::before { animation: aurora 22s ease-in-out infinite alternate; }
+  .eyebrow::before { animation: ping 2.4s var(--ease-out) infinite; }
+}
+@keyframes aurora {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-4%, 3%, 0) scale(1.06); }
+  100% { transform: translate3d(3%, -2%, 0) scale(1.02); }
+}
+@keyframes ping {
+  0%   { box-shadow: 0 0 0 0 rgba(var(--brand-rgb), .45); }
+  70%  { box-shadow: 0 0 0 7px rgba(var(--brand-rgb), 0); }
+  100% { box-shadow: 0 0 0 0 rgba(var(--brand-rgb), 0); }
+}
+
+/* --- Movimiento reducido --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  .reveal { opacity: 1; transform: none; }
+  .ticker-track { animation: none; }
+}
+
+/* Cards con .reveal: una sola lista de transiciones (la del hover anularía el fundido). */
+.reveal.card, .reveal.stat-card, .report-body .card {
+  transition: opacity .6s var(--ease-out), transform .45s var(--ease-out), box-shadow .25s ease, border-color .25s ease;
+}

@@ -11,8 +11,8 @@
   DTS:LocaleID="9226"
   DTS:ObjectName="FAOSTAT"
   DTS:PackageType="5"
-  DTS:VersionBuild="88"
-  DTS:VersionGUID="{7D96CC11-8A21-4261-9891-7704A2D39AB0}">
+  DTS:VersionBuild="94"
+  DTS:VersionGUID="{24A9E420-417A-4570-A1E2-2AAC8027EACA}">
   <DTS:Property
     DTS:Name="PackageFormatVersion">8</DTS:Property>
   <DTS:ConnectionManagers>
@@ -878,7 +878,7 @@
                       refId="Package\DFT_Extraccion_FAOSTAT\DC_TiposFAOSTAT.Inputs[Data Conversion Input].Columns[Producto]"
                       cachedCodepage="65001"
                       cachedDataType="str"
-                      cachedLength="50"
+                      cachedLength="500"
                       cachedName="Producto"
                       lineageId="Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Producto]" />
                     <inputColumn
@@ -3217,6 +3217,21 @@
                           name="OutputColumnLineageID">#{Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Dataset]}</property>
                       </properties>
                     </inputColumn>
+                    <inputColumn
+                      refId="Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Inputs[Union All Input 3].Columns[Producto]"
+                      cachedCodepage="65001"
+                      cachedDataType="str"
+                      cachedLength="500"
+                      cachedName="Producto"
+                      lineageId="Package\DFT_Extraccion_FAOSTAT\SRC_FS.Outputs[Flat File Source Output].Columns[Producto]">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Output column lineage ID"
+                          name="OutputColumnLineageID">#{Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Producto]}</property>
+                      </properties>
+                    </inputColumn>
                   </inputColumns>
                   <externalMetadataColumns />
                 </input>
@@ -3608,6 +3623,21 @@
                           name="OutputColumnLineageID">#{Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Dataset]}</property>
                       </properties>
                     </inputColumn>
+                    <inputColumn
+                      refId="Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Inputs[Union All Input 2].Columns[Producto]"
+                      cachedCodepage="65001"
+                      cachedDataType="str"
+                      cachedLength="500"
+                      cachedName="Producto"
+                      lineageId="Package\DFT_Extraccion_FAOSTAT\SRC_QCL.Outputs[Flat File Source Output].Columns[Producto]">
+                      <properties>
+                        <property
+                          containsID="true"
+                          dataType="System.Int32"
+                          description="Output column lineage ID"
+                          name="OutputColumnLineageID">#{Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Producto]}</property>
+                      </properties>
+                    </inputColumn>
                   </inputColumns>
                   <externalMetadataColumns />
                 </input>
@@ -3677,7 +3707,7 @@
                       refId="Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Producto]"
                       codePage="65001"
                       dataType="str"
-                      length="50"
+                      length="500"
                       lineageId="Package\DFT_Extraccion_FAOSTAT\UN_Fuentes.Outputs[Union All Output 1].Columns[Producto]"
                       name="Producto" />
                     <outputColumn
@@ -5365,6 +5395,453 @@
               </outputs>
             </component>
             <component
+              refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT"
+              componentClassID="Microsoft.FlatFileDestination"
+              contactInfo="Flat File Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
+              description="Flat File Destination"
+              localeId="9226"
+              name="DEST_ErrLimpios_FAOSTAT"
+              version="1">
+              <properties>
+                <property
+                  dataType="System.Boolean"
+                  description="Specifies whether the data will overwrite or append to the destination file."
+                  name="Overwrite">true</property>
+                <property
+                  dataType="System.Null"
+                  description="Specifies the text to write to the destination file before any data is written."
+                  expressionType="Notify"
+                  name="Header" />
+                <property
+                  dataType="System.Boolean"
+                  description="When text qualifier is enabled, specifies whether the text qualifier in the data written to the destination file will be escaped or not."
+                  name="EscapeQualifier">false</property>
+              </properties>
+              <connections>
+                <connection
+                  refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Connections[FlatFileConnection]"
+                  connectionManagerID="Package.ConnectionManagers[CM_CSV_Errores]"
+                  connectionManagerRefId="Package.ConnectionManagers[CM_CSV_Errores]"
+                  name="FlatFileConnection" />
+              </connections>
+              <inputs>
+                <input
+                  refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input]"
+                  hasSideEffects="true"
+                  name="Flat File Destination Input">
+                  <inputColumns>
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[IdStg]"
+                      cachedDataType="i8"
+                      cachedName="IdStg"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[IdStg]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[IdStg]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[IdLote]"
+                      cachedDataType="i4"
+                      cachedName="IdLote"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[IdLote]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[IdLote]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Dataset]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="12"
+                      cachedName="Dataset"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Dataset]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Dataset]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[ArchivoOrigen]"
+                      cachedDataType="wstr"
+                      cachedLength="260"
+                      cachedName="ArchivoOrigen"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ArchivoOrigen]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[ArchivoOrigen]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[NumeroFila]"
+                      cachedDataType="i4"
+                      cachedName="NumeroFila"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[NumeroFila]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[NumeroFila]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoAmbito]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="CodigoAmbito"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoAmbito]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Ambito]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Ambito"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Ambito]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Ambito]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoArea]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="CodigoArea"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoArea]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Area]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Area"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Area]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Area]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoElemento]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="CodigoElemento"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoElemento]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Elemento]"
+                      cachedDataType="wstr"
+                      cachedLength="255"
+                      cachedName="Elemento"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Elemento]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Elemento]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoProducto]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="CodigoProducto"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoProducto]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Producto]"
+                      cachedDataType="wstr"
+                      cachedLength="500"
+                      cachedName="Producto"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Producto]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Producto]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoAnio]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="CodigoAnio"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoAnio]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Anio]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="Anio"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Anio]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Anio]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[AnioInicio]"
+                      cachedDataType="i2"
+                      cachedName="AnioInicio"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[AnioInicio]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[AnioInicio]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[AnioFin]"
+                      cachedDataType="i2"
+                      cachedName="AnioFin"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[AnioFin]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[AnioFin]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[Unidad]"
+                      cachedDataType="wstr"
+                      cachedLength="100"
+                      cachedName="Unidad"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Unidad]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Unidad]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[ValorTexto]"
+                      cachedDataType="wstr"
+                      cachedLength="100"
+                      cachedName="ValorTexto"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ValorTexto]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[ValorTexto]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[RankDup]"
+                      cachedDataType="i8"
+                      cachedName="RankDup"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[RankDup]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[RankDup]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[ValorNumerico]"
+                      cachedDataType="decimal"
+                      cachedName="ValorNumerico"
+                      cachedScale="4"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ValorNumerico]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_ValorNumerico.Outputs[Data Conversion Output].Columns[ValorNumerico]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[UnidadModal]"
+                      cachedDataType="wstr"
+                      cachedLength="50"
+                      cachedName="UnidadModal"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[UnidadModal]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_UnidadReferencia.Outputs[Lookup Match Output].Columns[UnidadModal]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[GrupoClave]"
+                      cachedDataType="wstr"
+                      cachedLength="101"
+                      cachedName="GrupoClave"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[GrupoClave]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_GrupoClave.Outputs[Derived Column Output].Columns[GrupoClave]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[LimiteInferior]"
+                      cachedDataType="numeric"
+                      cachedName="LimiteInferior"
+                      cachedPrecision="20"
+                      cachedScale="4"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[LimiteInferior]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Outputs[Lookup Match Output].Columns[LimiteInferior]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[LimiteSuperior]"
+                      cachedDataType="numeric"
+                      cachedName="LimiteSuperior"
+                      cachedPrecision="20"
+                      cachedScale="4"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[LimiteSuperior]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Outputs[Lookup Match Output].Columns[LimiteSuperior]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[FlagUnidadAtipica]"
+                      cachedDataType="bool"
+                      cachedName="FlagUnidadAtipica"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[FlagUnidadAtipica]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_Banderas.Outputs[Derived Column Output].Columns[FlagUnidadAtipica]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[FlagAtipicoValor]"
+                      cachedDataType="bool"
+                      cachedName="FlagAtipicoValor"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[FlagAtipicoValor]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_Banderas.Outputs[Derived Column Output].Columns[FlagAtipicoValor]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoAmbito_S]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="10"
+                      cachedName="CodigoAmbito_S"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito_S]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoAmbito_S]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoArea_S]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="10"
+                      cachedName="CodigoArea_S"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea_S]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoArea_S]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoElemento_S]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="10"
+                      cachedName="CodigoElemento_S"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento_S]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoElemento_S]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoProducto_S]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="20"
+                      cachedName="CodigoProducto_S"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto_S]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoProducto_S]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[CodigoAnio_S]"
+                      cachedCodepage="1252"
+                      cachedDataType="str"
+                      cachedLength="20"
+                      cachedName="CodigoAnio_S"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio_S]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoAnio_S]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[ErrorCode]"
+                      cachedDataType="i4"
+                      cachedName="ErrorCode"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ErrorCode]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]" />
+                    <inputColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].Columns[ErrorColumn]"
+                      cachedDataType="i4"
+                      cachedName="ErrorColumn"
+                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ErrorColumn]"
+                      lineageId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]" />
+                  </inputColumns>
+                  <externalMetadataColumns
+                    isUsed="True">
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[IdStg]"
+                      dataType="i8"
+                      name="IdStg" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[IdLote]"
+                      dataType="i4"
+                      name="IdLote" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Dataset]"
+                      codePage="1252"
+                      dataType="str"
+                      length="12"
+                      name="Dataset" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ArchivoOrigen]"
+                      dataType="wstr"
+                      length="260"
+                      name="ArchivoOrigen" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[NumeroFila]"
+                      dataType="i4"
+                      name="NumeroFila" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito]"
+                      dataType="wstr"
+                      length="50"
+                      name="CodigoAmbito" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Ambito]"
+                      dataType="wstr"
+                      length="255"
+                      name="Ambito" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea]"
+                      dataType="wstr"
+                      length="50"
+                      name="CodigoArea" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Area]"
+                      dataType="wstr"
+                      length="255"
+                      name="Area" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento]"
+                      dataType="wstr"
+                      length="50"
+                      name="CodigoElemento" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Elemento]"
+                      dataType="wstr"
+                      length="255"
+                      name="Elemento" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto]"
+                      dataType="wstr"
+                      length="50"
+                      name="CodigoProducto" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Producto]"
+                      dataType="wstr"
+                      length="500"
+                      name="Producto" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio]"
+                      dataType="wstr"
+                      length="50"
+                      name="CodigoAnio" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Anio]"
+                      dataType="wstr"
+                      length="50"
+                      name="Anio" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[AnioInicio]"
+                      dataType="i2"
+                      name="AnioInicio" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[AnioFin]"
+                      dataType="i2"
+                      name="AnioFin" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[Unidad]"
+                      dataType="wstr"
+                      length="100"
+                      name="Unidad" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ValorTexto]"
+                      dataType="wstr"
+                      length="100"
+                      name="ValorTexto" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[RankDup]"
+                      dataType="i8"
+                      name="RankDup" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ValorNumerico]"
+                      dataType="decimal"
+                      name="ValorNumerico"
+                      scale="4" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[UnidadModal]"
+                      dataType="wstr"
+                      length="50"
+                      name="UnidadModal" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[GrupoClave]"
+                      dataType="wstr"
+                      length="101"
+                      name="GrupoClave" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[LimiteInferior]"
+                      dataType="numeric"
+                      name="LimiteInferior"
+                      precision="20"
+                      scale="4" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[LimiteSuperior]"
+                      dataType="numeric"
+                      name="LimiteSuperior"
+                      precision="20"
+                      scale="4" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[FlagUnidadAtipica]"
+                      dataType="bool"
+                      name="FlagUnidadAtipica" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[FlagAtipicoValor]"
+                      dataType="bool"
+                      name="FlagAtipicoValor" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito_S]"
+                      codePage="1252"
+                      dataType="str"
+                      length="10"
+                      name="CodigoAmbito_S" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea_S]"
+                      codePage="1252"
+                      dataType="str"
+                      length="10"
+                      name="CodigoArea_S" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento_S]"
+                      codePage="1252"
+                      dataType="str"
+                      length="10"
+                      name="CodigoElemento_S" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto_S]"
+                      codePage="1252"
+                      dataType="str"
+                      length="20"
+                      name="CodigoProducto_S" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio_S]"
+                      codePage="1252"
+                      dataType="str"
+                      length="20"
+                      name="CodigoAnio_S" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ErrorCode]"
+                      dataType="i4"
+                      name="ErrorCode" />
+                    <externalMetadataColumn
+                      refId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input].ExternalColumns[ErrorColumn]"
+                      dataType="i4"
+                      name="ErrorColumn" />
+                  </externalMetadataColumns>
+                </input>
+              </inputs>
+            </component>
+            <component
               refId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios"
               componentClassID="Microsoft.OLEDBDestination"
               contactInfo="OLE DB Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;4"
@@ -6091,453 +6568,6 @@
               </outputs>
             </component>
             <component
-              refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination"
-              componentClassID="Microsoft.FlatFileDestination"
-              contactInfo="Flat File Destination;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;1"
-              description="Flat File Destination"
-              localeId="9226"
-              name="Flat File Destination"
-              version="1">
-              <properties>
-                <property
-                  dataType="System.Boolean"
-                  description="Specifies whether the data will overwrite or append to the destination file."
-                  name="Overwrite">true</property>
-                <property
-                  dataType="System.Null"
-                  description="Specifies the text to write to the destination file before any data is written."
-                  expressionType="Notify"
-                  name="Header" />
-                <property
-                  dataType="System.Boolean"
-                  description="When text qualifier is enabled, specifies whether the text qualifier in the data written to the destination file will be escaped or not."
-                  name="EscapeQualifier">false</property>
-              </properties>
-              <connections>
-                <connection
-                  refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Connections[FlatFileConnection]"
-                  connectionManagerID="Package.ConnectionManagers[CM_CSV_Errores]"
-                  connectionManagerRefId="Package.ConnectionManagers[CM_CSV_Errores]"
-                  name="FlatFileConnection" />
-              </connections>
-              <inputs>
-                <input
-                  refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input]"
-                  hasSideEffects="true"
-                  name="Flat File Destination Input">
-                  <inputColumns>
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[IdStg]"
-                      cachedDataType="i8"
-                      cachedName="IdStg"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[IdStg]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[IdStg]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[IdLote]"
-                      cachedDataType="i4"
-                      cachedName="IdLote"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[IdLote]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[IdLote]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Dataset]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="12"
-                      cachedName="Dataset"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Dataset]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Dataset]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[ArchivoOrigen]"
-                      cachedDataType="wstr"
-                      cachedLength="260"
-                      cachedName="ArchivoOrigen"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ArchivoOrigen]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[ArchivoOrigen]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[NumeroFila]"
-                      cachedDataType="i4"
-                      cachedName="NumeroFila"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[NumeroFila]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[NumeroFila]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoAmbito]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="CodigoAmbito"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoAmbito]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Ambito]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="Ambito"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Ambito]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Ambito]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoArea]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="CodigoArea"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoArea]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Area]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="Area"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Area]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Area]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoElemento]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="CodigoElemento"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoElemento]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Elemento]"
-                      cachedDataType="wstr"
-                      cachedLength="255"
-                      cachedName="Elemento"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Elemento]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Elemento]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoProducto]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="CodigoProducto"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoProducto]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Producto]"
-                      cachedDataType="wstr"
-                      cachedLength="500"
-                      cachedName="Producto"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Producto]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Producto]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoAnio]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="CodigoAnio"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[CodigoAnio]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Anio]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="Anio"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Anio]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Anio]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[AnioInicio]"
-                      cachedDataType="i2"
-                      cachedName="AnioInicio"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[AnioInicio]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[AnioInicio]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[AnioFin]"
-                      cachedDataType="i2"
-                      cachedName="AnioFin"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[AnioFin]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[AnioFin]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[Unidad]"
-                      cachedDataType="wstr"
-                      cachedLength="100"
-                      cachedName="Unidad"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Unidad]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[Unidad]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[ValorTexto]"
-                      cachedDataType="wstr"
-                      cachedLength="100"
-                      cachedName="ValorTexto"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ValorTexto]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[ValorTexto]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[RankDup]"
-                      cachedDataType="i8"
-                      cachedName="RankDup"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[RankDup]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\SRC_stg_FAOSTAT.Outputs[OLE DB Source Output].Columns[RankDup]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[ValorNumerico]"
-                      cachedDataType="decimal"
-                      cachedName="ValorNumerico"
-                      cachedScale="4"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ValorNumerico]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_ValorNumerico.Outputs[Data Conversion Output].Columns[ValorNumerico]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[UnidadModal]"
-                      cachedDataType="wstr"
-                      cachedLength="50"
-                      cachedName="UnidadModal"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[UnidadModal]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_UnidadReferencia.Outputs[Lookup Match Output].Columns[UnidadModal]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[GrupoClave]"
-                      cachedDataType="wstr"
-                      cachedLength="101"
-                      cachedName="GrupoClave"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[GrupoClave]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_GrupoClave.Outputs[Derived Column Output].Columns[GrupoClave]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[LimiteInferior]"
-                      cachedDataType="numeric"
-                      cachedName="LimiteInferior"
-                      cachedPrecision="20"
-                      cachedScale="4"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LimiteInferior]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Outputs[Lookup Match Output].Columns[LimiteInferior]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[LimiteSuperior]"
-                      cachedDataType="numeric"
-                      cachedName="LimiteSuperior"
-                      cachedPrecision="20"
-                      cachedScale="4"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LimiteSuperior]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Outputs[Lookup Match Output].Columns[LimiteSuperior]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[FlagUnidadAtipica]"
-                      cachedDataType="bool"
-                      cachedName="FlagUnidadAtipica"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FlagUnidadAtipica]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_Banderas.Outputs[Derived Column Output].Columns[FlagUnidadAtipica]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[FlagAtipicoValor]"
-                      cachedDataType="bool"
-                      cachedName="FlagAtipicoValor"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FlagAtipicoValor]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\DER_Banderas.Outputs[Derived Column Output].Columns[FlagAtipicoValor]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoAmbito_S]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="10"
-                      cachedName="CodigoAmbito_S"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito_S]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoAmbito_S]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoArea_S]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="10"
-                      cachedName="CodigoArea_S"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea_S]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoArea_S]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoElemento_S]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="10"
-                      cachedName="CodigoElemento_S"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento_S]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoElemento_S]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoProducto_S]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="20"
-                      cachedName="CodigoProducto_S"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto_S]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoProducto_S]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[CodigoAnio_S]"
-                      cachedCodepage="1252"
-                      cachedDataType="str"
-                      cachedLength="20"
-                      cachedName="CodigoAnio_S"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio_S]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Outputs[Data Conversion Output].Columns[CodigoAnio_S]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[ErrorCode]"
-                      cachedDataType="i4"
-                      cachedName="ErrorCode"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ErrorCode]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Outputs[OLE DB Destination Error Output].Columns[ErrorCode]" />
-                    <inputColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].Columns[ErrorColumn]"
-                      cachedDataType="i4"
-                      cachedName="ErrorColumn"
-                      externalMetadataColumnId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ErrorColumn]"
-                      lineageId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Outputs[OLE DB Destination Error Output].Columns[ErrorColumn]" />
-                  </inputColumns>
-                  <externalMetadataColumns
-                    isUsed="True">
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[IdStg]"
-                      dataType="i8"
-                      name="IdStg" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[IdLote]"
-                      dataType="i4"
-                      name="IdLote" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Dataset]"
-                      codePage="1252"
-                      dataType="str"
-                      length="12"
-                      name="Dataset" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ArchivoOrigen]"
-                      dataType="wstr"
-                      length="260"
-                      name="ArchivoOrigen" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[NumeroFila]"
-                      dataType="i4"
-                      name="NumeroFila" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito]"
-                      dataType="wstr"
-                      length="50"
-                      name="CodigoAmbito" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Ambito]"
-                      dataType="wstr"
-                      length="255"
-                      name="Ambito" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea]"
-                      dataType="wstr"
-                      length="50"
-                      name="CodigoArea" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Area]"
-                      dataType="wstr"
-                      length="255"
-                      name="Area" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento]"
-                      dataType="wstr"
-                      length="50"
-                      name="CodigoElemento" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Elemento]"
-                      dataType="wstr"
-                      length="255"
-                      name="Elemento" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto]"
-                      dataType="wstr"
-                      length="50"
-                      name="CodigoProducto" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Producto]"
-                      dataType="wstr"
-                      length="500"
-                      name="Producto" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio]"
-                      dataType="wstr"
-                      length="50"
-                      name="CodigoAnio" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Anio]"
-                      dataType="wstr"
-                      length="50"
-                      name="Anio" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[AnioInicio]"
-                      dataType="i2"
-                      name="AnioInicio" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[AnioFin]"
-                      dataType="i2"
-                      name="AnioFin" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[Unidad]"
-                      dataType="wstr"
-                      length="100"
-                      name="Unidad" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ValorTexto]"
-                      dataType="wstr"
-                      length="100"
-                      name="ValorTexto" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[RankDup]"
-                      dataType="i8"
-                      name="RankDup" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ValorNumerico]"
-                      dataType="decimal"
-                      name="ValorNumerico"
-                      scale="4" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[UnidadModal]"
-                      dataType="wstr"
-                      length="50"
-                      name="UnidadModal" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[GrupoClave]"
-                      dataType="wstr"
-                      length="101"
-                      name="GrupoClave" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LimiteInferior]"
-                      dataType="numeric"
-                      name="LimiteInferior"
-                      precision="20"
-                      scale="4" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[LimiteSuperior]"
-                      dataType="numeric"
-                      name="LimiteSuperior"
-                      precision="20"
-                      scale="4" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FlagUnidadAtipica]"
-                      dataType="bool"
-                      name="FlagUnidadAtipica" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[FlagAtipicoValor]"
-                      dataType="bool"
-                      name="FlagAtipicoValor" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAmbito_S]"
-                      codePage="1252"
-                      dataType="str"
-                      length="10"
-                      name="CodigoAmbito_S" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoArea_S]"
-                      codePage="1252"
-                      dataType="str"
-                      length="10"
-                      name="CodigoArea_S" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoElemento_S]"
-                      codePage="1252"
-                      dataType="str"
-                      length="10"
-                      name="CodigoElemento_S" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoProducto_S]"
-                      codePage="1252"
-                      dataType="str"
-                      length="20"
-                      name="CodigoProducto_S" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[CodigoAnio_S]"
-                      codePage="1252"
-                      dataType="str"
-                      length="20"
-                      name="CodigoAnio_S" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ErrorCode]"
-                      dataType="i4"
-                      name="ErrorCode" />
-                    <externalMetadataColumn
-                      refId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input].ExternalColumns[ErrorColumn]"
-                      dataType="i4"
-                      name="ErrorColumn" />
-                  </externalMetadataColumns>
-                </input>
-              </inputs>
-            </component>
-            <component
               refId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR"
               componentClassID="Microsoft.Lookup"
               contactInfo="Lookup;Microsoft Corporation; Microsoft SQL Server; (C) Microsoft Corporation; All Rights Reserved; http://www.microsoft.com/sql/support;6"
@@ -6793,7 +6823,7 @@ where [refTable].[Codigo] = ?</property>
                   containsID="true"
                   dataType="System.String"
                   description="Specifies the list of lineage identifiers that map to the parameters that the SQL statement in the SQLCommand property uses. Entries in the list are separated by semicolons."
-                  name="ParameterMap">#{Package\DFT_Limpieza_FAOSTAT\204:invalid};</property>
+                  name="ParameterMap">#{Package\DFT_Limpieza_FAOSTAT\815:invalid};</property>
                 <property
                   dataType="System.Int32"
                   description="Specifies the column code page to use when code page information is unavailable from the data source."
@@ -7140,7 +7170,7 @@ where [refTable].[Dataset] = ? and [refTable].[CodigoElemento] = ? and [refTable
          THEN CAST(RIGHT(LTRIM(RTRIM(CodigoAnio)), 4) AS SMALLINT)
          ELSE CAST(LTRIM(RTRIM(CodigoAnio)) AS SMALLINT) END AS AnioFin,
     LTRIM(RTRIM(Unidad))            AS Unidad,
-    NULLIF(LTRIM(RTRIM(Valor)), '') AS ValorTexto,
+      NULLIF(CAST(REPLACE(LTRIM(RTRIM(Valor)), '.', ',') AS NVARCHAR(100)), '') AS ValorTexto,
     ROW_NUMBER() OVER (
         PARTITION BY Dataset, CodigoArea, CodigoElemento, CodigoProducto, CodigoAnio, Unidad
         ORDER BY IdStg
@@ -9239,40 +9269,40 @@ WHERE IdLote = ?</property>
               name="Data Conversion Output"
               startId="Package\DFT_Limpieza_FAOSTAT\CONV_ValorNumerico.Outputs[Data Conversion Output]" />
             <path
+              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output6]"
+              endId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Inputs[Lookup Input]"
+              name="Derived Column Output"
+              startId="Package\DFT_Limpieza_FAOSTAT\DER_GrupoClave.Outputs[Derived Column Output]" />
+            <path
               refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output5]"
               endId="Package\DFT_Limpieza_FAOSTAT\CONV_CodigosCortos.Inputs[Data Conversion Input]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_FAOSTAT\DER_Banderas.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output6]"
-              endId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Inputs[OLE DB Destination Input]"
-              name="Derived Column Output"
-              startId="Package\DFT_Limpieza_FAOSTAT\DER_TruncarTextos.Outputs[Derived Column Output]" />
-            <path
               refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output3]"
-              endId="Package\DFT_Limpieza_FAOSTAT\LKP_IQR.Inputs[Lookup Input]"
-              name="Derived Column Output"
-              startId="Package\DFT_Limpieza_FAOSTAT\DER_GrupoClave.Outputs[Derived Column Output]" />
-            <path
-              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output4]"
-              endId="Package\DFT_Limpieza_FAOSTAT\UN_Revision_FAOSTAT.Inputs[Union All Input 4]"
-              name="Derived Column Output"
-              startId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_ConversionFinal.Outputs[Derived Column Output]" />
-            <path
-              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output1]"
               endId="Package\DFT_Limpieza_FAOSTAT\UN_Revision_FAOSTAT.Inputs[Union All Input 2]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_Conversion.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output]"
+              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output4]"
+              endId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Inputs[OLE DB Destination Input]"
+              name="Derived Column Output"
+              startId="Package\DFT_Limpieza_FAOSTAT\DER_TruncarTextos.Outputs[Derived Column Output]" />
+            <path
+              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output1]"
               endId="Package\DFT_Limpieza_FAOSTAT\UN_Revision_FAOSTAT.Inputs[Union All Input 1]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_Duplicado.Outputs[Derived Column Output]" />
             <path
-              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output2]"
+              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output]"
               endId="Package\DFT_Limpieza_FAOSTAT\UN_Revision_FAOSTAT.Inputs[Union All Input 3]"
               name="Derived Column Output"
               startId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_DomNeg.Outputs[Derived Column Output]" />
+            <path
+              refId="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output2]"
+              endId="Package\DFT_Limpieza_FAOSTAT\UN_Revision_FAOSTAT.Inputs[Union All Input 4]"
+              name="Derived Column Output"
+              startId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_ConversionFinal.Outputs[Derived Column Output]" />
             <path
               refId="Package\DFT_Limpieza_FAOSTAT.Paths[Dominio_Negativo]"
               endId="Package\DFT_Limpieza_FAOSTAT\DER_Rev_DomNeg.Inputs[Derived Column Input]"
@@ -9300,7 +9330,7 @@ WHERE IdLote = ?</property>
               startId="Package\DFT_Limpieza_FAOSTAT\LKP_UnidadReferencia.Outputs[Lookup Match Output]" />
             <path
               refId="Package\DFT_Limpieza_FAOSTAT.Paths[OLE DB Destination Error Output]"
-              endId="Package\DFT_Limpieza_FAOSTAT\Flat File Destination.Inputs[Flat File Destination Input]"
+              endId="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT.Inputs[Flat File Destination Input]"
               name="OLE DB Destination Error Output"
               startId="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios.Outputs[OLE DB Destination Error Output]" />
             <path
@@ -9915,7 +9945,7 @@ WHERE IdLote = ?</property>
     design-time-name="Package\DFT_Extraccion_FAOSTAT">
     <LayoutInfo>
       <GraphLayout
-        Capacity="32" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
+        Capacity="32" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml">
         <NodeLayout
           Size="131,42"
           Id="Package\DFT_Extraccion_FAOSTAT\SRC_QCL"
@@ -9975,9 +10005,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -9999,9 +10027,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10023,9 +10049,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10047,9 +10071,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10083,9 +10105,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10119,9 +10139,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10155,9 +10173,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10179,9 +10195,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10203,9 +10217,7 @@ WHERE IdLote = ?</property>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="0,0,0,0"
-              RelativePosition="Any" />
+            <EdgeLabelCollection />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -10230,13 +10242,17 @@ WHERE IdLote = ?</property>
       <GraphLayout
         Capacity="64" xmlns="clr-namespace:Microsoft.SqlServer.IntegrationServices.Designer.Model.Serialization;assembly=Microsoft.SqlServer.IntegrationServices.Graph" xmlns:mssgle="clr-namespace:Microsoft.SqlServer.Graph.LayoutEngine;assembly=Microsoft.SqlServer.Graph" xmlns:assembly="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:mssgm="clr-namespace:Microsoft.SqlServer.Graph.Model;assembly=Microsoft.SqlServer.Graph">
         <NodeLayout
+          Size="125,42"
+          Id="Package\DFT_Limpieza_FAOSTAT\LKP_IQR"
+          TopLeft="172.5,540" />
+        <NodeLayout
           Size="179,42"
           Id="Package\DFT_Limpieza_FAOSTAT\DER_TruncarTextos"
           TopLeft="140,625" />
         <NodeLayout
-          Size="125,42"
-          Id="Package\DFT_Limpieza_FAOSTAT\LKP_IQR"
-          TopLeft="172.5,540" />
+          Size="224,42"
+          Id="Package\DFT_Limpieza_FAOSTAT\DEST_ErrLimpios_FAOSTAT"
+          TopLeft="123,789" />
         <NodeLayout
           Size="190,42"
           Id="Package\DFT_Limpieza_FAOSTAT\CONV_ValorNumerico"
@@ -10253,6 +10269,10 @@ WHERE IdLote = ?</property>
           Size="177,42"
           Id="Package\DFT_Limpieza_FAOSTAT\DER_Rev_DomNeg"
           TopLeft="480.227272727273,374.204545454545" />
+        <NodeLayout
+          Size="209,42"
+          Id="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios"
+          TopLeft="128,706" />
         <NodeLayout
           Size="190,42"
           Id="Package\DFT_Limpieza_FAOSTAT\DER_Rev_Conversion"
@@ -10298,28 +10318,6 @@ WHERE IdLote = ?</property>
           Id="Package\DFT_Limpieza_FAOSTAT\CSPL_Duplicados"
           TopLeft="153,126" />
         <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Union All Output 1]"
-          TopLeft="846,748.416666666667">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,40.5833333333333"
-              Start="0,0"
-              End="0,33.0833333333333">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,33.0833333333333" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
           Id="Package\DFT_Limpieza_FAOSTAT.Paths[OLE DB Source Output]"
           TopLeft="236.5,85">
           <EdgeLayout.Curve>
@@ -10339,6 +10337,30 @@ WHERE IdLote = ?</property>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[OLE DB Destination Error Output]"
+          TopLeft="233.75,748">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,41"
+              Start="0,0"
+              End="0,33.5">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,33.5" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <mssgm:EdgeLabel
+              BoundingBox="-73.20890625,11.033203125,146.4178125,11.43359375"
+              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
@@ -10462,6 +10484,28 @@ WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output6]"
+          TopLeft="233.625,498.25">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="0,41.75"
+              Start="0,0"
+              End="0,34.25">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,34.25" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
           Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output5]"
           TopLeft="558.125,584.5">
           <EdgeLayout.Curve>
@@ -10485,18 +10529,18 @@ WHERE IdLote = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output4]"
-          TopLeft="669,726.083333333333">
+          TopLeft="231,667">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="78.5,0"
+              EndConnector="0,39"
               Start="0,0"
-              End="71,0">
+              End="0,31.5">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="71,0" />
+                    End="0,31.5" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -10507,62 +10551,6 @@ WHERE IdLote = ?</property>
         </EdgeLayout>
         <EdgeLayout
           Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output3]"
-          TopLeft="233.625,498.25">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,41.75"
-              Start="0,0"
-              End="0,34.25">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,34.25" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output2]"
-          TopLeft="568.727272727273,416.204545454545">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="230.772727272727,290.212121212122"
-              Start="0,0"
-              End="230.772727272727,282.712121212122">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,60.2623604465714" />
-                  <mssgle:CubicBezierSegment
-                    Point1="0,60.2623604465714"
-                    Point2="0,64.2623604465714"
-                    Point3="4,64.2623604465714" />
-                  <mssgle:LineSegment
-                    End="226.772727272727,64.2623604465714" />
-                  <mssgle:CubicBezierSegment
-                    Point1="226.772727272727,64.2623604465714"
-                    Point2="230.772727272727,64.2623604465714"
-                    Point3="230.772727272727,68.2623604465714" />
-                  <mssgle:LineSegment
-                    End="230.772727272727,282.712121212122" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output1]"
           TopLeft="575.090909090909,249.727272727273">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -10596,7 +10584,29 @@ WHERE IdLote = ?</property>
           </EdgeLayout.Labels>
         </EdgeLayout>
         <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output]"
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output2]"
+          TopLeft="669,726.083333333333">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="78.5,0"
+              Start="0,0"
+              End="71,0">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="71,0" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output1]"
           TopLeft="574.863636363636,170.909090909091">
           <EdgeLayout.Curve>
             <mssgle:Curve
@@ -10621,6 +10631,40 @@ WHERE IdLote = ?</property>
                     Point3="272.636363636364,22.864898989899" />
                   <mssgle:LineSegment
                     End="272.636363636364,528.007575757576" />
+                </mssgle:SegmentCollection>
+              </mssgle:Curve.Segments>
+            </mssgle:Curve>
+          </EdgeLayout.Curve>
+          <EdgeLayout.Labels>
+            <EdgeLabelCollection />
+          </EdgeLayout.Labels>
+        </EdgeLayout>
+        <EdgeLayout
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output]"
+          TopLeft="568.727272727273,416.204545454545">
+          <EdgeLayout.Curve>
+            <mssgle:Curve
+              StartConnector="{assembly:Null}"
+              EndConnector="230.772727272727,290.212121212122"
+              Start="0,0"
+              End="230.772727272727,282.712121212122">
+              <mssgle:Curve.Segments>
+                <mssgle:SegmentCollection
+                  Capacity="5">
+                  <mssgle:LineSegment
+                    End="0,60.2623604465714" />
+                  <mssgle:CubicBezierSegment
+                    Point1="0,60.2623604465714"
+                    Point2="0,64.2623604465714"
+                    Point3="4,64.2623604465714" />
+                  <mssgle:LineSegment
+                    End="226.772727272727,64.2623604465714" />
+                  <mssgle:CubicBezierSegment
+                    Point1="226.772727272727,64.2623604465714"
+                    Point2="230.772727272727,64.2623604465714"
+                    Point3="230.772727272727,68.2623604465714" />
+                  <mssgle:LineSegment
+                    End="230.772727272727,282.712121212122" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
@@ -10769,58 +10813,26 @@ WHERE IdLote = ?</property>
               RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
-        <NodeLayout
-          Size="209,42"
-          Id="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios"
-          TopLeft="128,706" />
         <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Derived Column Output6]"
-          TopLeft="231,667">
+          Id="Package\DFT_Limpieza_FAOSTAT.Paths[Union All Output 1]"
+          TopLeft="846,748.416666666667">
           <EdgeLayout.Curve>
             <mssgle:Curve
               StartConnector="{assembly:Null}"
-              EndConnector="0,39"
+              EndConnector="0,40.5833333333333"
               Start="0,0"
-              End="0,31.5">
+              End="0,33.0833333333333">
               <mssgle:Curve.Segments>
                 <mssgle:SegmentCollection
                   Capacity="5">
                   <mssgle:LineSegment
-                    End="0,31.5" />
+                    End="0,33.0833333333333" />
                 </mssgle:SegmentCollection>
               </mssgle:Curve.Segments>
             </mssgle:Curve>
           </EdgeLayout.Curve>
           <EdgeLayout.Labels>
             <EdgeLabelCollection />
-          </EdgeLayout.Labels>
-        </EdgeLayout>
-        <NodeLayout
-          Size="176,42"
-          Id="Package\DFT_Limpieza_FAOSTAT\Flat File Destination"
-          TopLeft="141,788" />
-        <EdgeLayout
-          Id="Package\DFT_Limpieza_FAOSTAT.Paths[OLE DB Destination Error Output]"
-          TopLeft="230.75,748">
-          <EdgeLayout.Curve>
-            <mssgle:Curve
-              StartConnector="{assembly:Null}"
-              EndConnector="0,40"
-              Start="0,0"
-              End="0,32.5">
-              <mssgle:Curve.Segments>
-                <mssgle:SegmentCollection
-                  Capacity="5">
-                  <mssgle:LineSegment
-                    End="0,32.5" />
-                </mssgle:SegmentCollection>
-              </mssgle:Curve.Segments>
-            </mssgle:Curve>
-          </EdgeLayout.Curve>
-          <EdgeLayout.Labels>
-            <mssgm:EdgeLabel
-              BoundingBox="-73.20890625,10.533203125,146.4178125,11.43359375"
-              RelativePosition="Any" />
           </EdgeLayout.Labels>
         </EdgeLayout>
       </GraphLayout>
@@ -10873,6 +10885,19 @@ WHERE IdLote = ?</property>
     </Properties>
   </PipelineComponentMetadata>
   <PipelineComponentMetadata
+    design-time-name="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios">
+    <Properties>
+      <Property>
+        <Name>DataSourceViewID</Name>
+      </Property>
+      <Property>
+        <Name>TableInfoObjectType</Name>
+        <Value
+          type="q2:string">Table</Value>
+      </Property>
+    </Properties>
+  </PipelineComponentMetadata>
+  <PipelineComponentMetadata
     design-time-name="Package\DFT_Limpieza_FAOSTAT\LKP_UnidadReferencia">
     <Properties>
       <Property>
@@ -10905,19 +10930,6 @@ WHERE IdLote = ?</property>
   </PipelineComponentMetadata>
   <PipelineComponentMetadata
     design-time-name="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Revision">
-    <Properties>
-      <Property>
-        <Name>DataSourceViewID</Name>
-      </Property>
-      <Property>
-        <Name>TableInfoObjectType</Name>
-        <Value
-          type="q2:string">Table</Value>
-      </Property>
-    </Properties>
-  </PipelineComponentMetadata>
-  <PipelineComponentMetadata
-    design-time-name="Package\DFT_Limpieza_FAOSTAT\DEST_FAOSTAT_Limpios">
     <Properties>
       <Property>
         <Name>DataSourceViewID</Name>

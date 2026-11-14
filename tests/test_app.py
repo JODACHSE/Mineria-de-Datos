@@ -1,4 +1,4 @@
-"""Pruebas básicas de humo para las rutas principales de la aplicación."""
+"""Pruebas de humo de las rutas y la API."""
 import sys
 from pathlib import Path
 
@@ -32,7 +32,8 @@ def test_r1_ok(client):
 def test_entregables_ok(client):
     resp = client.get("/entregables")
     assert resp.status_code == 200
-    assert b"R8" in resp.data
+    assert b"R7" in resp.data
+    assert b"R8" not in resp.data
     assert "Aún no definido".encode("utf-8") in resp.data
 
 
@@ -70,7 +71,7 @@ def test_api_dataset_eva_basicos(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["dataset"] == "eva_basicos"
-    assert data["total"] > 10000  # dataset real, no simulado
+    assert data["total"] > 10000  # Dataset real, no simulado.
     assert "Cultivo" in data["display_columns"]
     assert set(data["productos_disponibles"]) == {"Maíz", "Arroz", "Papa", "Plátano", "Yuca", "Frijol"}
 
@@ -125,12 +126,12 @@ def test_api_dataset_version_tratado(client):
     assert resp.status_code == 200
     data = resp.get_json()
     assert data["total"] <= 48932
-    # la version tratada agrega columnas de bandera que la cruda no tiene
+    # La versión tratada agrega columnas de bandera.
     assert any(c.startswith("_flag") or c.startswith("_outlier") for c in data["columns"])
 
 
 def test_api_quality_sin_regresion_tras_refactor(client):
-    """R1 no debe cambiar de comportamiento tras extraer app/quality.py."""
+    """R1 conserva su contrato tras extraer app/quality.py."""
     resp = client.get("/api/quality/eva_basicos")
     assert resp.status_code == 200
     data = resp.get_json()

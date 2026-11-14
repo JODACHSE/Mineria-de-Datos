@@ -1,105 +1,145 @@
-{# Barra de navegación: navbar de Bootstrap con offcanvas en móvil y dropdown de etapas. #}
-<header class="sticky-top">
-  <nav class="navbar navbar-expand-xl bg-body-tertiary border-bottom" aria-label="Navegación principal">
+{# Header (sticky) con el menú «Etapas» y menú móvil; el offcanvas va fuera del <header> por su z-index. #}
+{% set etapas_endpoints = ['pages.r1','pages.r2','pages.r3','pages.r4','pages.r4_territorial','pages.r4_temporal',
+                           'pages.r4_relacional','pages.r5','pages.r5_vista','pages.r6','pages.entregables'] %}
+{% set en_etapas = request.endpoint in etapas_endpoints %}
+
+{% macro etapa_active(e) -%}
+  {%- set subs = e.subpaginas | map(attribute='endpoint') | list if e.subpaginas else [] -%}
+  {{- 'active' if request.endpoint == e.url_endpoint or request.endpoint in subs -}}
+{%- endmacro %}
+{% macro sub_active(s) -%}
+  {{- 'active' if request.endpoint == s.endpoint and request.view_args == s.args -}}
+{%- endmacro %}
+{# Icono + código + título de una etapa. #}
+{% macro stage_label(e) -%}
+  <span class="stage-icon"><i class="bi {{ e.icono }}" aria-hidden="true"></i></span>
+  <span class="stage-text"><span class="stage-code">{{ e.codigo }}</span><span class="stage-title">{{ e.titulo }}</span></span>
+{%- endmacro %}
+
+<header class="site-header" id="site-header">
+  <nav class="navbar navbar-expand-lg" aria-label="Navegación principal">
     <div class="container">
-      <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('pages.index') }}">
+      <a class="navbar-brand brand d-flex align-items-center me-xl-4" href="{{ url_for('pages.index') }}">
         <img src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="" width="34" height="34" class="rounded-circle brand-mark">
         <span class="d-flex flex-column lh-1">
-          <span class="fw-bold letter-spacing-1">{{ brand_name | upper }}</span>
-          <small class="text-body-secondary" style="font-size:.65rem;">{{ brand_tagline }}</small>
+          <span class="brand-name">{{ brand_name | upper }}</span>
+          <small class="brand-tagline mt-1">{{ brand_tagline }}</small>
         </span>
       </a>
 
-      <div class="d-flex align-items-center gap-1 order-xl-last">
-        <button class="btn btn-outline-secondary btn-sm border-0" type="button" id="sfx-toggle" data-sound="on"
-                title="Silenciar / activar sonidos de interfaz" aria-label="Alternar sonido" aria-pressed="true">
-          <i class="bi bi-volume-up-fill snd-on"></i><i class="bi bi-volume-mute-fill snd-off"></i>
-        </button>
-        <button class="btn btn-outline-secondary btn-sm border-0" type="button" id="theme-toggle"
-                title="Cambiar tema claro / oscuro" aria-label="Alternar tema">
-          <i class="bi bi-moon-stars-fill icon-moon"></i><i class="bi bi-sun-fill icon-sun"></i>
-        </button>
-        <a class="btn btn-outline-secondary btn-sm border-0" href="{{ github_repo_url }}" target="_blank" rel="noopener"
-           title="Repositorio en GitHub" aria-label="Ver repositorio en GitHub"><i class="bi bi-github"></i></a>
-        <button class="navbar-toggler ms-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#navMenu"
-                aria-controls="navMenu" aria-label="Abrir menú">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-      </div>
-
-      <div class="offcanvas offcanvas-end" tabindex="-1" id="navMenu" aria-labelledby="navMenuLabel">
-        <div class="offcanvas-header border-bottom">
-          <h5 class="offcanvas-title" id="navMenuLabel">{{ brand_name }}</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-        </div>
-        <div class="offcanvas-body">
-          <ul class="navbar-nav ms-xl-auto me-xl-3 gap-xl-1">
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'pages.index' }}" href="{{ url_for('pages.index') }}">Inicio</a>
-            </li>
-            <li class="nav-item dropdown">
-              {% set etapas_endpoints = ['pages.r1','pages.r2','pages.r3','pages.r4','pages.r4_territorial','pages.r4_temporal','pages.r4_relacional','pages.entregables'] %}
-              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in etapas_endpoints }}"
-                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Etapas</a>
-              <ul class="dropdown-menu dropdown-menu-xl-end shadow">
-                {# R5 tiene su propia opción de menú («Análisis multidimensional»); no se repite aquí. #}
-                {% for e in etapas if e.codigo != 'R5' %}
-                <li class="{{ 'has-submenu' if e.subpaginas }}">
-                  {% if e.url_endpoint %}
-                  {% set sub_endpoints = e.subpaginas | map(attribute='endpoint') | list if e.subpaginas else [] %}
-                  <a class="dropdown-item d-flex justify-content-between align-items-center gap-3 {{ 'active' if request.endpoint == e.url_endpoint or request.endpoint in sub_endpoints }}" href="{{ url_for(e.url_endpoint) }}">
-                    <span><small class="text-body-secondary font-monospace me-2">{{ e.codigo }}</small>{{ e.titulo }}</span>
-                    {% if e.subpaginas %}<i class="bi bi-chevron-left small d-none d-xl-inline" aria-hidden="true"></i>{% endif %}
-                  </a>
-                  {% if e.subpaginas %}
-                  <ul class="dropdown-menu dropdown-submenu" aria-label="Dimensiones de {{ e.titulo }}">
-                    {% for s in e.subpaginas %}
-                    <li>
-                      <a class="dropdown-item {{ 'active' if request.endpoint == s.endpoint and request.view_args == s.args }}"
-                         href="{{ url_for(s.endpoint, **s.args) }}">{{ s.label }}</a>
-                    </li>
-                    {% endfor %}
-                  </ul>
-                  {% endif %}
-                  {% else %}
-                  <span class="dropdown-item disabled d-flex justify-content-between gap-3" aria-disabled="true">
-                    <span><small class="font-monospace me-2">{{ e.codigo }}</small>{{ e.titulo }}</span>
-                    <small class="badge text-bg-secondary rounded-pill align-self-center">Próximamente</small>
-                  </span>
-                  {% endif %}
-                </li>
-                {% endfor %}
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" href="{{ url_for('pages.entregables') }}"><i class="bi bi-map me-2"></i>Ver todas las etapas</a></li>
-              </ul>
-            </li>
-            {# Opción propia del menú para R5 (requisito de la etapa): resumen + las 4 vistas. #}
-            {% set r5 = etapas | selectattr('codigo', 'equalto', 'R5') | first %}
-            <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle {{ 'active' if request.endpoint in ('pages.r5', 'pages.r5_vista') }}"
-                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-box me-1" aria-hidden="true"></i>Análisis multidimensional</a>
-              <ul class="dropdown-menu dropdown-menu-xl-end shadow">
-                <li><a class="dropdown-item {{ 'active' if request.endpoint == 'pages.r5' }}" href="{{ url_for('pages.r5') }}">
-                  <i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Resumen y modelo estrella</a></li>
+      {# --- Escritorio (≥ lg) --- #}
+      <ul class="navbar-nav site-nav d-none d-lg-flex me-auto">
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint == 'pages.index' }}" href="{{ url_for('pages.index') }}"
+             {% if request.endpoint == 'pages.index' %}aria-current="page"{% endif %}>Inicio</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {{ 'active' if en_etapas }}" href="#" role="button"
+             data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">Etapas</a>
+          <ul class="dropdown-menu stage-menu">
+            <li><h6 class="dropdown-header">Entregables del proyecto</h6></li>
+            {% for e in etapas %}
+            <li class="{{ 'has-submenu' if e.subpaginas }}">
+              {% if e.url_endpoint %}
+              <a class="dropdown-item stage-item tone-{{ e.tono }} {{ etapa_active(e) }}" href="{{ url_for(e.url_endpoint) }}">
+                {{ stage_label(e) }}
+                {% if e.subpaginas %}<i class="bi bi-chevron-right small ms-auto opacity-50" aria-hidden="true"></i>{% endif %}
+              </a>
+              {% if e.subpaginas %}
+              <ul class="dropdown-menu dropdown-submenu" aria-label="Subpáginas de {{ e.titulo }}">
+                {% if e.codigo == 'R5' %}
+                <li><a class="dropdown-item {{ 'active' if request.endpoint == 'pages.r5' }}" href="{{ url_for('pages.r5') }}"><i class="bi bi-diagram-3 me-2" aria-hidden="true"></i>Resumen y modelo estrella</a></li>
                 <li><hr class="dropdown-divider"></li>
                 <li><h6 class="dropdown-header">Análisis interactivos</h6></li>
-                {% for s in r5.subpaginas %}
-                <li><a class="dropdown-item {{ 'active' if request.endpoint == s.endpoint and request.view_args == s.args }}"
-                       href="{{ url_for(s.endpoint, **s.args) }}"><small class="text-body-secondary font-monospace me-2">{{ loop.index }}</small>{{ s.label }}</a></li>
+                {% endif %}
+                {% for s in e.subpaginas %}
+                <li><a class="dropdown-item {{ sub_active(s) }}" href="{{ url_for(s.endpoint, **s.args) }}">{{ s.label }}</a></li>
                 {% endfor %}
               </ul>
+              {% endif %}
+              {% else %}
+              <span class="dropdown-item stage-item tone-0 disabled" aria-disabled="true">
+                {{ stage_label(e) }}
+                <small class="badge text-bg-secondary rounded-pill ms-auto">Próximamente</small>
+              </span>
+              {% endif %}
             </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'pages.r6' }}" href="{{ url_for('pages.r6') }}">
-                <i class="bi bi-eye me-1"></i>Conocimiento oculto</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link {{ 'active' if request.endpoint == 'pages.about' }}" href="{{ url_for('pages.about') }}">Sobre nosotros</a>
-            </li>
+            {% endfor %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item {{ 'active' if request.endpoint == 'pages.entregables' }}" href="{{ url_for('pages.entregables') }}"><i class="bi bi-map me-2" aria-hidden="true"></i>Ver la hoja de ruta completa</a></li>
           </ul>
-        </div>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link {{ 'active' if request.endpoint == 'pages.about' }}" href="{{ url_for('pages.about') }}"
+             {% if request.endpoint == 'pages.about' %}aria-current="page"{% endif %}>Sobre nosotros</a>
+        </li>
+      </ul>
+
+      {# --- Acciones (siempre visibles) --- #}
+      <div class="d-flex align-items-center gap-1 ms-auto">
+        <button class="icon-btn" type="button" id="sfx-toggle" data-sound="on"
+                title="Silenciar / activar sonidos de interfaz" aria-label="Alternar sonido" aria-pressed="true">
+          <i class="bi bi-volume-up snd-on" aria-hidden="true"></i><i class="bi bi-volume-mute snd-off" aria-hidden="true"></i>
+        </button>
+        <button class="icon-btn" type="button" id="theme-toggle" title="Cambiar tema claro / oscuro" aria-label="Alternar tema">
+          <i class="bi bi-moon-stars icon-moon" aria-hidden="true"></i><i class="bi bi-sun icon-sun" aria-hidden="true"></i>
+        </button>
+        <a class="icon-btn d-none d-sm-inline-grid" href="{{ github_repo_url }}" target="_blank" rel="noopener noreferrer"
+           title="Repositorio en GitHub" aria-label="Ver repositorio en GitHub"><i class="bi bi-github" aria-hidden="true"></i></a>
+        <button class="icon-btn d-lg-none ms-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#navMenu"
+                aria-controls="navMenu" aria-label="Abrir menú">
+          <i class="bi bi-list fs-4" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
   </nav>
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
 </header>
+
+{# --- Menú móvil (< lg) --- #}
+<div class="offcanvas offcanvas-end mobile-menu" tabindex="-1" id="navMenu" aria-labelledby="navMenuLabel">
+  <div class="offcanvas-header">
+    <a class="brand d-flex align-items-center text-decoration-none text-body" href="{{ url_for('pages.index') }}">
+      <img src="{{ url_for('static', filename='assets/img/wololo-icon.png') }}" alt="" width="30" height="30" class="rounded-circle">
+      <span class="brand-name" id="navMenuLabel">{{ brand_name | upper }}</span>
+    </a>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar menú"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <ul class="mobile-nav">
+      <li><a class="mobile-nav-link {{ 'active' if request.endpoint == 'pages.index' }}" href="{{ url_for('pages.index') }}"><span><i class="bi bi-house me-2" aria-hidden="true"></i>Inicio</span></a></li>
+
+      <li>
+        <button class="mobile-nav-link" type="button" data-bs-toggle="collapse" data-bs-target="#m-etapas"
+                aria-expanded="{{ 'true' if en_etapas else 'false' }}" aria-controls="m-etapas">
+          <span><i class="bi bi-signpost-split me-2" aria-hidden="true"></i>Etapas</span><i class="bi bi-chevron-down" aria-hidden="true"></i>
+        </button>
+        <div class="collapse {{ 'show' if en_etapas }}" id="m-etapas">
+          <ul class="mobile-nav mobile-stages">
+            {% for e in etapas if e.url_endpoint %}
+            <li>
+              <a class="mobile-nav-link stage-item tone-{{ e.tono }} {{ etapa_active(e) if not e.subpaginas }}" href="{{ url_for(e.url_endpoint) }}">{{ stage_label(e) }}</a>
+              {% if e.subpaginas %}
+              <ul class="mobile-subnav">
+                {% if e.codigo == 'R5' %}
+                <li><a class="mobile-nav-link {{ 'active' if request.endpoint == 'pages.r5' }}" href="{{ url_for('pages.r5') }}">Resumen y modelo estrella</a></li>
+                {% endif %}
+                {% for s in e.subpaginas %}
+                <li><a class="mobile-nav-link {{ sub_active(s) }}" href="{{ url_for(s.endpoint, **s.args) }}">{{ s.label }}</a></li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </li>
+            {% endfor %}
+            <li><a class="mobile-nav-link {{ 'active' if request.endpoint == 'pages.entregables' }}" href="{{ url_for('pages.entregables') }}"><span><i class="bi bi-map me-2" aria-hidden="true"></i>Hoja de ruta completa</span></a></li>
+          </ul>
+        </div>
+      </li>
+
+      <li><a class="mobile-nav-link {{ 'active' if request.endpoint == 'pages.about' }}" href="{{ url_for('pages.about') }}"><span><i class="bi bi-people me-2" aria-hidden="true"></i>Sobre nosotros</span></a></li>
+    </ul>
+
+    <a class="btn btn-outline-secondary mt-auto" href="{{ github_repo_url }}" target="_blank" rel="noopener noreferrer">
+      <i class="bi bi-github me-2" aria-hidden="true"></i>Repositorio en GitHub</a>
+  </div>
+</div>

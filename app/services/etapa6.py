@@ -1,9 +1,4 @@
-"""Contexto de la Etapa 6 (R6 · Conocimiento oculto).
-
-Lee los resultados reproducidos de los flujos de Orange
-(app/static/data/R6/resultados.json, generado por scripts/R6/resultados_orange.py)
-y los productos del análisis de comentarios de YouTube (orange/data/youtube/).
-"""
+"""Contexto de R6 a partir de data/R6/resultados.json (Orange) y orange/data/youtube/."""
 from __future__ import annotations
 
 import csv
@@ -12,7 +7,7 @@ from pathlib import Path
 
 MODELO_ELEGIDO = "Random Forest"
 
-# Descripción comprensible de cada grupo, según su cultivo dominante.
+# Descripción de cada grupo según su cultivo dominante.
 _DESCRIPCION_GRUPO = {
     "Arroz": ("Arroceros de gran escala",
               "Municipios de llanura con mucha área sembrada, casi toda en arroz, y el mayor rendimiento relativo."),
@@ -38,7 +33,7 @@ def _read_csv(path: Path) -> list[dict]:
 
 
 def _matriz(m: dict) -> dict:
-    """Matriz de confusión con totales y tasas por fila (real)."""
+    """Matriz de confusión con totales y tasas por fila."""
     labels, vals = m["matriz"]["etiquetas"], m["matriz"]["valores"]
     filas = []
     for lab, row in zip(labels, vals):
@@ -68,7 +63,7 @@ def build_r6_context(r6_dir: Path, youtube_dir: Path, orange_dir: Path) -> dict:
     factores = _read_csv(youtube_dir / "factores_por_video.csv")
     limpieza = _read_json(youtube_dir / "log_limpieza.json")
     extraccion = _read_json(youtube_dir / "log_extraccion.json")
-    # corpus.csv tiene la cabecera de 3 filas de Orange; la columna video es "V01 · título…".
+    # corpus.csv trae la cabecera de 3 filas de Orange; la columna video es «V01 · título…».
     limpios: dict[str, int] = {}
     for row in _read_csv(youtube_dir / "corpus.csv"):
         codigo = (row.get("video") or "")[:3]

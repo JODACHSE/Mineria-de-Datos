@@ -1,20 +1,9 @@
-"""R6 · Conocimiento oculto: prepara los CSV que consume Orange Data Mining.
+"""R6 · Prepara los CSV de Orange desde el EVA tratado de R2.
 
-Lee el EVA tratado de R2 (app/static/data/R2/eva_basicos.json) y genera en
-orange/data/:
-
-  eva_supervisado.csv   registros -> pregunta: ¿el rendimiento es ALTO o BAJO
-                        respecto a la mediana de su cultivo?
-  eva_supervisado_entrenamiento_2019_2023.csv / eva_supervisado_prueba_2024.csv
-                        partición temporal del mismo conjunto
-  eva_municipios.csv    una fila por municipio -> clustering (sin rendimiento)
-  log_preparacion.json  cada filtro/transformación con su conteo y motivo
-
-Uso (desde la raíz del repo):  python scripts/R6/preparar_datos_orange.py
-Requiere: pandas, numpy (requirements-dev.txt).
-
-Formato de salida: CSV con cabecera de 3 filas de Orange (nombre / tipo /
-rol), de modo que File lee la clase y los metadatos sin configuración manual.
+Uso: python scripts/R6/preparar_datos_orange.py
+Salida (orange/data/): eva_supervisado*.csv (clase alto/bajo y partición 2019–2023 / 2024),
+eva_municipios.csv (clustering) y log_preparacion.json.
+Los CSV llevan la cabecera de 3 filas de Orange (nombre / tipo / rol).
 """
 from __future__ import annotations
 
@@ -29,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "app" / "static" / "data" / "R2" / "eva_basicos.json"
 OUT = ROOT / "orange" / "data"
 
-# Mismo mapeo departamento -> región que usa R4/R5 (app/services/etapa4.py).
+# Departamento -> región (el mismo mapeo de etapa4.py).
 REGION = {
     **dict.fromkeys(["Antioquia", "Boyacá", "Caldas", "Cundinamarca", "Huila", "Nariño",
                      "Norte de Santander", "Quindío", "Risaralda", "Santander", "Tolima"], "Andina"),
@@ -40,7 +29,7 @@ REGION = {
     **dict.fromkeys(["Cauca", "Chocó", "Valle del Cauca"], "Pacífica"),
 }
 CULTIVOS = ["Arroz", "Frijol", "Maíz", "Papa", "Plátano", "Yuca"]
-ANIO_CORTE = 2023  # el umbral alto/bajo se calcula con 2019-2023; 2024 queda como prueba
+ANIO_CORTE = 2023  # El umbral alto/bajo se calcula con 2019–2023; 2024 queda para la prueba.
 
 LOG: list[dict] = []
 
@@ -70,9 +59,7 @@ def cargar() -> pd.DataFrame:
     return df
 
 
-# --------------------------------------------------------------------------
-# 1) Supervisado
-# --------------------------------------------------------------------------
+# --- 1) Supervisado ---
 def supervisado(df: pd.DataFrame) -> dict:
     n0 = len(df)
     d = df[(df.AreaCosechada > 0) & (df.Produccion > 0) & (df.Rendimiento > 0)]
@@ -87,9 +74,7 @@ def supervisado(df: pd.DataFrame) -> dict:
     d["RendimientoAlto"] = np.where(d["Rendimiento"] > d["Cultivo"].map(umbral), "Alto", "Bajo")
     d["Log10_AreaSembrada"] = np.log10(d["AreaSembrada"]).round(4)
 
-    # GrupoCV: cada municipio cae completo en uno de 10 grupos (semilla fija). Sirve para la
-    # validación "por municipio" (Test and Score -> Cross validation by feature): en cada
-    # pliegue el modelo se prueba en municipios que NO vio al entrenar. Es meta: no predice.
+    # GrupoCV: 10 grupos de municipios completos para la validación «por municipio». Es meta.
     munis = np.array(sorted(d["CodigoMunicipioDane"].unique()))
     np.random.default_rng(42).shuffle(munis)
     grupo = {m: f"G{i % 10}" for i, m in enumerate(munis)}
@@ -101,9 +86,9 @@ def supervisado(df: pd.DataFrame) -> dict:
     tipos = {"CodMunicipio": "s", "Municipio": "s", "GrupoCV": "d", "Cultivo": "d", "DesagregacionCultivo": "d", "Region": "d",
              "Departamento": "d", "Anio": "c", "Semestre": "d", "Log10_AreaSembrada": "c", "RendimientoAlto": "d"}
     roles = {"CodMunicipio": "meta", "Municipio": "meta", "GrupoCV": "meta", "Anio": "meta",
-             "RendimientoAlto": "class"}   # Anio queda como meta: sirve para partir/describir, no para predecir
+             "RendimientoAlto": "class"}  # Anio es meta: sirve para partir, no para predecir.
     escribir_orange(out, tipos, roles, OUT / "eva_supervisado.csv")
-    # Partición temporal para la prueba "entrenar con el pasado, probar con el año siguiente".
+    # Partición temporal: entrenar con el pasado y probar con 2024.
     escribir_orange(out[out.Anio <= ANIO_CORTE], tipos, roles, OUT / "eva_supervisado_entrenamiento_2019_2023.csv")
     escribir_orange(out[out.Anio > ANIO_CORTE], tipos, roles, OUT / "eva_supervisado_prueba_2024.csv")
 
@@ -118,9 +103,7 @@ def supervisado(df: pd.DataFrame) -> dict:
     }
 
 
-# --------------------------------------------------------------------------
-# 2) Clustering: una fila por municipio, SIN variables de rendimiento
-# --------------------------------------------------------------------------
+# --- 2) Clustering: una fila por municipio, sin variables de rendimiento ---
 def municipios(df: pd.DataFrame) -> dict:
     n_muni0 = df["CodigoMunicipioDane"].nunique()
     d = df[df.AreaSembrada > 0]
@@ -139,7 +122,7 @@ def municipios(df: pd.DataFrame) -> dict:
     t = pd.DataFrame({
         "Log10_AreaSembradaAnual": np.log10(anual).round(4),
         "NumCultivos": g["Cultivo"].nunique(),
-        "Diversificacion": (1 - (share ** 2).sum(axis=1)).round(4),   # 1 - Herfindahl (0 = monocultivo)
+        "Diversificacion": (1 - (share ** 2).sum(axis=1)).round(4),  # 1 − Herfindahl (0 = monocultivo).
         **{f"PctArea_{c}": (share[c] * 100).round(2) for c in CULTIVOS},
         "TasaCosecha": tasa.round(4),
     })
@@ -148,7 +131,7 @@ def municipios(df: pd.DataFrame) -> dict:
     paso("Municipios con tasa de cosecha calculable", antes, len(t),
          "Sin registros de área coherente no se puede estimar cosechada/sembrada.")
 
-    # Datos para CARACTERIZAR los grupos a posteriori (meta: no entran al k-Means).
+    # Solo para describir los grupos (meta: no entran al k-Means).
     base = d.drop_duplicates("CodigoMunicipioDane").set_index("CodigoMunicipioDane")
     mediana = df[(df.AreaCosechada > 0) & (df.Rendimiento > 0)].groupby("Cultivo")["Rendimiento"].median()
     v = df[(df.AreaCosechada > 0) & (df.Rendimiento > 0)].copy()

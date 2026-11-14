@@ -1,4 +1,7 @@
-"""Tratamiento real de calidad para los 4 datasets del proyecto (Etapa 2 / R2).
+"""R2 · Tratamiento de calidad de los 4 datasets.
+
+Uso: python scripts/clean_datasets.py
+Entrada: app/static/data/R1/*.json · Salida: app/static/data/R2/*.json + log_tratamiento.json
 """
 from __future__ import annotations
 
@@ -70,7 +73,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
     total = len(rows)
     acciones: list[dict] = []
 
-    # 1) Duplicados exactos bajo la llave de unicidad
+    # 1) Duplicados exactos bajo la llave de unicidad.
     n_dup = _count_duplicates(rows, schema["unique_key_fields"])
     acciones.append(dict(
         dataset="eva_basicos", accion="Eliminación de duplicados",
@@ -82,7 +85,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
         ),
     ))
 
-    # 2) Nulos en campos numéricos críticos
+    # 2) Nulos en campos numéricos críticos.
     n_nulos = sum(1 for r in rows for f in schema["numeric_fields"] if r.get(f) in (None, "", "NaN"))
     acciones.append(dict(
         dataset="eva_basicos", accion="Tratamiento de valores nulos",
@@ -91,7 +94,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
                        "no se requirió imputación ni eliminación.",
     ))
 
-    # 3) Estandarización de texto (espacios/casing)
+    # 3) Texto: espacios y mayúsculas.
     n_texto = 0
     for r in rows:
         for f in TEXT_FIELDS["eva_basicos"]:
@@ -107,15 +110,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
                        "el control queda activo para futuros refrescos del dataset.",
     ))
 
-    # 4) Corrección de tipos de datos: códigos DANE con cero inicial.
-    #    El CSV original SÍ trae "Código Dane municipio" como texto con cero
-    #    inicial (p. ej. "05001"); al construir eva_basicos.json en R1,
-    #    process_eva.py dejó que pandas infiriera un tipo entero para esa
-    #    columna y el cero inicial se perdió en los departamentos cuyo
-    #    código empieza en 0 (Antioquia=05, Atlántico=08, etc.) — un defecto
-    #    real del pipeline de R1, no del dato fuente. Se corrige aquí
-    #    reformateando ambos campos como texto de ancho fijo; el valor
-    #    numérico no cambia, solo su representación (no se fabrica un dato).
+    # 4) Códigos DANE como texto con cero inicial (R1 los perdió al leerlos como enteros).
     n_codigo_corregido = 0
     for r in rows:
         mun_str = str(r.get("CodigoMunicipioDane"))
@@ -134,7 +129,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
         ),
     ))
 
-    # 5) Validación de rangos: área cosechada > sembrada -> bandera, no corrección
+    # 5) Área cosechada > sembrada: bandera, no corrección.
     n_incons = 0
     for r in rows:
         area_c, area_s = _to_float(r.get("AreaCosechada")), _to_float(r.get("AreaSembrada"))
@@ -149,7 +144,7 @@ def clean_eva(dataset: dict) -> tuple[dict, list[dict]]:
                       "resiembra legítima en el mismo semestre) — no se fabrica un valor corregido.",
     ))
 
-    # 6) Outliers IQR por variable numérica -> bandera
+    # 6) Outliers IQR por variable: bandera.
     for f in schema["numeric_fields"]:
         valores_validos = [v for v in (_to_float(r.get(f)) for r in rows) if v is not None]
         lo, hi = _iqr_bounds(valores_validos)
@@ -176,7 +171,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
     rows = _rows_as_dicts(dataset)
     acciones: list[dict] = []
 
-    # 1) Corrección de la llave de unicidad (+ 'Unidad')
+    # 1) Llave de unicidad corregida (+ 'Unidad').
     n_grupos_multi, n_filas_afectadas = _hallazgo_duplicados_por_unidad(rows, schema["key_fields"])
     acciones.append(dict(
         dataset=schema_name, accion="Corrección de la llave de unicidad (+ 'Unidad')",
@@ -189,7 +184,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
         ),
     ))
 
-    # 2) Nulos en 'Valor' -> bandera, no imputación
+    # 2) Nulos en 'Valor': bandera, no imputación.
     n_nulos = 0
     for r in rows:
         flag = r.get("Valor") in (None, "", "NaN")
@@ -205,7 +200,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
         ),
     ))
 
-    # 3) Estandarización de texto (espacios/casing)
+    # 3) Texto: espacios y mayúsculas.
     n_texto = 0
     for r in rows:
         for f in TEXT_FIELDS[schema_name]:
@@ -220,7 +215,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
                        "encontraron variantes, el control queda activo para futuros refrescos.",
     ))
 
-    # 4) Estandarización temporal: AnioNormalizado (primer año del rango, p. ej. "2000-2002"->2000)
+    # 4) AnioNormalizado: primer año del rango ("2000-2002" -> 2000).
     for r in rows:
         raw = str(r.get(schema["year_field"], ""))[:4]
         r["AnioNormalizado"] = int(raw) if raw.isdigit() else None
@@ -232,10 +227,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
                        "sin modificar.",
     ))
 
-    # 5) Homologación/consistencia de unidad por (Producto, Elemento) -> bandera
-    #    Se agrupa por (Producto, Elemento) y no solo por Elemento: un mismo
-    #    Elemento cubre cultivos y ganadería con unidades legítimamente
-    #    distintas (ver app.quality._consistencia_unidad_por_elemento).
+    # 5) Unidad distinta de la modal por (Producto, Elemento): bandera.
     por_grupo = defaultdict(Counter)
     for r in rows:
         por_grupo[(r.get("Producto"), r.get("Elemento"))][r.get("Unidad")] += 1
@@ -255,9 +247,7 @@ def clean_faostat(dataset: dict, schema_name: str) -> tuple[dict, list[dict]]:
         ),
     ))
 
-    # 6) Tratamiento justificado de atípicos en 'Valor', agrupado por
-    #    (Producto, Elemento) — ver app.quality._iqr_bounds_por_grupo: un
-    #    IQR global sobre 'Valor' mezclaría magnitudes no comparables.
+    # 6) Atípicos de 'Valor' por (Producto, Elemento): un IQR global mezclaría unidades.
     bounds = _iqr_bounds_por_grupo(rows, ("Producto", "Elemento"), "Valor")
     n_out = 0
     for r in rows:
@@ -306,8 +296,7 @@ def main() -> None:
         despues = compute_dimensions(tratado, name, **kwargs)
 
         if name != "eva_basicos":
-            # "Antes" refleja el método de R1 (llave sin 'Unidad'); "después"
-            # ya usa la llave corregida vía compute_dimensions(tratado, ...).
+            # «Antes» usa la llave de R1 (sin 'Unidad'); «después», la corregida.
             total = len(crudo["rows"])
             dup_antes = _count_duplicates(_rows_as_dicts(crudo), DATASET_SCHEMA[name]["key_fields"])
             antes["unicidad"] = round(100 * (total - dup_antes) / total, 2) if total else None

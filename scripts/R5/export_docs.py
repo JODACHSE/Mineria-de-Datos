@@ -1,13 +1,7 @@
-"""R5 · Genera docs/R5/analisis_multidimensional.md desde el modelo estrella.
+"""R5 · Exporta a docs/R5/analisis_multidimensional.md lo mismo que muestra /r5.
 
-Uso (desde la raíz del repositorio, después de build_star.py):
-
-    python scripts/R5/export_docs.py
-
-Exporta al repositorio lo mismo que muestra /r5: relación con R4, el diccionario de
-dimensiones, las cuatro preguntas, los ejemplos de las operaciones OLAP, los ocho conocimientos (con
-cifras calculadas por consulta al modelo) y las validaciones. Así la
-documentación no se desincroniza de la aplicación.
+Uso: python scripts/R5/export_docs.py  (después de build_star.py)
+Las cifras salen del modelo, así la documentación no se desincroniza de la app.
 """
 import sys
 from contextlib import closing

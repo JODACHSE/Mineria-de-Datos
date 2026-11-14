@@ -1,226 +1,190 @@
-# Wololo · Seguridad alimentaria y producción agrícola — Colombia
+<div align="center">
 
-Proyecto de Minería de Datos de **Wololo** (Universidad de Cundinamarca).
-Sitio web en **Flask** que publica los entregables **R1 · Del problema a los
-datos**, **R2 · Diagnóstico y calidad de los datos**, **R3 · Tratamiento ETL
-con SSIS**, **R4 · Conocimiento evidente** (análisis exploratorio con
-Power BI) y **R5 · Análisis multidimensional** (modelo estrella + OLAP), con un explorador de datos y métricas de calidad servidas por una
-API propia.
+<img src="app/static/assets/img/wololo-icon.png" alt="Wololo" width="88">
 
-**Equipo:** Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) ·
-Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N))
-**Cobertura:** Colombia (nacional) · **Periodo:** 2000–2024
-**Fuentes:** EVA · MinAgricultura/UPRA (48.932 registros municipales) + FAOSTAT · FAO + ENSIN, DANE, World Bank, Our World in Data (contexto)
+# Seguridad alimentaria y producción agrícola en Colombia
+
+**Proyecto de Minería de Datos · Grupo Wololo · Universidad de Cundinamarca**
+
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)
+![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
+![Orange](https://img.shields.io/badge/Orange-3.40-F28C28)
+![Render](https://img.shields.io/badge/Render-desplegado-46E3B7?logo=render&logoColor=white)
+
+[**🌐 Ver el sitio**](https://mineria-de-datos-4qn5.onrender.com) ·
+[🗺️ Hoja de ruta](https://mineria-de-datos-4qn5.onrender.com/entregables) ·
+[🎬 Video R6](https://youtu.be/kvMEUs-LW4k)
+
+</div>
 
 ---
 
-## Características
+## ¿De qué trata?
 
-- **Bootstrap 5.3.8 nativo** — grid, componentes (navbar + offcanvas, dropdown,
-  cards, badges, progress, accordion, tabs, toasts, scrollspy) y los **dos temas
-  base claro/oscuro** de Bootstrap (`data-bs-theme`). El CSS propio cabe en
-  ~50 líneas (`static/css/app.css`): solo motion y ajustes de layout.
-- **Full responsive** — probado a 390 px y 1366 px en ambos temas.
-- **Sonidos de interfaz** — librería [uisfx](https://www.npmjs.com/package/uisfx)
-  (pack `zen`), cargada como módulo ES desde jsDelivr. Sintetiza cada sonido
-  en el navegador con Web Audio API a partir de recetas deterministas: no
-  hay archivos `.mp3` que alojar ni versionar. Botón de silencio persistente
-  (uisfx guarda la preferencia en `localStorage`).
-- **Contenido animado** — entrada por scroll, cifras con *count-up*, barras de
-  calidad que se llenan al aparecer, transiciones de Bootstrap; respeta
-  `prefers-reduced-motion`.
-- **Backend dinámico** — filtros y paginación en el servidor
-  (`/api/dataset/<nombre>`), calidad recalculada en vivo (`/api/quality`,
-  `/api/profile`). Gráficos Chart.js que toman los colores de las variables CSS
-  de Bootstrap y se redibujan al cambiar de tema.
-- **Arquitectura limpia** — rutas delgadas, lógica en `services/`, plantillas
-  por `layouts/` · `components/` · `macros/` · `pages/`, JS en módulos ES sin
-  build step.
-- **Listo para Render** — `render.yaml`, `Procfile`, `requirements.txt` mínimo
-  para producción y `requirements-dev.txt` para scripts y tests.
+Colombia produce mucha comida y, aun así, muchos hogares no tienen acceso seguro a ella.
+Este proyecto usa **datos oficiales abiertos** para entender **dónde, cuánto y con qué
+estabilidad** se producen seis cultivos básicos (maíz, arroz, papa, plátano, yuca y fríjol)
+y qué patrones explican que algunos territorios rindan menos que otros.
 
-## Estructura
+Todo se publica en un **sitio web** donde cada etapa del curso es una sección con sus
+gráficos, tablas, filtros, descargas y conclusiones.
 
-```
-.
-├── app/
-│   ├── __init__.py          # application factory + filtros Jinja + 404
-│   ├── config.py            # configuración y metadatos del proyecto
-│   ├── etapas.py            # las 8 etapas / entregables
-│   ├── quality.py           # perfilamiento y 6 dimensiones (Python puro)
-│   ├── routes/
-│   │   ├── pages.py         # blueprint `pages`: /, /r1, /r2, /entregables, /sobre-nosotros
-│   │   └── api.py           # blueprint `api`: /api/dataset, /api/quality, /api/profile
-│   ├── services/
-│   │   ├── datasets.py      # carga y caché de los JSON (R1 crudo / R2 tratado)
-│   │   └── reports.py       # contextos de R1 y R2, consultas de la API
-│   ├── templates/
-│   │   ├── layouts/         # base.html (Bootstrap + temas) · report.html (hero + TOC + scrollspy)
-│   │   ├── components/      # navbar, ticker, footer, toc, data_explorer, toast, back_to_top
-│   │   ├── macros/ui.html   # stat, section_head, callout, tag, quality_bar, source_card…
-│   │   ├── pages/           # home, r1, r2, r3, r4 (+ r4_territorial/temporal/ ), entregables, about
-│   │   └── errors/404.html
-│   ├── static/
-│   │   ├── css/app.css      # ~50 líneas propias
-│   │   ├── js/app.js        # entrada; modules/: sound (uisfx), theme, motion, explorer, charts, notify
-│   │   ├── data/R1|R2|R3/   # datasets curados / tratados + log_tratamiento.json + iteraciones.json
-│   │   ├── etapa3/          # assets servidos de R3: SSIS (sql/, img/), R3.zip, informe PDF/DOCX
-│   │   └── assets/img/
-│   └── data/                # CSV originales (trazabilidad) — ver "Reproducir los datos"
-├── SQL/                     # esquema y SPs maestros de Wololo_ETL (SQL Server)
-├── scripts/
-│   ├── fetch_faostat.py · rebuild_chart.py · process_eva.py · clean_datasets.py · etapa3_iteraciones.py
-│   └── R3/                  # proyecto SSIS de Visual Studio (EVA.dtsx, FAOSTAT.dtsx, R3.dtproj)
-├── docs/R3/                 # detalle técnico ampliado de los paquetes SSIS (EVA, FAOSTAT)
-├── tests/                   # pytest: rutas, API y calidad
-├── render.yaml · Procfile · .python-version
-├── requirements.txt · requirements-dev.txt   
-├── setup.sh · setup.bat · .env.example
-└── run.py
-```
+| | |
+|---|---|
+| 📊 **Datos** | EVA · MinAgricultura/UPRA (48.932 registros municipales, 2019–2024) y FAOSTAT · FAO (2000–2024) |
+| 🗺️ **Cobertura** | Colombia: 1.098 municipios de 32 departamentos |
+| 👥 **Equipo** | Jonathan David Chavarro Segura ([@JODACHSE](https://github.com/JODACHSE)) · Andrés Felipe Rodríguez Correa ([@N3X4N](https://github.com/N3X4N)) |
 
-## Puesta en marcha
+## Las etapas
+
+| Etapa | ¿Qué se hizo? | En el sitio |
+|:---:|---|---|
+| **R1** · Del problema a los datos | Pregunta de investigación, fuentes, dataset inicial y primer diagnóstico de calidad. | [`/r1`](https://mineria-de-datos-4qn5.onrender.com/r1) |
+| **R2** · Calidad de los datos | Medición de 6 dimensiones de calidad y limpieza documentada de los 4 datasets. | [`/r2`](https://mineria-de-datos-4qn5.onrender.com/r2) |
+| **R3** · ETL con SSIS | Limpieza automática con paquetes de SQL Server Integration Services, en tres iteraciones. | [`/r3`](https://mineria-de-datos-4qn5.onrender.com/r3) |
+| **R4** · Conocimiento evidente | Cuatro preguntas exploratorias (población, territorio, tiempo y cruces) con informe en Power BI. | [`/r4`](https://mineria-de-datos-4qn5.onrender.com/r4) |
+| **R5** · Análisis multidimensional | Modelo estrella y cubo OLAP interactivo (drill-down, roll-up, slice, dice y pivot). | [`/r5`](https://mineria-de-datos-4qn5.onrender.com/r5) |
+| **R6** · Conocimiento oculto | Modelos predictivos, grupos de municipios y análisis de comentarios de YouTube en Orange. | [`/r6`](https://mineria-de-datos-4qn5.onrender.com/r6) |
+| **R7** | Aún no definida. | — |
+
+## Probarlo en tu computador
+
+Necesitas **Python 3.12** y Git.
 
 ```bash
-./setup.sh        # Linux / macOS      (Windows: setup.bat)
-# → http://127.0.0.1:5000
+git clone https://github.com/JODACHSE/Mineria-de-Datos.git
+cd Mineria-de-Datos
+./setup.sh          # en Windows: setup.bat
 ```
 
-Manual:
+El script crea un entorno virtual, instala todo y deja el sitio corriendo en **http://127.0.0.1:5000** (Ctrl+C para detenerlo).
+
+<details>
+<summary>Prefiero hacerlo paso a paso</summary>
 
 ```bash
-python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate            # Windows: .venv\Scripts\activate
 pip install -r requirements-dev.txt
-cp .env.example .env
+cp .env.example .env                 # Windows: copy .env.example .env
 python run.py
 ```
 
-### Despliegue en Render
+</details>
 
-1. Sube el repositorio a GitHub.
-2. En Render: **New → Blueprint** y elige el repo; `render.yaml` crea el
-   servicio web con `gunicorn run:app`.
-3. (Alternativa manual) **New → Web Service**: *Build* `pip install -r
-   requirements.txt`, *Start* `gunicorn run:app --workers 1 --threads 4
-   --timeout 120 --preload`, variable `FLASK_DEBUG=0`.
+Para correr las pruebas: `pytest` (53 pruebas).
 
-`--preload` calcula el contexto de R2 (48.932 filas) una sola vez al arrancar.
+## ¿Cómo está organizado?
 
-## Rutas
+La regla es simple: **lo que pertenece a una sola etapa vive en una carpeta `rN/`**;
+lo que comparten varias páginas está en carpetas comunes.
 
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Landing |
-| `/r1` · `/r2` · `/r3` | Entregables (R3 incluye la descarga del informe en PDF/Word y el video) |
-| `/r4` · `/r4/territorial` · `/r4/temporal` · `/r4/relacional` | R4 · Conocimiento evidente: las 4 preguntas de análisis (poblacional, territorial, temporal, multivariada) y el acceso al informe de Power BI |
-| `/r5` · `/r5/territorial` · `/r5/temporal` · `/r5/sistemas` · `/r5/cosecha` | R5 · Análisis multidimensional: modelo estrella, validaciones y las 4 vistas OLAP (`?ej=<id>` abre un ejemplo guiado) |
-| `/r6` | R6 · Conocimiento oculto: modelos supervisados, clustering, comentarios de YouTube, conclusiones integradas, informe y video |
-| `/entregables` | Hoja de ruta (8 etapas) |
-| `/sobre-nosotros` | Equipo |
-| `/api/dataset/<qcl\|qcl_basicos\|fs\|eva_basicos>` | Datos paginados (`q`, `producto`, `elemento`, `anio_min`, `anio_max`, `page`, `page_size`, `version=crudo\|tratado`) |
-| `/api/quality/<nombre>` | Diagnóstico R1 |
-| `/api/profile/<nombre>?version=` | Perfilamiento + 6 dimensiones (R2) |
-| `/api/r5/<vista>` | Consulta OLAP (`rows`, `cols`, `measure`, `f_<nivel>` repetible): matriz, 3 indicadores y datos de la 2.ª gráfica |
-
-## Reproducir los datos
-
-```bash
-export FAOSTAT_TOKEN="tu_token"
-python scripts/fetch_faostat.py     # descarga FAOSTAT vía API
-python scripts/rebuild_chart.py     # JSON de FAOSTAT desde CSV
-python scripts/process_eva.py       # limpia EVA + integración EVA↔FAOSTAT (R1)
-python scripts/clean_datasets.py    # tratamiento de calidad → data/R2 (R2)
+```
+app/
+├── routes/             páginas (pages.py) y API en JSON (api.py)
+├── services/           cálculos de cada etapa: reports (R1/R2), etapa3 … etapa6, dw + olap (R5)
+├── templates/
+│   ├── layouts/        esqueleto de las páginas
+│   ├── components/     menú, índice lateral, footer…
+│   ├── pages/          inicio, entregables y equipo
+│   └── etapas/r1…r6/   una carpeta por etapa
+├── static/
+│   ├── css/            estilos por capas: tokens → base → layout → components
+│   ├── js/             core/ (común) · features/ (compartido) · etapas/rN/ (de una etapa)
+│   ├── etapas/r3, r6/  descargas: informes, R3.zip, imágenes
+│   └── data/R1…R6/     datos ya procesados que muestra el sitio
+├── etapas.py           lista de etapas (título, estado, icono y color)
+└── security.py         cabeceras de seguridad
+scripts/                programas que generan los datos (R1/R2 en la raíz, R3/, R5/, R6/)
+SQL/                    scripts de base de datos (R3 y R5)
+orange/                 flujos y datos de Orange (R6) — ver su README
+docs/                   documentación técnica (R3, R4 · Power BI, R5)
+tests/                  pruebas automáticas
 ```
 
-## Pruebas
+> El sitio **no modifica** los datos: solo lee los archivos de `app/static/data/`, que se
+> generan con los scripts de abajo.
 
-```bash
-pytest
-```
+## Regenerar los datos
+
+Solo hace falta si quieres reconstruir todo desde las fuentes originales.
+
+| Comando | ¿Qué hace? |
+|---|---|
+| `python scripts/fetch_faostat.py` | Descarga FAOSTAT (necesita `FAOSTAT_TOKEN` en `.env`). |
+| `python scripts/rebuild_chart.py` | Rehace los datos de FAOSTAT desde los CSV, sin descargar. |
+| `python scripts/process_eva.py` | Prepara el EVA y lo cruza con FAOSTAT (R1). |
+| `python scripts/clean_datasets.py` | Aplica la limpieza de calidad (R2). |
+| `python scripts/etapa3_iteraciones.py` | Replica en Python las reglas de SSIS (R3). |
+| `python scripts/R5/build_star.py` | Construye el modelo estrella en SQLite (R5). |
+| `python scripts/R5/export_docs.py` | Regenera la documentación de R5. |
+| `python scripts/R6/…` | Pasos de Orange y YouTube: ver [`orange/README.md`](orange/README.md). |
+
+## Detalle por etapa
+
+<details>
+<summary><b>R3 · ETL con SSIS</b></summary>
+
+- Proyecto de Visual Studio en [`scripts/R3/`](scripts/R3/) (`EVA.dtsx`, `FAOSTAT.dtsx`). También se descarga como `R3.zip` desde `/r3`.
+- Base de datos (esquema y procedimientos) en [`SQL/`](SQL/).
+- Explicación de cada paquete: [`docs/R3/Mineria_ETL_EVA.md`](docs/R3/Mineria_ETL_EVA.md) y [`docs/R3/Mineria_ETL_FAOSTAT.md`](docs/R3/Mineria_ETL_FAOSTAT.md).
+- Video de demostración: [youtu.be/z8omdqE1M5I](https://youtu.be/z8omdqE1M5I).
+
+</details>
+
+<details>
+<summary><b>R4 · Conocimiento evidente</b></summary>
+
+- Cuatro páginas, una por pregunta: `/r4` (poblacional), `/r4/territorial`, `/r4/temporal` y `/r4/relacional`.
+- Cada página incluye su informe interactivo de Power BI. El archivo original está en [`docs/R4/EVA_PowerBI_wololo.pbix`](docs/R4/) y se descarga desde la página.
+
+</details>
+
+<details>
+<summary><b>R5 · Análisis multidimensional</b></summary>
+
+- **Modelo estrella** en SQLite: una tabla de hechos (producción por municipio, cultivo y periodo) y cuatro dimensiones (territorio, tiempo, cultivo y sistema productivo), con 8 medidas y 4 jerarquías.
+- Se eligió SQLite porque viene con Python, es un solo archivo y funciona en Render. La base **no se versiona**: la app la construye sola al arrancar.
+
+| ¿Qué buscas? | ¿Dónde está? |
+|---|---|
+| Diagrama y diccionario | [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md) |
+| Preguntas, operaciones y conocimientos | [`docs/R5/analisis_multidimensional.md`](docs/R5/analisis_multidimensional.md) |
+| Tablas, consultas y validaciones en SQL | [`SQL/R5/`](SQL/R5/) |
+| Carga de datos y motor OLAP | [`app/services/dw.py`](app/services/dw.py) · [`app/services/olap.py`](app/services/olap.py) |
+
+</details>
+
+<details>
+<summary><b>R6 · Conocimiento oculto</b></summary>
+
+- Tres flujos de Orange en [`orange/flujos/`](orange/flujos/): clasificación (¿el rendimiento será alto o bajo?), grupos de municipios (k-Means) y análisis de comentarios de YouTube.
+- Guía completa para reproducirlos: [`orange/README.md`](orange/README.md).
+- En el sitio (`/r6`): hallazgos, métricas, diagramas de los flujos, informe en PDF y [video de sustentación](https://youtu.be/kvMEUs-LW4k).
+
+</details>
+
+## API
+
+Los datos también se pueden consultar en JSON:
+
+| Ruta | Devuelve |
+|---|---|
+| `/api/dataset/<nombre>` | Filas paginadas y filtrables (`qcl`, `qcl_basicos`, `fs`, `eva_basicos`). |
+| `/api/quality/<nombre>` | Diagnóstico de calidad de R1. |
+| `/api/profile/<nombre>` | Perfil de columnas y 6 dimensiones de calidad (R2). |
+| `/api/r5/<vista>` | Consulta OLAP de una vista de R5. |
+
+## Publicación y seguridad
+
+- **Render:** al conectar el repositorio como *Blueprint*, [`render.yaml`](render.yaml) crea el servicio. Comando de arranque: `gunicorn run:app --workers 1 --threads 4 --timeout 120 --preload`.
+- **Configuración:** todo valor sensible va en variables de entorno (ver [`.env.example`](.env.example)); nunca se sube a GitHub.
+- **Protección:** política de seguridad de contenido (CSP), cabeceras HTTP seguras y cookies protegidas ([`app/security.py`](app/security.py)).
 
 ## Fuentes y licencias
 
-EVA (MinAgricultura/UPRA, datos abiertos) · FAOSTAT (FAO, CC BY-4.0) ·
-ENSIN 2015 (ICBF/MinSalud) · DANE (IPC) · World Bank Open Data (CC BY-4.0) ·
-Our World in Data (CC BY 4.0). Uso estrictamente académico.
+EVA (MinAgricultura/UPRA, datos abiertos) · FAOSTAT (FAO, CC BY 4.0) · ENSIN 2015 (ICBF/MinSalud) ·
+DANE · World Bank Open Data (CC BY 4.0) · Our World in Data (CC BY 4.0).
 
-## Etapa 3 · Tratamiento ETL con SSIS
-
-- Página: `/r3` — resumen, reglas, diagramas de los paquetes, resultados de las tres
-  iteraciones, comparación de calidad, ejemplos, prueba de re-ejecución, video y descarga
-  del informe (assets servidos desde `app/static/etapa3/`).
-- Proyecto SSIS (Visual Studio): [`scripts/R3/`](scripts/R3/) — `EVA.dtsx`, `FAOSTAT.dtsx`,
-  `R3.dtproj`. Esquema y stored procedures maestros en [`SQL/`](SQL/).
-- Documentación técnica detallada de cada paquete (control flow, data flow, reglas,
-  manejo de errores): [`docs/R3/Mineria_ETL_EVA.md`](docs/R3/Mineria_ETL_EVA.md) ·
-  [`docs/R3/Mineria_ETL_FAOSTAT.md`](docs/R3/Mineria_ETL_FAOSTAT.md).
-- Resultados de las iteraciones: `python scripts/etapa3_iteraciones.py`
-  → `app/static/data/R3/iteraciones.json`.
-- Video: definir `VIDEO_ETAPA3_URL` (YouTube o Google Drive público) en `.env` o en las
-  variables de entorno de Render para que se embeba en `/r3`.
-
-## Etapa 4 · Conocimiento evidente
-
-- Páginas: `/r4` (propósito de la etapa, las 4 preguntas y acceso al informe de Power BI),
-  `/r4/territorial`, `/r4/temporal`, `/r4/relacional` — cada una con sus indicadores,
-  visualizaciones, filtros y conocimientos evidentes.
-- Informe de Power BI: pendiente de publicar. Cuando esté listo, definir
-  `POWERBI_REPORT_URL` en `.env` o en las variables de entorno de Render para que el
-  botón "Abrir informe" en `/r4` quede activo.
-- Archivo `.pbix`, medidas DAX documentadas e instrucciones para abrirlo/actualizarlo:
-  pendiente — se publicará en una carpeta `powerbi/` en la raíz del repositorio.
-
-## Etapa 5 · Análisis multidimensional
-
-**Aplicación publicada:** `PENDIENTE: URL de Render`/r5
-(menú **Análisis multidimensional**: resumen y modelo estrella + 4 análisis interactivos).
-
-### Qué contiene el repositorio
-
-| Entregable | Dónde |
-|---|---|
-| Diagrama y diccionario del modelo | [`docs/R5/modelo_estrella.md`](docs/R5/modelo_estrella.md) (Mermaid) y `/r5#modelo` |
-| Preguntas, operaciones OLAP, conocimientos y validaciones | [`docs/R5/analisis_multidimensional.md`](docs/R5/analisis_multidimensional.md) (generado desde el modelo) |
-| Creación de tablas y relaciones | [`SQL/R5/01_modelo_estrella.sql`](SQL/R5/01_modelo_estrella.sql) |
-| Transformación y carga (ETL) | [`app/services/dw.py`](app/services/dw.py), ejecutado por [`scripts/R5/build_star.py`](scripts/R5/build_star.py) |
-| Consultas de análisis y de validación | [`SQL/R5/03_consultas_olap.sql`](SQL/R5/03_consultas_olap.sql) · [`SQL/R5/02_validaciones.sql`](SQL/R5/02_validaciones.sql) |
-| Motor OLAP (drill-down, roll-up, slice, dice, pivot) | [`app/services/olap.py`](app/services/olap.py) |
-| Vistas Flask | [`app/services/etapa5.py`](app/services/etapa5.py), [`templates/pages/r5*.html`](app/templates/pages/), [`static/js/modules/olap.js`](app/static/js/modules/olap.js) |
-| Pruebas | [`tests/test_etapa5.py`](tests/test_etapa5.py) |
-
-**Datos utilizados:** el EVA tratado en R2/R3, versionado en `app/static/data/R2/eva_basicos.json`
-(48.932 registros, 2019–2024, 1.098 municipios). Para regenerarlo desde la fuente:
-`python scripts/process_eva.py` y `python scripts/clean_datasets.py`. La base SQLite
-`app/data/R5/wololo_dw.sqlite` **no se versiona**: se construye a partir de ese JSON.
-
-**Modelo:** `fact_produccion_agricola` (grano: municipio × desagregación × periodo) +
-`dim_territorio`, `dim_tiempo`, `dim_cultivo`, `dim_sistema_productivo`; 8 medidas (aditivas y
-derivadas) y 4 jerarquías. Se eligió **SQLite** porque viene incluido en Python, es un solo archivo
-consultable desde Flask y funciona en Render (el SQL Server de R3 no está disponible allí); el ETL
-usa solo la biblioteca estándar, así que no se agregan dependencias.
-
-### Configurar, cargar y ejecutar
-
-```bash
-pip install -r requirements-dev.txt      # Flask + pytest (SQLite viene con Python)
-python scripts/R5/build_star.py          # crea la base, carga dimensiones y hechos, ejecuta 28 validaciones
-python scripts/R5/export_docs.py         # (opcional) regenera docs/R5/analisis_multidimensional.md
-python run.py                            # http://127.0.0.1:5000/r5
-pytest tests/test_etapa5.py              # pruebas del modelo, el motor OLAP y las vistas
-```
-
-La app también construye la base al arrancar si no existe o si el JSON tratado es más reciente
-(`dw.ensure`), así que en Render no hace falta un paso adicional. Para revisar las validaciones
-directamente en SQL: `sqlite3 app/data/R5/wololo_dw.sqlite < SQL/R5/02_validaciones.sql`.
-
-## Etapa 6 · Conocimiento oculto (Orange Data Mining)
-
-- **Flujos de Orange 3.40:** [`orange/flujos/`](orange/flujos/) — `01_supervisado.ows` (regresión logística, árbol y
-  Random Forest), `02_clustering.ows` (k-Means de municipios) y `03_comentarios_youtube.ows` (texto). Guía completa de
-  reproducción y parámetros: [`orange/README.md`](orange/README.md).
-- **Scripts:** [`scripts/R6/`](scripts/R6/) — preparación de datos, generación de flujos, extracción de comentarios
-  (YouTube Data API v3; clave en `.env` como `YOUTUBE_API_KEY`, nunca en el repo), limpieza y conteo de factores.
-- **Resultados para la app:** `"%LOCALAPPDATA%/Programs/Orange/python.exe" scripts/R6/resultados_orange.py` reproduce
-  sin interfaz las métricas, matrices de confusión y grupos de los flujos y escribe `app/static/data/R6/resultados.json`.
-- **Sección Flask:** `/r6`. El informe en PDF se sirve si existe `app/static/etapa6/Informe_Etapa6_Conocimiento_Oculto.pdf`
-  (o con `INFORME_ETAPA6_URL`); el video se enlaza con `VIDEO_ETAPA6_URL`.
+Proyecto de **uso académico**.

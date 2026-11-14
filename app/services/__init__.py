@@ -1,1 +1,1 @@
-"""Capa de servicios: acceso a datos y construcción de contextos (sin Flask)."""
+"""Servicios: carga de datos y contextos de página (sin Flask)."""

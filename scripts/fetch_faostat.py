@@ -1,4 +1,7 @@
-"""Descarga reproducible de datos FAOSTAT para Colombia.
+"""R1 · Descarga de FAOSTAT para Colombia (requiere FAOSTAT_TOKEN en .env).
+
+Uso: python scripts/fetch_faostat.py
+Salida: app/data/faostat_*.csv y app/static/data/R1/
 """
 from __future__ import annotations
 
@@ -28,7 +31,7 @@ def log(msg: str) -> None:
 
 
 def get_client():
-    """Crea el cliente de FAOSTAT autenticado con el token del entorno."""
+    """Cliente de FAOSTAT autenticado con el token del entorno."""
     try:
         import faostat
     except ImportError:
@@ -66,7 +69,7 @@ def save_table_json(df, filename: str) -> Path:
 
 
 def build_fs_chart_json(fs_df, filename: str = "faostat_fs_colombia.json") -> None:
-    """Construye el JSON liviano {labels, datasets} que consume Chart.js."""
+    """JSON {labels, datasets} para Chart.js."""
     import pandas as pd
 
     indicadores = {

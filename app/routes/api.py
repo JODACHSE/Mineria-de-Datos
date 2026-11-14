@@ -1,4 +1,4 @@
-"""Blueprint `api`: datasets paginados/filtrados y métricas de calidad en JSON."""
+"""Blueprint `api`: datasets, calidad y consultas OLAP en JSON."""
 from __future__ import annotations
 
 from flask import Blueprint, current_app, jsonify, request
@@ -19,7 +19,7 @@ def _not_found(name: str):
 
 @api_bp.route("/dataset/<name>")
 def dataset(name):
-    """Params: q, producto, elemento, anio_min, anio_max, page, page_size, version=crudo|tratado."""
+    """Parámetros: q, producto, elemento, anio_min, anio_max, page, page_size, version=crudo|tratado."""
     version = request.args.get("version", "crudo")
     r1_dir, r2_dir = _dirs()
     try:
@@ -41,7 +41,7 @@ def quality(name):
 
 @api_bp.route("/r5/<slug>")
 def r5_vista(slug):
-    """Consulta OLAP de una vista de R5. Params: rows, cols, measure, f_<nivel> (repetible)."""
+    """Consulta OLAP de una vista de R5. Parámetros: rows, cols, measure, f_<nivel>."""
     if slug not in VISTAS_BY_SLUG:
         return jsonify(error=f"Vista '{slug}' no existe. Usa una de: {list(VISTAS_BY_SLUG)}"), 404
     try:

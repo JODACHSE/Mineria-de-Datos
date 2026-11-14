@@ -1,17 +1,12 @@
-"""Contexto de la página R3 · Tratamiento ETL con SSIS.
-
-Lee `app/static/data/R3/iteraciones.json` (generado offline por
-`scripts/etapa3_iteraciones.py`, que replica las reglas de EVA.dtsx y
-FAOSTAT.dtsx) y arma las tablas de la sección Etapa 3.
-"""
+"""Contexto de R3 (ETL con SSIS) a partir de data/R3/iteraciones.json."""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
-INFORME_PDF  = "etapa3/Informe_Etapa3_Tratamiento_ETL_SSIS.pdf"
-INFORME_DOCX = "etapa3/Informe_Etapa3_Tratamiento_ETL_SSIS.docx"
-PROYECTO_ZIP = "etapa3/R3.zip"
+INFORME_PDF  = "etapas/r3/Informe_Etapa3_Tratamiento_ETL_SSIS.pdf"
+INFORME_DOCX = "etapas/r3/Informe_Etapa3_Tratamiento_ETL_SSIS.docx"
+PROYECTO_ZIP = "etapas/r3/R3.zip"
 
 REGLAS = [
     # (paquete, código, problema, campo, acción, justificación)
@@ -63,12 +58,14 @@ HALLAZGOS = {
 }
 
 DIAGRAMAS = [
-    ("etapa3/img/eva_cf.png", "EVA · Control Flow"),
-    ("etapa3/img/eva_df_lim.png", "EVA · DFT_Limpieza_EVA"),
-    ("etapa3/img/fao_cf.png", "FAOSTAT · Control Flow"),
-    ("etapa3/img/fao_df_ext.png", "FAOSTAT · DFT_Extraccion_FAOSTAT"),
-    ("etapa3/img/fao_df_lim.png", "FAOSTAT · DFT_Limpieza_FAOSTAT"),
-    ("etapa3/img/eva_eh.png", "Event Handler OnError"),
+    ("etapas/r3/img/eva_cf.png", "EVA · Control Flow"),
+    ("etapas/r3/img/eva_df_ext.png", "EVA · DFT_Extraccion_EVA"),
+    ("etapas/r3/img/eva_df_lim.png", "EVA · DFT_Limpieza_EVA"),
+    ("etapas/r3/img/eva_eh.png", "EVA · Event Handler OnError"),
+    ("etapas/r3/img/fao_cf.png", "FAOSTAT · Control Flow"),
+    ("etapas/r3/img/fao_df_ext.png", "FAOSTAT · DFT_Extraccion_FAOSTAT"),
+    ("etapas/r3/img/fao_df_lim.png", "FAOSTAT · DFT_Limpieza_FAOSTAT"),
+    ("etapas/r3/img/fao_eh.png", "FAOSTAT · Event Handler OnError"),
 ]
 
 
@@ -111,11 +108,11 @@ def _indicadores(eva: dict, fao: dict) -> dict:
         "EVA": [
             ("Consistencia de áreas (AC ≤ AS)", consistencia_base,
              [consistencia_base, 100.0, 100.0]),
-            ("Conformidad del formato numérico", 0.0,  # formato_coma == recibidos en original
+            ("Conformidad del formato numérico", 0.0,
              [100.0, 100.0, 100.0]),
             ("Unicidad", _pct(e["recibidos"] - e["duplicados"], e["recibidos"]),
              [100.0, 100.0, 100.0]),
-            ("Integridad referencial (DIVIPOLA)", 100.0,  # sin códigos inválidos en el CSV
+            ("Integridad referencial (DIVIPOLA)", 100.0,
              [100.0, 100.0, 100.0]),
             ("Tasa de aceptación", None,
              [_pct(it["aceptados"], it["recibidos"]) for it in e_its]),
@@ -130,7 +127,7 @@ def _indicadores(eva: dict, fao: dict) -> dict:
             ("Unicidad", _pct(f["recibidos"] - f["duplicados"], f["recibidos"]),
              [100.0, 100.0, 100.0]),
             ("Consistencia de unidades", None,
-             [None, None, 100.0]),  # shortcut: I1/I2 no verificables solo con conteos
+             [None, None, 100.0]),  # I1/I2 no se pueden verificar solo con conteos.
             ("Tasa de aceptación", None,
              [_pct(it["aceptados"], it["recibidos"]) for it in f_its]),
         ],
@@ -170,7 +167,7 @@ def build_r3_context(r3_dir: Path, video_url: str = "") -> dict:
 
 
 def _embed(url: str) -> str:
-    """Convierte un enlace de YouTube o Google Drive en URL para <iframe>."""
+    """Enlace de YouTube o Google Drive -> URL para <iframe>."""
     if not url:
         return ""
     if "youtube.com/watch?v=" in url:

@@ -1,8 +1,6 @@
-"""Contextos de la Etapa 5 (R5 · Análisis multidimensional).
+"""Contextos de R5 (análisis multidimensional).
 
-Las cifras de indicadores, gráficos, matrices y conocimientos salen de
-consultas al modelo estrella (`app/services/olap.py`); nada se lee del JSON
-de R2 salvo en las validaciones que comparan el modelo con su origen.
+Todas las cifras salen del modelo estrella vía `olap.py`; el JSON de R2 solo se usa en las validaciones.
 """
 from __future__ import annotations
 
@@ -14,7 +12,7 @@ from app.services.olap import HIERARCHIES, LEVELS, MEASURES
 
 
 def fmt(v, nd: int = 0) -> str:
-    """Formato colombiano: 12345.6 → '12.345,6'."""
+    """12345.6 -> '12.345,6'."""
     if v is None:
         return "—"
     s = f"{v:,.{nd}f}"
@@ -40,7 +38,7 @@ def _level_dim(level):
     return LEVELS[level][2] if level in LEVELS else None
 
 
-# =========================================================== vistas (preguntas)
+# --- Vistas (preguntas de análisis) ---
 VISTAS = [
     {
         "slug": "territorial", "num": 1,
@@ -191,7 +189,7 @@ VISTAS = [
 ]
 VISTAS_BY_SLUG = {v["slug"]: v for v in VISTAS}
 
-# Ejemplos guiados de las cinco operaciones (se abren en su vista con ?ej=<id>).
+# Ejemplos guiados de las 5 operaciones OLAP (se abren con ?ej=<id>).
 EJEMPLOS = [
     {
         "id": "drill-papa", "op": "Drill-down", "vista": "territorial", "icon": "bi-zoom-in",
@@ -285,11 +283,8 @@ EJEMPLOS = [
 EJEMPLOS_BY_ID = {e["id"]: e for e in EJEMPLOS}
 
 
-# ======================================================= trazabilidad con R4
-# Los 12 conocimientos evidentes de R4 (3 por página) y si requieren mayor
-# profundidad. R4 contó registros sobre una dimensión a la vez; los que se
-# retoman son los que cambian (o pueden cambiar) al medir volumen, cruzar
-# dimensiones o bajar de nivel. `vistas` = análisis de R5 que los retoman.
+# --- Trazabilidad con R4 ---
+# Los 12 conocimientos de R4 y las vistas de R5 que los profundizan (`vistas`).
 R4_RELACION = [
     {"pagina": "Poblacional", "titulo": "Maíz domina la población evaluada",
      "hallazgo": "Maíz = 37,8 % de los registros (18.490 de 48.932).", "profundizar": True,
@@ -367,7 +362,7 @@ def _r4_para_vista(slug: str) -> list[dict]:
 
 
 def _cobertura(con) -> dict:
-    """Cobertura del modelo (para no fijar cifras en las plantillas)."""
+    """Cobertura del modelo, para no fijar cifras en las plantillas."""
     one = lambda sql: con.execute(sql).fetchone()  # noqa: E731
     anios = one("SELECT MIN(anio), MAX(anio) FROM dim_tiempo")
     return {
@@ -378,9 +373,9 @@ def _cobertura(con) -> dict:
     }
 
 
-# ================================================================ API de vistas
+# --- API de vistas ---
 def parse_state(slug: str, args) -> dict:
-    """Estado de la vista desde los parámetros GET (`rows`, `cols`, `measure`, `f_<nivel>`)."""
+    """Estado de la vista desde la URL: rows, cols, measure y f_<nivel>."""
     cfg = VISTAS_BY_SLUG[slug]["config"]
     rows = args.get("rows") or cfg["rows"]
     cols = args.get("cols", cfg["cols"]) or None
@@ -415,7 +410,7 @@ def _operation_label(state: dict) -> str:
     return "Consulta base"
 
 
-# ---------------------------------------------------------------- indicadores
+# --- Indicadores ---
 def _kpi(label, value, detail="", unit=""):
     return {"label": label, "value": value, "unit": unit, "detail": detail}
 
@@ -498,7 +493,7 @@ _KPIS = {"territorial": _kpis_territorial, "temporal": _kpis_temporal,
          "sistemas": _kpis_sistemas, "cosecha": _kpis_cosecha}
 
 
-# ------------------------------------------------------------ segunda gráfica
+# --- Segunda gráfica ---
 def _chart2_territorial(con, st):
     f, rows = st["filters"], st["rows"]
     prod = olap.query(con, rows, "produccion", None, f, limit=15)
@@ -550,12 +545,12 @@ _CHART2 = {"territorial": _chart2_territorial, "temporal": _chart2_temporal,
            "sistemas": _chart2_sistemas, "cosecha": _chart2_cosecha}
 
 
-# ================================================================ conocimientos
+# --- Conocimientos ---
 def _conocimientos(con) -> dict[str, list[dict]]:
     Q = olap.query
     K = olap.kpis
 
-    # --- Vista 1 · territorial
+    # Vista 1 · territorial
     reg = Q(con, "region", "registros")
     prod = Q(con, "region", "produccion")
     rs, ps = dict(zip(reg["rows"], reg["share_pct"])), dict(zip(prod["rows"], prod["share_pct"]))
@@ -566,7 +561,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
     papa_mun, k_papa = _concentration(con, "municipio", {"cultivo": ["Papa"]})
     boy = Q(con, "municipio", "produccion", None, {"cultivo": ["Papa"], "departamento": ["Boyacá"]})
 
-    # --- Vista 2 · temporal
+    # Vista 2 · temporal
     m = {"cultivo": ["Maíz"]}
     mz_reg = Q(con, "anio", "registros", None, m)
     mz_prod = Q(con, "anio", "produccion", None, m)
@@ -579,7 +574,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
     ar_per = dict(zip(*[Q(con, "periodo", "produccion", None, a)[k] for k in ("rows", "row_totals")]))
     ar_y = dict(zip(*[Q(con, "anio", "produccion", None, a)[k] for k in ("rows", "row_totals")]))
 
-    # --- Vista 3 · sistemas
+    # Vista 3 · sistemas
     tec = K(con, ["rendimiento", "area_cosechada", "produccion", "registros"], {**m, "sistema": ["Tecnificado"]})
     tra = K(con, ["rendimiento", "area_cosechada", "produccion", "registros"], {**m, "sistema": ["Tradicional"]})
     mz_tot = K(con, ["area_cosechada", "produccion", "registros"], m)
@@ -593,7 +588,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
     rend = {r: dict(zip(ar_rend["cols"], row)) for r, row in zip(ar_rend["rows"], ar_rend["cells"])}
     ar_tra_car = K(con, ["area_cosechada"], {**a, "region": ["Caribe"], "sistema": ["Tradicional"]})
 
-    # --- Vista 4 · cosecha
+    # Vista 4 · cosecha
     no = Q(con, "region", "area_no_cosechada")
     ns = dict(zip(no["rows"], no["share_pct"]))
     tasa = dict(zip(*[Q(con, "region", "tasa_cosecha")[k] for k in ("rows", "row_totals")]))
@@ -755,7 +750,7 @@ def _conocimientos(con) -> dict[str, list[dict]]:
     }
 
 
-# ================================================================== contextos
+# --- Contextos de página ---
 def _vista_meta(v: dict) -> dict:
     return {
         **v,
@@ -780,7 +775,7 @@ def build_r5_vista_context(db_path: Path, slug: str, cache) -> dict:
     v = VISTAS_BY_SLUG[slug]
     with closing(dw.connect(db_path)) as con:
         filter_options = {f["level"]: olap.members(con, f["level"]) for f in v["config"]["filters"]}
-        # Orden fijo de miembros por nivel: el color de una serie sigue a su miembro, no a su rango.
+        # Orden fijo de miembros: el color de una serie sigue al miembro, no a su posición.
         series_members = {lv: olap.members(con, lv) for lv in LEVELS if lv not in ("municipio", "periodo")}
         cobertura = _cobertura(con)
     return {
